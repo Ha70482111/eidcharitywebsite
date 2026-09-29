@@ -1,0 +1,56 @@
+name: Build and deploy
+
+# On every push to main: run the API tests, build the React site,
+# then publish a ready-to-run copy to the "production" branch.
+# cPanel pulls the "production" branch (no build step needed on the server).
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: API tests
+        run: npm test
+
+      - name: Build website + admin
+        run: |
+          npm --prefix client install
+          npm --prefix client run build
+
+      - name: Prepare production files
+        run: |
+          mkdir -p out
+          cp -r app.js package.json server database dist uploads README.md .env.example out/
+          echo "node_modules/" > out/.gitignore
+          echo ".env" >> out/.gitignore
+          echo "uploads/*" >> out/.gitignore
+          echo "!uploads/.gitkeep" >> out/.gitignore
+
+      - name: Push to production branch
+        env:
+          TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          mkdir deploy && cd deploy
+          git init -q -b production
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git remote add origin "https://x-access-token:${TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+          if git fetch -q --depth=1 origin production; then git reset -q --soft FETCH_HEAD; fi
+          rsync -a --delete --exclude .git ../out/ ./
+          git add -A
+          if git diff --cached --quiet; then echo "No changes"; exit 0; fi
+          git commit -q -m "Deploy ${GITHUB_SHA::7}"
+          git push -q origin production
