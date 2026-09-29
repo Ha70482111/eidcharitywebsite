@@ -1,0 +1,21 @@
+{
+  "name": "eid-charity",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Eid Charity website with a full admin dashboard (Node.js + React + MySQL)",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js",
+    "build": "npm --prefix client install && npm --prefix client run build",
+    "dev:server": "node app.js",
+    "dev:client": "npm --prefix client run dev",
+    "test": "node --test --no-warnings tests/api.test.js",
+    "db:sql": "node tools/generate-sql.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "mysql2": "^3.11.0"
+  }
+}
