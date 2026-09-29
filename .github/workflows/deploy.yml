@@ -32,6 +32,7 @@ jobs:
 
       - name: Prepare production files
         run: |
+          node --no-warnings tools/generate-sql.js
           mkdir -p out
           cp -r app.js package.json server database dist uploads README.md .env.example out/
           echo "node_modules/" > out/.gitignore

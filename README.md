@@ -40,7 +40,7 @@ cPanel بيسحب الفرع ده بس، فمش محتاج تبني أي حاج�
 4. من **Add User To Database** اربط المستخدم بالقاعدة، واختار **ALL PRIVILEGES**.
 
 > مش محتاج تستورد أي ملف SQL. الجداول والمحتوى المبدئي بيتعملوا تلقائيًا أول ما السيرفر يشتغل.
-> لو حابب تستوردهم يدويًا، الملفات موجودة في `database/schema.sql` و`database/seed.sql`، وتقدر تستوردها من phpMyAdmin.
+> لو حابب تستوردهم يدويًا، الملفات موجودة في فرع `production` جوه فولدر `database/`، وهما `schema.sql` و`seed.sql`، وتقدر تستوردهم من phpMyAdmin.
 
 ### 2) سحب الكود من GitHub
 1. cPanel ← **Git™ Version Control** ← **Create**
@@ -118,7 +118,6 @@ server/
   db.js                 الاتصال بـ MySQL + إنشاء الجداول تلقائيًا
   auth.js               تسجيل الدخول (scrypt + توكن موقّع)
   seed.js               المحتوى المبدئي (من تصميم Figma)
-database/               schema.sql و seed.sql للاستيراد اليدوي
 client/src/
   site/                 الموقع العام
   admin/                لوحة التحكم

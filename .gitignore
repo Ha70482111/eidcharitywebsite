@@ -7,3 +7,4 @@ uploads/*
 *.log
 .DS_Store
 client/public/logo.jpg
+database/
