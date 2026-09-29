@@ -28,7 +28,7 @@ export default function Admin() {
     document.title = 'لوحة التحكم'
     setUnauthorizedHandler(() => { setToken(null); setState(s => ({ ...s, user: null })) })
     get('/api/auth/status')
-      .then(s => setState({ loading: false, needsSetup: s.needsSetup, user: getToken() ? s.user : null }))
+      .then(s => setState({ loading: false, needsInstall: s.needsInstall, needsSetup: s.needsSetup, user: getToken() ? s.user : null }))
       .catch(e => setState({ loading: false, error: e.message }))
   }, [])
 
@@ -40,8 +40,56 @@ export default function Admin() {
 
   return (
     <ToastProvider>
-      {state.user ? <Shell user={state.user} onLogout={logout} /> : <AuthForm setup={state.needsSetup} onAuth={onAuth} />}
+      {state.needsInstall ? <InstallForm onDone={onAuth} />
+        : state.user ? <Shell user={state.user} onLogout={logout} />
+        : <AuthForm setup={state.needsSetup} onAuth={onAuth} />}
     </ToastProvider>
+  )
+}
+
+function InstallForm({ onDone }) {
+  const [f, setF] = useState({ db_host: 'localhost', db_name: '', db_user: '', db_password: '', username: '', password: '', confirm: '' })
+  const [error, setError] = useState('')
+  const [busy, setBusy] = useState(false)
+  const set = k => e => setF({ ...f, [k]: e.target.value })
+
+  const submit = async e => {
+    e.preventDefault()
+    setError('')
+    if (f.password !== f.confirm) return setError('كلمتا مرور المدير غير متطابقتين')
+    setBusy(true)
+    try {
+      await post('/api/install', f)
+      onDone(await post('/api/auth/login', { username: f.username, password: f.password }))
+    } catch (err) { setError(err.message) } finally { setBusy(false) }
+  }
+
+  const field = (k, label, props = {}) => (
+    <>
+      <label className="ad-label" htmlFor={`in-${k}`}>{label}</label>
+      <input id={`in-${k}`} className="ad-input" dir="ltr" value={f[k]} onChange={set(k)} {...props} />
+    </>
+  )
+
+  return (
+    <div className="ad-auth">
+      <form className="ad-auth-card" onSubmit={submit} style={{ width: 'min(480px, 100%)' }}>
+        <img src="/logo.jpg" alt="" className="ad-auth-logo" />
+        <h1>تجهيز الموقع لأول مرة</h1>
+        <p className="ad-help">اكتب بيانات قاعدة البيانات اللي عملتها في cPanel، وبيانات حساب المدير. الخطوة دي بتحصل مرة واحدة بس.</p>
+        <h2 style={{ fontSize: 16, margin: '14px 0 0' }}>قاعدة البيانات</h2>
+        {field('db_host', 'الخادم (Host)', { required: true })}
+        {field('db_name', 'اسم قاعدة البيانات (الاسم الكامل)', { required: true, placeholder: 'hifzalna_eid' })}
+        {field('db_user', 'اسم مستخدم قاعدة البيانات (الاسم الكامل)', { required: true, placeholder: 'hifzalna_eid' })}
+        {field('db_password', 'كلمة مرور قاعدة البيانات', { type: 'password', autoComplete: 'off' })}
+        <h2 style={{ fontSize: 16, margin: '18px 0 0' }}>حساب المدير</h2>
+        {field('username', 'اسم المستخدم', { required: true, minLength: 3, autoComplete: 'username' })}
+        {field('password', 'كلمة المرور (8 أحرف على الأقل)', { type: 'password', required: true, minLength: 8, autoComplete: 'new-password' })}
+        {field('confirm', 'تأكيد كلمة المرور', { type: 'password', required: true, minLength: 8, autoComplete: 'new-password' })}
+        {error && <p className="ad-error" role="alert">{error}</p>}
+        <button className="ad-btn ad-btn-primary ad-block" disabled={busy}>{busy ? 'جارِ التجهيز… (قد يستغرق ثوانٍ)' : 'تجهيز الموقع'}</button>
+      </form>
+    </div>
   )
 }
 

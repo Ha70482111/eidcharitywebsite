@@ -1,8 +1,8 @@
 name: Build and deploy
 
-# On every push to main: run the API tests, build the React site,
-# then publish a ready-to-run copy to the "production" branch.
-# cPanel pulls the "production" branch (no build step needed on the server).
+# On every push to main: run the API tests against PHP, build the React site,
+# then publish a ready-to-deploy copy to the "production" branch.
+# cPanel (Git Version Control) pulls "production" and copies public/ into the subdomain folder.
 
 on:
   push:
@@ -22,7 +22,15 @@ jobs:
         with:
           node-version: 22
 
-      - name: API tests
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.1'
+          extensions: pdo_sqlite, pdo_mysql, mbstring
+
+      - name: Refresh seed data
+        run: npm run seed:json
+
+      - name: API tests (PHP + SQLite)
         run: npm test
 
       - name: Build website + admin
@@ -32,19 +40,19 @@ jobs:
 
       - name: Prepare production files
         run: |
-          node --no-warnings tools/generate-sql.js
-          mkdir -p out
-          cp -r app.js package.json server database dist uploads README.md .env.example out/
-          echo "node_modules/" > out/.gitignore
-          echo ".env" >> out/.gitignore
-          echo "uploads/*" >> out/.gitignore
-          echo "!uploads/.gitkeep" >> out/.gitignore
+          mkdir -p out/public
+          cp -r dist/. out/public/
+          cp -r php/. out/public/
+          rm -f out/public/api/config.php
+          find out/public/uploads -type f ! -name '.htaccess' ! -name '.gitkeep' -delete
+          cp deploy/cpanel.yml out/.cpanel.yml
+          cp README.md out/
 
       - name: Push to production branch
         env:
           TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          mkdir deploy && cd deploy
+          mkdir deploy-branch && cd deploy-branch
           git init -q -b production
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"

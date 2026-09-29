@@ -1,0 +1,8 @@
+---
+# cPanel Git deployment: copies the ready-built site into the subdomain's folder.
+# Change DEPLOYPATH if the subdomain's Document Root is different.
+deployment:
+  tasks:
+    - export DEPLOYPATH=/home3/hifzalna/eid.hifzalnaema.com/
+    - /bin/mkdir -p $DEPLOYPATH
+    - /bin/cp -R public/. $DEPLOYPATH

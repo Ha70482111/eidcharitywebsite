@@ -16,7 +16,7 @@ export async function api(method, url, body) {
   const token = getToken()
   const res = await fetch(url, {
     method,
-    headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+    headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}`, 'X-Auth-Token': token } : {}) },
     body: body === undefined ? undefined : JSON.stringify(body),
   })
   let data = null

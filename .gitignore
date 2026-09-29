@@ -1,10 +1,10 @@
 node_modules/
 client/node_modules/
 dist/
-.env
-uploads/*
-!uploads/.gitkeep
 *.log
 .DS_Store
 client/public/logo.jpg
-database/
+php/api/config.php
+php/uploads/*
+!php/uploads/.htaccess
+!php/uploads/.gitkeep

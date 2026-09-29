@@ -14,7 +14,10 @@ export default function Site() {
   const [lang, setLang] = useState(readLang)
 
   useEffect(() => {
-    fetch('/api/site').then(r => { if (!r.ok) throw new Error(); return r.json() }).then(setData).catch(() => setError(true))
+    fetch('/api/site')
+      .then(r => { if (r.status === 503) throw new Error('setup'); if (!r.ok) throw new Error(); return r.json() })
+      .then(setData)
+      .catch(e => setError(e.message === 'setup' ? 'setup' : true))
   }, [])
 
   useEffect(() => {
@@ -38,6 +41,7 @@ export default function Site() {
     }
   }, [data])
 
+  if (error === 'setup') return <div className="ec-loading">الموقع قيد التجهيز. <a href="/admin" style={{ color: M, fontWeight: 700, marginInlineStart: 6 }}>ابدأ التجهيز</a></div>
   if (error) return <div className="ec-loading">تعذر تحميل المحتوى، حاول تحديث الصفحة.</div>
   if (!data) return <div className="ec-loading" aria-live="polite">جارِ التحميل…</div>
 
