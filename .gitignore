@@ -6,3 +6,4 @@ uploads/*
 !uploads/.gitkeep
 *.log
 .DS_Store
+client/public/logo.jpg
