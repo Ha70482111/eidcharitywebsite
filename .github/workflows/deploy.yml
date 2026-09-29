@@ -47,6 +47,7 @@ jobs:
           find out/public/uploads -type f ! -name '.htaccess' ! -name '.gitkeep' -delete
           cp deploy/cpanel.yml out/.cpanel.yml
           cp README.md out/
+          printf 'public/api/config.php\npublic/uploads/*\n!public/uploads/.htaccess\n!public/uploads/.gitkeep\n' > out/.gitignore
 
       - name: Push to production branch
         env:
