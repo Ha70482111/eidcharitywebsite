@@ -557,6 +557,53 @@ function TextBlock({ content: c }) {
   return <Shell content={c}><div className="ec-grid-story">{c.image_side === 'start' ? <>{img}{text}</> : <>{text}{img}</>}</div></Shell>
 }
 
+// ─── DOCUMENTS (PDF downloads) ───────────────────────────────────────────────
+function Documents({ content: c, items }) {
+  const t = useT()
+  return (
+    <Shell content={c}>
+      <Head c={c} />
+      <ul className="ec-docs">
+        {items.map((it, i) => (
+          <li key={i} className="ec-doc">
+            <span className="ec-doc-icon" aria-hidden="true"><Icon name="doc" c={M} /></span>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <h3 style={{ fontFamily: 'Cairo, sans-serif', fontSize: 17, fontWeight: 800, color: N, margin: 0, lineHeight: 1.5 }}>{t(it.title)}</h3>
+              {t(it.desc) && <p style={{ fontSize: 14, color: '#5A5450', lineHeight: 1.7, margin: '4px 0 0', whiteSpace: 'pre-line' }}>{t(it.desc)}</p>}
+            </div>
+            {it.file && <a className="ec-btn-outline" href={it.file} target="_blank" rel="noopener noreferrer" style={{ flexShrink: 0 }}>{t(c.link_label) || t({ ar: 'تحميل', en: 'Download' })}</a>}
+          </li>
+        ))}
+      </ul>
+    </Shell>
+  )
+}
+
+// ─── SUB-PAGE BANNER (title + breadcrumb, shown at the top of every sub-page) ─
+export function PageBanner({ page }) {
+  const { lang } = useLang()
+  const t = useT()
+  const title = (lang === 'en' ? page.title_en : page.title_ar) || page.title_ar || page.title_en
+  const c = page.content || {}
+  return (
+    <section style={{ position: 'relative', overflow: 'hidden', background: N, padding: 'clamp(48px, 7vw, 88px) 0' }}>
+      {c.image && <>
+        <img src={c.image} alt="" aria-hidden="true" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
+        <div style={{ position: 'absolute', inset: 0, background: `${N}D9` }} />
+      </>}
+      <div className="ec-inner" style={{ position: 'relative' }}>
+        <nav aria-label={lang === 'ar' ? 'مسار التنقل' : 'Breadcrumb'} style={{ fontSize: 14, color: 'rgba(255,255,255,0.75)', margin: '0 0 14px' }}>
+          <a href="/" className="ec-crumb">{lang === 'ar' ? 'الرئيسية' : 'Home'}</a>
+          <span aria-hidden="true" style={{ margin: '0 8px', color: G }}>/</span>
+          <span aria-current="page">{title}</span>
+        </nav>
+        <h1 style={{ ...H2, color: '#fff', fontSize: 'clamp(30px,3.6vw,50px)' }}>{title}</h1>
+        {t(c.subtitle) && <p style={{ fontSize: 17, lineHeight: 1.8, color: 'rgba(255,255,255,0.85)', maxWidth: 720, margin: '12px 0 0' }}>{t(c.subtitle)}</p>}
+      </div>
+    </section>
+  )
+}
+
 // ─── CTA BANNER ──────────────────────────────────────────────────────────────
 function CtaBanner({ content: c }) {
   const t = useT()
@@ -579,5 +626,5 @@ function CtaBanner({ content: c }) {
 export const SECTION_COMPONENTS = {
   hero: Hero, gates: Gates, campaigns: Campaigns, centers: Centers, impact: Impact, story: Story,
   projects: Projects, governance: Governance, join: Join, media: Media, partners: Partners,
-  cards: Cards, text_block: TextBlock, cta_banner: CtaBanner,
+  cards: Cards, text_block: TextBlock, cta_banner: CtaBanner, documents: Documents,
 }

@@ -51,7 +51,46 @@ function menu_row($r)
 function section_row($r)
 {
     return ['id' => (int)$r['id'], 'type' => $r['type'], 'name' => $r['name'], 'sort_order' => (int)$r['sort_order'],
-        'is_visible' => (bool)(int)$r['is_visible'], 'content' => (object)jparse($r['content'])];
+        'is_visible' => (bool)(int)$r['is_visible'], 'content' => (object)jparse($r['content']),
+        'page_id' => isset($r['page_id']) ? (int)$r['page_id'] : null];
+}
+function page_row($r)
+{
+    return ['id' => (int)$r['id'], 'slug' => $r['slug'], 'title_ar' => $r['title_ar'], 'title_en' => $r['title_en'],
+        'sort_order' => (int)$r['sort_order'], 'is_visible' => (bool)(int)$r['is_visible'], 'content' => (object)jparse($r['content'])];
+}
+function slugv($v)
+{
+    $slug = strtolower(trim(preg_replace('/[^A-Za-z0-9]+/', '-', str($v, 120)), '-'));
+    if ($slug === '') throw new HttpError(400, 'اكتب رابط الصفحة بحروف إنجليزية أو أرقام (مثال: about-us)');
+    return $slug;
+}
+function slug_taken($slug, $exceptId = 0)
+{
+    return (bool)q('SELECT id FROM pages WHERE slug = ? AND id <> ?', [$slug, $exceptId]);
+}
+/** Page filter for section queries: NULL = home page. */
+function page_scope($pageId)
+{
+    return $pageId === null ? ['page_id IS NULL', []] : ['page_id = ?', [$pageId]];
+}
+/** Visible sections (with visible items) of the home page (null) or of one sub-page. */
+function public_sections($pageId)
+{
+    [$where, $params] = page_scope($pageId);
+    $sections = array_map('section_row', q("SELECT * FROM sections WHERE is_visible = 1 AND $where ORDER BY sort_order, id", $params));
+    if (!$sections) return [];
+    $ids = implode(',', array_map(function ($s) { return $s['id']; }, $sections));
+    $items = array_map('item_row', q("SELECT * FROM section_items WHERE is_visible = 1 AND section_id IN ($ids) ORDER BY sort_order, id"));
+    foreach ($sections as &$s) {
+        $s['items'] = array_values(array_filter($items, function ($i) use ($s) { return $i['section_id'] === $s['id']; }));
+    }
+    return $sections;
+}
+function delete_section($id)
+{
+    q('DELETE FROM section_items WHERE section_id = ?', [$id]);
+    q('DELETE FROM sections WHERE id = ?', [$id]);
 }
 function item_row($r)
 {
@@ -125,7 +164,10 @@ function route($method, $pattern, $handler)
 {
     global $routes;
     $keys = [];
-    $re = '#^' . preg_replace_callback('/:(\w+)/', function ($m) use (&$keys) { $keys[] = $m[1]; return '(\d+)'; }, $pattern) . '$#';
+    $re = '#^' . preg_replace_callback('/:(\w+)/', function ($m) use (&$keys) {
+        $keys[] = $m[1];
+        return $m[1] === 'slug' ? '([A-Za-z0-9-]+)' : '(\d+)';
+    }, $pattern) . '$#';
     $routes[] = ['method' => $method, 're' => $re, 'keys' => $keys, 'handler' => $handler, 'auth' => strpos($pattern, '/api/admin') === 0];
 }
 
@@ -168,12 +210,16 @@ route('POST', '/api/install', function ($ctx) {
 route('GET', '/api/site', function () {
     $settings = get_setting('site', []);
     $menu = array_map('menu_row', q('SELECT * FROM menu_items WHERE is_visible = 1'));
-    $sections = array_map('section_row', q('SELECT * FROM sections WHERE is_visible = 1 ORDER BY sort_order, id'));
-    $items = array_map('item_row', q('SELECT * FROM section_items WHERE is_visible = 1 ORDER BY sort_order, id'));
-    foreach ($sections as &$s) {
-        $s['items'] = array_values(array_filter($items, function ($i) use ($s) { return $i['section_id'] === $s['id']; }));
-    }
-    return ['settings' => (object)$settings, 'menu' => build_tree($menu), 'sections' => $sections];
+    return ['settings' => (object)$settings, 'menu' => build_tree($menu), 'sections' => public_sections(null)];
+});
+
+// A sub-page: same header/footer data as /api/site plus the page and its own sections.
+route('GET', '/api/page/:slug', function ($ctx) {
+    $rows = q('SELECT * FROM pages WHERE slug = ? AND is_visible = 1', [strtolower($ctx['params']['slug'])]);
+    if (!$rows) throw new HttpError(404, 'الصفحة غير موجودة');
+    $page = page_row($rows[0]);
+    $menu = array_map('menu_row', q('SELECT * FROM menu_items WHERE is_visible = 1'));
+    return ['settings' => (object)get_setting('site', []), 'menu' => build_tree($menu), 'page' => $page, 'sections' => public_sections($page['id'])];
 });
 
 route('GET', '/api/auth/status', function ($ctx) {
@@ -244,9 +290,118 @@ route('POST', '/api/admin/menu/reorder', function ($ctx) {
     return ['ok' => true];
 });
 
-// Admin: sections
+// Admin: sub-pages
+route('GET', '/api/admin/pages', function () {
+    $pages = array_map('page_row', q('SELECT * FROM pages ORDER BY sort_order, id'));
+    $counts = [];
+    foreach (q('SELECT page_id, COUNT(*) AS n FROM sections WHERE page_id IS NOT NULL GROUP BY page_id') as $c) $counts[(int)$c['page_id']] = (int)$c['n'];
+    foreach ($pages as &$p) $p['section_count'] = $counts[$p['id']] ?? 0;
+    return $pages;
+});
+route('POST', '/api/admin/pages', function ($ctx) {
+    $b = $ctx['body'];
+    $slug = slugv($b['slug'] ?? '');
+    if (slug_taken($slug)) throw new HttpError(409, 'فيه صفحة تانية بنفس الرابط، اختر رابطًا مختلفًا');
+    $r = q('INSERT INTO pages (slug, title_ar, title_en, sort_order, is_visible, content) VALUES (?, ?, ?, ?, ?, ?)',
+        [$slug, str($b['title_ar'] ?? '', 255), str($b['title_en'] ?? '', 255), next_order('pages'),
+            has($b, 'is_visible') ? boolv($b['is_visible']) : 1, jenc(objv($b['content'] ?? null))]);
+    return page_row(must_find('pages', $r['insertId'], 'الصفحة'));
+});
+route('GET', '/api/admin/pages/:id', function ($ctx) {
+    return page_row(must_find('pages', intv($ctx['params']['id']), 'الصفحة'));
+});
+route('PUT', '/api/admin/pages/:id', function ($ctx) {
+    $id = intv($ctx['params']['id']);
+    $b = $ctx['body'];
+    $cur = page_row(must_find('pages', $id, 'الصفحة'));
+    $slug = has($b, 'slug') ? slugv($b['slug']) : $cur['slug'];
+    if (slug_taken($slug, $id)) throw new HttpError(409, 'فيه صفحة تانية بنفس الرابط، اختر رابطًا مختلفًا');
+    q('UPDATE pages SET slug = ?, title_ar = ?, title_en = ?, is_visible = ?, content = ? WHERE id = ?', [$slug,
+        has($b, 'title_ar') ? str($b['title_ar'], 255) : $cur['title_ar'],
+        has($b, 'title_en') ? str($b['title_en'], 255) : $cur['title_en'],
+        has($b, 'is_visible') ? boolv($b['is_visible']) : $cur['is_visible'],
+        has($b, 'content') ? jenc(objv($b['content'])) : jenc((array)$cur['content']), $id]);
+    return page_row(must_find('pages', $id, 'الصفحة'));
+});
+route('DELETE', '/api/admin/pages/:id', function ($ctx) {
+    $id = intv($ctx['params']['id']);
+    must_find('pages', $id, 'الصفحة');
+    foreach (q('SELECT id FROM sections WHERE page_id = ?', [$id]) as $s) delete_section((int)$s['id']);
+    q('DELETE FROM pages WHERE id = ?', [$id]);
+    return ['ok' => true];
+});
+route('POST', '/api/admin/pages/reorder', function ($ctx) {
+    apply_order('pages', idsv($ctx['body']['ids'] ?? null));
+    return ['ok' => true];
+});
+
+// Copies images and PDF files that the imported pages still load from the old website (eidcharity.net)
+// into uploads/, and points the pages at the copies. A few files per call; the admin repeats until none remain.
+define('EID_OLD_SITE_FILE', '#https?://(?:www\.)?eidcharity\.net/[^\s"\'<>\\\\]+?\.(?:jpe?g|png|gif|webp|pdf)(?=["\s]|$)#i');
+function old_site_rows()
+{
+    $rows = [];
+    foreach (q('SELECT id, content FROM pages') as $r) $rows[] = ['pages', $r];
+    foreach (q('SELECT id, content FROM sections WHERE page_id IS NOT NULL') as $r) $rows[] = ['sections', $r];
+    foreach (q('SELECT i.id, i.content FROM section_items i JOIN sections s ON s.id = i.section_id WHERE s.page_id IS NOT NULL') as $r) $rows[] = ['section_items', $r];
+    return $rows;
+}
+function download_file($url)
+{
+    if (function_exists('curl_init')) {
+        $ch = curl_init($url);
+        curl_setopt_array($ch, [CURLOPT_RETURNTRANSFER => true, CURLOPT_FOLLOWLOCATION => false, CURLOPT_TIMEOUT => 25, CURLOPT_CONNECTTIMEOUT => 8,
+            CURLOPT_USERAGENT => 'EidCharity-site-import', CURLOPT_PROTOCOLS => CURLPROTO_HTTP | CURLPROTO_HTTPS]);
+        $buf = curl_exec($ch);
+        $code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+        return ($buf !== false && $code === 200) ? $buf : false;
+    }
+    $ctx = stream_context_create(['http' => ['timeout' => 25, 'follow_location' => 0, 'user_agent' => 'EidCharity-site-import']]);
+    return @file_get_contents($url, false, $ctx);
+}
+route('POST', '/api/admin/pages/import-media', function ($ctx) {
+    $failed = boolv($ctx['body']['retry'] ?? false) ? [] : get_setting('media_import_failed', []);
+    $rows = old_site_rows();
+    $urls = [];
+    foreach ($rows as [$table, $r]) {
+        if (preg_match_all(EID_OLD_SITE_FILE, (string)$r['content'], $m)) foreach ($m[0] as $u) $urls[$u] = true;
+    }
+    $todo = array_values(array_diff(array_keys($urls), $failed));
+    $copied = 0;
+    $map = [];
+    foreach (array_slice($todo, 0, 8) as $url) {
+        $mime = preg_match('/\.pdf$/i', $url) ? 'application/pdf' : (preg_match('/\.png$/i', $url) ? 'image/png'
+            : (preg_match('/\.gif$/i', $url) ? 'image/gif' : (preg_match('/\.webp$/i', $url) ? 'image/webp' : 'image/jpeg')));
+        try {
+            $buf = download_file($url);
+            if ($buf === false || $buf === '') throw new HttpError(502, 'download failed');
+            if ($mime !== 'application/pdf' && function_exists('getimagesizefromstring')) {
+                $info = @getimagesizefromstring($buf);
+                if ($info && isset(EID_UPLOAD_TYPES[$info['mime']])) $mime = $info['mime'];
+            }
+            $map[$url] = save_upload($buf, $mime, basename(rawurldecode(parse_url($url, PHP_URL_PATH))), 25 * 1024 * 1024);
+            $copied++;
+        } catch (Throwable $e) {
+            $failed[] = $url;
+        }
+    }
+    if ($map) {
+        foreach ($rows as [$table, $r]) {
+            $new = strtr((string)$r['content'], $map);
+            if ($new !== $r['content']) q("UPDATE $table SET content = ? WHERE id = ?", [$new, (int)$r['id']]);
+        }
+    }
+    set_setting('media_import_failed', array_values(array_unique($failed)));
+    $remaining = count($todo) - count(array_slice($todo, 0, 8));
+    return ['copied' => $copied, 'remaining' => $remaining, 'failed' => count(array_intersect(array_keys($urls), $failed))];
+});
+
+// Admin: sections (?page=ID lists a sub-page's sections; without it, the home page's)
 route('GET', '/api/admin/sections', function () {
-    $sections = array_map('section_row', q('SELECT * FROM sections ORDER BY sort_order, id'));
+    $pageId = isset($_GET['page']) && $_GET['page'] !== '' ? intv($_GET['page']) : null;
+    [$where, $params] = page_scope($pageId);
+    $sections = array_map('section_row', q("SELECT * FROM sections WHERE $where ORDER BY sort_order, id", $params));
     $counts = [];
     foreach (q('SELECT section_id, COUNT(*) AS n FROM section_items GROUP BY section_id') as $c) $counts[(int)$c['section_id']] = (int)$c['n'];
     foreach ($sections as &$s) $s['item_count'] = $counts[$s['id']] ?? 0;
@@ -256,8 +411,12 @@ route('POST', '/api/admin/sections', function ($ctx) {
     $b = $ctx['body'];
     $type = str($b['type'] ?? '', 50);
     if (!preg_match('/^[a-z_]+$/', $type)) throw new HttpError(400, 'نوع القسم غير صالح');
-    $r = q('INSERT INTO sections (type, name, sort_order, is_visible, content) VALUES (?, ?, ?, ?, ?)',
-        [$type, str($b['name'] ?? '', 255), next_order('sections'), has($b, 'is_visible') ? boolv($b['is_visible']) : 1, jenc(objv($b['content'] ?? null))]);
+    $pageId = (!isset($b['page_id']) || $b['page_id'] === '') ? null : intv($b['page_id']);
+    if ($pageId !== null) must_find('pages', $pageId, 'الصفحة');
+    [$where, $params] = page_scope($pageId);
+    $r = q('INSERT INTO sections (type, name, sort_order, is_visible, content, page_id) VALUES (?, ?, ?, ?, ?, ?)',
+        [$type, str($b['name'] ?? '', 255), next_order('sections', "WHERE $where", $params), has($b, 'is_visible') ? boolv($b['is_visible']) : 1,
+            jenc(objv($b['content'] ?? null)), $pageId]);
     $items = is_array($b['items'] ?? null) ? array_slice(array_values($b['items']), 0, 50) : [];
     foreach ($items as $i => $it) {
         q('INSERT INTO section_items (section_id, sort_order, is_visible, content) VALUES (?, ?, 1, ?)', [$r['insertId'], $i + 1, jenc(objv($it))]);
@@ -283,8 +442,7 @@ route('PUT', '/api/admin/sections/:id', function ($ctx) {
 route('DELETE', '/api/admin/sections/:id', function ($ctx) {
     $id = intv($ctx['params']['id']);
     must_find('sections', $id, 'القسم');
-    q('DELETE FROM section_items WHERE section_id = ?', [$id]);
-    q('DELETE FROM sections WHERE id = ?', [$id]);
+    delete_section($id);
     return ['ok' => true];
 });
 route('POST', '/api/admin/sections/reorder', function ($ctx) {
@@ -296,8 +454,9 @@ route('POST', '/api/admin/sections/:id/duplicate', function ($ctx) {
     $s = section_row(must_find('sections', $id, 'القسم'));
     $content = (array)$s['content'];
     $content['anchor'] = !empty($content['anchor']) ? $content['anchor'] . '-2' : '';
-    $r = q('INSERT INTO sections (type, name, sort_order, is_visible, content) VALUES (?, ?, ?, 0, ?)',
-        [$s['type'], $s['name'] . ' (نسخة)', next_order('sections'), jenc($content)]);
+    [$where, $params] = page_scope($s['page_id']);
+    $r = q('INSERT INTO sections (type, name, sort_order, is_visible, content, page_id) VALUES (?, ?, ?, 0, ?, ?)',
+        [$s['type'], $s['name'] . ' (نسخة)', next_order('sections', "WHERE $where", $params), jenc($content), $s['page_id']]);
     foreach (q('SELECT * FROM section_items WHERE section_id = ? ORDER BY sort_order, id', [$id]) as $it) {
         q('INSERT INTO section_items (section_id, sort_order, is_visible, content) VALUES (?, ?, ?, ?)',
             [$r['insertId'], (int)$it['sort_order'], (int)$it['is_visible'], $it['content']]);
@@ -341,23 +500,32 @@ route('PUT', '/api/admin/settings', function ($ctx) {
     return (object)get_setting('site', []);
 });
 
-// Admin: uploads (images sent as base64 data URLs)
+// Admin: uploads (images and PDF files sent as base64 data URLs)
+define('EID_UPLOAD_TYPES', ['image/png' => 'png', 'image/jpeg' => 'jpg', 'image/webp' => 'webp', 'image/gif' => 'gif', 'application/pdf' => 'pdf']);
+/** Checks an uploaded or downloaded file and saves it in uploads/; returns its public URL. */
+function save_upload($buf, $mime, $filename, $max = EID_MAX_UPLOAD)
+{
+    if (strlen($buf) > $max) throw new HttpError(413, 'أقصى حجم للملف ' . round($max / 1048576) . ' ميجا');
+    if ($mime === 'application/pdf') {
+        if (strncmp($buf, '%PDF', 4) !== 0) throw new HttpError(400, 'الملف ليس PDF صالحًا');
+    } elseif (function_exists('getimagesizefromstring') && @getimagesizefromstring($buf) === false) {
+        throw new HttpError(400, 'الملف ليس صورة صالحة');
+    }
+    $base = preg_replace('/\.[^.]*$/', '', str($filename, 80));
+    $base = strtolower(trim(preg_replace('/[^\w-]+/', '-', $base), '-')) ?: ($mime === 'application/pdf' ? 'file' : 'image');
+    $name = time() . '-' . bin2hex(random_bytes(3)) . '-' . $base . '.' . EID_UPLOAD_TYPES[$mime];
+    if (!is_dir(EID_UPLOAD_DIR)) @mkdir(EID_UPLOAD_DIR, 0755, true);
+    if (@file_put_contents(EID_UPLOAD_DIR . '/' . $name, $buf) === false) throw new HttpError(500, 'تعذر حفظ الملف — تأكد من صلاحيات فولدر uploads');
+    return '/uploads/' . $name;
+}
 route('POST', '/api/admin/upload', function ($ctx) {
     $b = $ctx['body'];
-    $ext = ['image/png' => 'png', 'image/jpeg' => 'jpg', 'image/webp' => 'webp', 'image/gif' => 'gif'];
-    if (!preg_match('#^data:(image/(?:png|jpeg|webp|gif));base64,([A-Za-z0-9+/=\s]+)$#', (string)($b['data'] ?? ''), $m)) {
-        throw new HttpError(400, 'الملف لازم يكون صورة PNG أو JPG أو WEBP أو GIF');
+    if (!preg_match('#^data:(image/(?:png|jpeg|webp|gif)|application/pdf);base64,([A-Za-z0-9+/=\s]+)$#', (string)($b['data'] ?? ''), $m)) {
+        throw new HttpError(400, 'الملف لازم يكون صورة PNG أو JPG أو WEBP أو GIF، أو ملف PDF');
     }
     $buf = base64_decode(preg_replace('/\s+/', '', $m[2]), true);
-    if ($buf === false) throw new HttpError(400, 'بيانات الصورة غير صالحة');
-    if (strlen($buf) > EID_MAX_UPLOAD) throw new HttpError(413, 'أقصى حجم للصورة 5 ميجا');
-    if (function_exists('getimagesizefromstring') && @getimagesizefromstring($buf) === false) throw new HttpError(400, 'الملف ليس صورة صالحة');
-    $base = preg_replace('/\.[^.]*$/', '', str($b['filename'] ?? '', 80));
-    $base = strtolower(trim(preg_replace('/[^\w-]+/', '-', $base), '-')) ?: 'image';
-    $name = time() . '-' . bin2hex(random_bytes(3)) . '-' . $base . '.' . $ext[$m[1]];
-    if (!is_dir(EID_UPLOAD_DIR)) @mkdir(EID_UPLOAD_DIR, 0755, true);
-    if (@file_put_contents(EID_UPLOAD_DIR . '/' . $name, $buf) === false) throw new HttpError(500, 'تعذر حفظ الصورة — تأكد من صلاحيات فولدر uploads');
-    return ['url' => '/uploads/' . $name];
+    if ($buf === false) throw new HttpError(400, 'بيانات الملف غير صالحة');
+    return ['url' => save_upload($buf, $m[1], $b['filename'] ?? '')];
 });
 route('GET', '/api/admin/uploads', function () {
     if (!is_dir(EID_UPLOAD_DIR)) return [];
@@ -424,9 +592,8 @@ function dispatch()
 
         if (!eid_config()) {
             if ($path === '/api/auth/status') return send_json(200, ['needsInstall' => true, 'needsSetup' => false, 'user' => null]);
-            if ($path === '/api/site') throw new HttpError(503, 'الموقع لم يُجهَّز بعد');
             if ($path !== '/api/install') throw new HttpError(503, 'الموقع لم يُجهَّز بعد');
-        } elseif ($path === '/api/site' || $path === '/api/auth/status') {
+        } elseif ($path === '/api/site' || $path === '/api/auth/status' || strpos($path, '/api/page/') === 0) {
             eid_ensure_schema(); // creates tables on first run if config.php was written by hand
         }
 

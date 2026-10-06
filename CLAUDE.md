@@ -10,6 +10,7 @@ Dynamic charity website with an admin dashboard. Owner communicates in Egyptian 
   - Tables are created automatically (`eid_ensure_schema` in `php/api/db.php`); first-run installer at `/admin` writes `api/config.php`.
   - Content is JSON in `sections.content` / `section_items.content` — new fields usually need no schema change.
   - `tools/seed.js` → `php/api/seed.json` (only used for an empty database).
+  - Sub-pages: `pages` table + `sections.page_id` (NULL = home page); public at `/page/<slug>`. `tools/pages.js` (old-site content) is imported once into any database by `eid_import_pages` (guarded by the `pages_imported` setting).
 - Hosting: HostMonster shared cPanel (no Node.js). Site lives at `https://eid.hifzalnaema.com` (document root `/home3/hifzalna/eid.hifzalnaema.com/`).
 
 ## Workflow

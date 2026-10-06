@@ -272,4 +272,4 @@ const sections = [
       .map(n => ({ name: b(n, n), logo: '', url: '' })) },
 ]
 
-module.exports = { settings, menu, sections }
+module.exports = { settings, menu, sections, pages: require('./pages.js') }

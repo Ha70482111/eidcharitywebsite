@@ -137,7 +137,9 @@ function MenuForm({ level, initial, onSubmit, onCancel, submitLabel }) {
     extra: initial?.extra || (level === 1 ? { col: 1 } : {}),
   })
   const [busy, setBusy] = useState(false)
+  const [pages, setPages] = useState([])
   const featured = d.extra?.featured || {}
+  useEffect(() => { get('/api/admin/pages').then(setPages).catch(() => {}) }, [])
 
   const submit = async e => {
     e.preventDefault()
@@ -154,6 +156,14 @@ function MenuForm({ level, initial, onSubmit, onCancel, submitLabel }) {
         <div className="ad-field"><label className="ad-label">الاسم بالإنجليزي<input className="ad-input" dir="ltr" value={d.label_en} onChange={e => setD({ ...d, label_en: e.target.value })} /></label></div>
         <div className="ad-field"><label className="ad-label">الرابط{level === 0 ? ' (يُتجاهل إذا كان للعنصر مجموعات)' : ''}
           <input className="ad-input" dir="ltr" value={d.url} placeholder="https://… أو #impact" onChange={e => setD({ ...d, url: e.target.value })} /></label></div>
+        {pages.length > 0 && (
+          <div className="ad-field"><label className="ad-label">أو اختر صفحة فرعية
+            <select className="ad-input" value={pages.some(p => `/page/${p.slug}` === d.url) ? d.url : ''}
+              onChange={e => { const p = pages.find(x => `/page/${x.slug}` === e.target.value); setD({ ...d, url: e.target.value, ...(p && !d.label_ar ? { label_ar: p.title_ar, label_en: p.title_en } : {}) }) }}>
+              <option value="">— اختر صفحة —</option>
+              {pages.map(p => <option key={p.id} value={`/page/${p.slug}`}>{p.title_ar}{p.is_visible ? '' : ' (مخفية)'}</option>)}
+            </select></label></div>
+        )}
         {level === 1 && (
           <div className="ad-field"><label className="ad-label">رقم العمود
             <select className="ad-input" value={d.extra?.col || 1} onChange={e => setD({ ...d, extra: { ...d.extra, col: Number(e.target.value) } })}>

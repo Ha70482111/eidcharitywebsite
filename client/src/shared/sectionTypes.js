@@ -1,5 +1,5 @@
 // Section type registry: drives both the admin forms and the defaults for newly added sections.
-// Field types: text, textarea, image, number, url, select, color, bool, list (repeatable sub-fields)
+// Field types: text, textarea, image, file (PDF), number, url, select, color, bool, list (repeatable sub-fields)
 import { ICON_OPTIONS, SOCIAL_OPTIONS } from './icons.jsx'
 
 const bi = (key, label, type = 'text', extra = {}) => ({ key, label, type, bi: true, ...extra })
@@ -145,6 +145,14 @@ export const SECTION_TYPES = {
       f('image_side', 'مكان الصورة', 'select', { options: [['start', 'في البداية'], ['end', 'في النهاية']] }), ...button()],
     item: null,
     defaults: () => ({ content: { anchor: '', bg: 'white', eyebrow: b('', ''), title: b('عنوان جديد', 'New title'), body: b('اكتب النص هنا', 'Write your text here'), image: '', image_side: 'end' }, items: [] }),
+  },
+
+  documents: {
+    label: 'ملفات ومستندات (PDF)',
+    description: 'قائمة ملفات للتحميل مثل التقارير والسياسات',
+    fields: [anchor, bgLight, ...heading, bi('link_label', 'نص زر التحميل')],
+    item: { label: 'ملف', title: c => c.title, fields: [bi('title', 'العنوان'), bi('desc', 'وصف قصير', 'textarea'), f('file', 'الملف', 'file')] },
+    defaults: () => ({ content: { anchor: '', bg: 'white', eyebrow: b('', ''), title: b('الملفات', 'Documents'), subtitle: b('', ''), link_label: b('تحميل PDF', 'Download PDF') }, items: [] }),
   },
 
   cta_banner: {

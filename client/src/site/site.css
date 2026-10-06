@@ -227,3 +227,18 @@ a.ec-card-hover:focus-visible, a.ec-img-zoom:focus-visible { outline: 3px solid 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
 }
+
+/* ── Sub-pages ────────────────────────────────── */
+.ec-crumb { color: rgba(255,255,255,0.85); text-decoration: underline; text-underline-offset: 3px; display: inline-flex; align-items: center; min-height: 32px; }
+.ec-crumb:hover { color: #fff; }
+.ec-crumb:focus-visible { outline: 2px solid var(--gold); border-radius: 3px; }
+
+.ec-docs { list-style: none; padding: 0; margin: 0 auto; max-width: 960px; display: flex; flex-direction: column; gap: 14px; }
+.ec-doc { display: flex; align-items: center; gap: 18px; background: #fff; border: 1px solid var(--border); border-radius: 14px; padding: 16px 20px; }
+.ec-doc-icon { width: 52px; height: 52px; flex-shrink: 0; border-radius: 12px; background: #FAF4F6; display: flex; align-items: center; justify-content: center; }
+@media (max-width: 640px) {
+  .ec-doc { flex-wrap: wrap; }
+  .ec-doc .ec-btn-outline { width: 100%; }
+}
+
+.ec-notfound { text-align: center; padding: 96px 16px; }
