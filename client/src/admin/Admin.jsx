@@ -4,6 +4,7 @@ import { ToastProvider } from './ui.jsx'
 import SectionsPage from './SectionsPage.jsx'
 import SectionEditor from './SectionEditor.jsx'
 import MenuPage from './MenuPage.jsx'
+import PagesPage from './PagesPage.jsx'
 import SettingsPage from './SettingsPage.jsx'
 import AccountPage from './AccountPage.jsx'
 import './admin.css'
@@ -132,7 +133,8 @@ function AuthForm({ setup, onAuth }) {
 }
 
 const NAV = [
-  ['/sections', 'أقسام الصفحة'],
+  ['/sections', 'أقسام الصفحة الرئيسية'],
+  ['/pages', 'الصفحات الفرعية'],
   ['/menu', 'المنيو الرئيسية'],
   ['/settings', 'الإعدادات العامة'],
   ['/account', 'الحسابات'],
@@ -142,9 +144,12 @@ function Shell({ user, onLogout }) {
   const route = useHashRoute()
   const [navOpen, setNavOpen] = useState(false)
   const sectionMatch = /^\/sections\/(\d+)$/.exec(route)
+  const pageMatch = /^\/pages\/(\d+)$/.exec(route)
 
   let page
   if (sectionMatch) page = <SectionEditor id={Number(sectionMatch[1])} />
+  else if (pageMatch) page = <SectionsPage pageId={Number(pageMatch[1])} />
+  else if (route === '/pages') page = <PagesPage />
   else if (route === '/menu') page = <MenuPage />
   else if (route === '/settings') page = <SettingsPage />
   else if (route === '/account') page = <AccountPage user={user} />

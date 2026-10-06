@@ -170,6 +170,98 @@ test('items: add, edit, hide, reorder, delete', async () => {
   assert.equal((await call('DELETE', `/api/admin/items/${item.id}`)).status, 200)
 })
 
+test('sub-pages imported from the old website', async () => {
+  let r = await call('GET', '/api/page/about', undefined, null)
+  assert.equal(r.status, 200)
+  assert.equal(r.data.page.title_ar, 'عن المؤسسة')
+  assert.ok(r.data.sections.length >= 2)
+  assert.ok(r.data.menu.length > 0 && r.data.settings.donate_label, 'sub-pages get the header and footer data too')
+  assert.equal((await call('GET', '/api/page/organizational-structure', undefined, null)).status, 404, 'empty pages are imported hidden')
+  assert.equal((await call('GET', '/api/page/no-such-page', undefined, null)).status, 404)
+  assert.equal((await call('GET', '/api/site', undefined, null)).data.sections.length, 11, 'home page keeps only its own sections')
+  const docs = (await call('GET', '/api/page/governance-policies', undefined, null)).data.sections[0]
+  assert.equal(docs.type, 'documents')
+  assert.equal(docs.items.length, 8)
+
+  const pages = (await call('GET', '/api/admin/pages')).data
+  assert.equal(pages.length, require('../tools/pages.js').length)
+  assert.ok(pages.every(p => p.section_count > 0))
+})
+
+test('existing database is upgraded once, without touching its content', () => {
+  const file = path.join(tmp, 'old.sqlite')
+  const script = `
+    require ${JSON.stringify(path.join(ROOT, 'php/api/db.php'))};
+    $pdo = db();
+    $pdo->exec("CREATE TABLE sections (id INTEGER PRIMARY KEY AUTOINCREMENT, type VARCHAR(50) NOT NULL, name VARCHAR(255) NOT NULL DEFAULT '', sort_order INT NOT NULL DEFAULT 0, is_visible TINYINT NOT NULL DEFAULT 1, content LONGTEXT NULL)");
+    $pdo->exec("CREATE TABLE settings (k VARCHAR(100) NOT NULL PRIMARY KEY, v LONGTEXT NULL)");
+    $pdo->exec("INSERT INTO settings (k, v) VALUES ('site', '{}')");
+    $pdo->exec("INSERT INTO sections (type, name, content) VALUES ('text_block', 'live', '{}')");
+    eid_ensure_schema();
+    eid_ensure_schema();
+    q("DELETE FROM pages WHERE slug = 'about'");
+    eid_ensure_schema();
+    echo json_encode([
+      'home' => q('SELECT COUNT(*) AS n FROM sections WHERE page_id IS NULL')[0]['n'],
+      'pages' => q('SELECT COUNT(*) AS n FROM pages')[0]['n'],
+      'about' => count(q("SELECT id FROM pages WHERE slug = 'about'")),
+    ]);`
+  const out = require('node:child_process').execFileSync('php', ['-r', script], { env: { ...process.env, EID_DB_DRIVER: 'sqlite', EID_SQLITE_FILE: file } })
+  const res = JSON.parse(out)
+  assert.equal(Number(res.home), 1, 'the live home-page section is kept and nothing is re-seeded')
+  assert.equal(Number(res.pages), require('../tools/pages.js').length - 1)
+  assert.equal(res.about, 0, 'a page deleted by the owner does not come back')
+})
+
+test('pages: add, edit, sections, hide, reorder, delete', async () => {
+  let r = await call('POST', '/api/admin/pages', { title_ar: 'صفحة', title_en: 'Page', slug: ' My New Page! ', content: { subtitle: { ar: 'وصف', en: 'Desc' } } })
+  assert.equal(r.status, 200)
+  const pg = r.data
+  assert.equal(pg.slug, 'my-new-page')
+  assert.equal((await call('POST', '/api/admin/pages', { title_ar: 'x', slug: 'my-new-page' })).status, 409)
+  assert.equal((await call('POST', '/api/admin/pages', { title_ar: 'x', slug: 'عربي' })).status, 400)
+  assert.equal((await call('PUT', `/api/admin/pages/${pg.id}`, { slug: 'about' })).status, 409)
+
+  r = await call('POST', '/api/admin/sections', { type: 'text_block', name: 'نص', content: { title: { ar: 'أ', en: 'A' } }, page_id: pg.id })
+  assert.equal(r.data.page_id, pg.id)
+  const sec = r.data
+  assert.equal((await call('POST', '/api/admin/sections', { type: 'text_block', page_id: 999999 })).status, 404)
+  assert.deepEqual((await call('GET', `/api/admin/sections?page=${pg.id}`)).data.map(s => s.id), [sec.id])
+  assert.ok(!(await call('GET', '/api/admin/sections')).data.some(s => s.id === sec.id), 'home list excludes sub-page sections')
+  r = await call('POST', `/api/admin/sections/${sec.id}/duplicate`)
+  assert.equal(r.data.page_id, pg.id, 'a copy stays on the same page')
+
+  r = await call('GET', '/api/page/My-New-Page', undefined, null)
+  assert.equal(r.status, 200)
+  assert.equal(r.data.sections.length, 1, 'hidden copy is not public')
+  assert.equal(r.data.page.content.subtitle.en, 'Desc')
+
+  r = await call('PUT', `/api/admin/pages/${pg.id}`, { title_ar: 'معدلة', slug: 'renamed' })
+  assert.equal(r.data.title_ar, 'معدلة')
+  assert.equal(r.data.content.subtitle.ar, 'وصف', 'content kept when not sent')
+  assert.equal((await call('GET', '/api/page/my-new-page', undefined, null)).status, 404)
+  await call('PUT', `/api/admin/pages/${pg.id}`, { is_visible: false })
+  assert.equal((await call('GET', '/api/page/renamed', undefined, null)).status, 404)
+
+  const ids = (await call('GET', '/api/admin/pages')).data.map(p => p.id)
+  await call('POST', '/api/admin/pages/reorder', { ids: [pg.id, ...ids.filter(i => i !== pg.id)] })
+  assert.equal((await call('GET', '/api/admin/pages')).data[0].id, pg.id)
+
+  assert.equal((await call('DELETE', `/api/admin/pages/${pg.id}`)).status, 200)
+  assert.equal((await call('GET', `/api/admin/sections/${sec.id}`)).status, 404, 'deleting a page deletes its sections')
+  assert.equal((await call('GET', '/api/admin/pages', undefined, null)).status, 401)
+})
+
+test('PDF upload', async () => {
+  const pdf = 'data:application/pdf;base64,' + Buffer.from('%PDF-1.4\n%%EOF\n').toString('base64')
+  let r = await call('POST', '/api/admin/upload', { filename: 'تقرير 2020.pdf', data: pdf })
+  assert.equal(r.status, 200)
+  assert.match(r.data.url, /\.pdf$/)
+  assert.equal((await fetch(base + r.data.url)).status, 200)
+  r = await call('POST', '/api/admin/upload', { filename: 'fake.pdf', data: 'data:application/pdf;base64,' + Buffer.from('<html>').toString('base64') })
+  assert.equal(r.status, 400)
+})
+
 test('settings, upload, accounts, password', async () => {
   const s = (await call('GET', '/api/admin/settings')).data
   s.phone = '+974 1111 2222'

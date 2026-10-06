@@ -3,13 +3,20 @@ import { get, post, put, del } from './api.js'
 import { useToast, VisibilityToggle, MoveButtons, PageHead, swap } from './ui.jsx'
 import { SECTION_TYPES } from '../shared/sectionTypes.js'
 
-export default function SectionsPage() {
+// pageId: a sub-page's sections; without it, the home page's.
+export default function SectionsPage({ pageId = null }) {
   const toast = useToast()
   const [list, setList] = useState(null)
+  const [page, setPage] = useState(null)
   const [adding, setAdding] = useState(false)
 
-  const load = () => get('/api/admin/sections').then(setList).catch(e => toast(e.message, 'error'))
-  useEffect(() => { load() }, [])
+  const load = () => get(pageId ? `/api/admin/sections?page=${pageId}` : '/api/admin/sections').then(setList).catch(e => toast(e.message, 'error'))
+  useEffect(() => {
+    setList(null)
+    setAdding(false)
+    load()
+    if (pageId) get(`/api/admin/pages/${pageId}`).then(setPage).catch(e => toast(e.message, 'error'))
+  }, [pageId])
 
   const toggle = async (s, v) => {
     setList(l => l.map(x => (x.id === s.id ? { ...x, is_visible: v } : x)))
@@ -34,14 +41,16 @@ export default function SectionsPage() {
 
   return (
     <>
-      <PageHead title="أقسام الصفحة الرئيسية">
+      {pageId && <a href="#/pages" className="ad-back">→ كل الصفحات</a>}
+      <PageHead title={pageId ? `أقسام صفحة «${page?.title_ar || '…'}»` : 'أقسام الصفحة الرئيسية'}>
+        {page && <a className="ad-btn ad-btn-light" href={`/page/${page.slug}`} target="_blank" rel="noopener">عرض الصفحة ↗</a>}
         <button type="button" className="ad-btn ad-btn-primary" onClick={() => setAdding(true)}>+ إضافة قسم</button>
       </PageHead>
       <p className="ad-help">الترتيب هنا هو ترتيب ظهور الأقسام في الموقع. الأقسام المخفية لا تظهر للزوار.</p>
 
-      {adding && <AddSection onClose={() => setAdding(false)} />}
+      {adding && <AddSection pageId={pageId} onClose={() => setAdding(false)} />}
 
-      {!list ? <p>جارِ التحميل…</p> : (
+      {!list ? <p>جارِ التحميل…</p> : !list.length ? <p className="ad-help">الصفحة دي لسه ما فيهاش أقسام. اضغط «إضافة قسم».</p> : (
         <ul className="ad-rows">
           {list.map((s, i) => (
             <li key={s.id} className={`ad-row ${s.is_visible ? '' : 'ad-row-hidden'}`}>
@@ -68,7 +77,7 @@ export default function SectionsPage() {
   )
 }
 
-function AddSection({ onClose }) {
+function AddSection({ pageId, onClose }) {
   const toast = useToast()
   const [type, setType] = useState('')
   const [name, setName] = useState('')
@@ -80,7 +89,7 @@ function AddSection({ onClose }) {
     setBusy(true)
     try {
       const d = SECTION_TYPES[type].defaults()
-      const s = await post('/api/admin/sections', { type, name: name || SECTION_TYPES[type].label, content: d.content, items: d.items })
+      const s = await post('/api/admin/sections', { type, name: name || SECTION_TYPES[type].label, content: d.content, items: d.items, page_id: pageId })
       toast('تمت إضافة القسم في آخر الصفحة')
       window.location.hash = `/sections/${s.id}`
     } catch (err) { toast(err.message, 'error'); setBusy(false) }

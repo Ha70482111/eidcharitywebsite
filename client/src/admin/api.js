@@ -33,9 +33,19 @@ export const del = url => api('DELETE', url)
 
 // Reads an image file and uploads it; returns the public URL.
 export function uploadImage(file) {
+  if (!/^image\/(png|jpeg|webp|gif)$/.test(file.type)) return Promise.reject(new Error('اختر صورة PNG أو JPG أو WEBP أو GIF'))
+  return upload(file)
+}
+
+// Reads a PDF file and uploads it; returns the public URL.
+export function uploadPdf(file) {
+  if (file.type !== 'application/pdf') return Promise.reject(new Error('اختر ملف PDF'))
+  return upload(file)
+}
+
+function upload(file) {
   return new Promise((resolve, reject) => {
-    if (!/^image\/(png|jpeg|webp|gif)$/.test(file.type)) return reject(new Error('اختر صورة PNG أو JPG أو WEBP أو GIF'))
-    if (file.size > 5 * 1024 * 1024) return reject(new Error('أقصى حجم للصورة 5 ميجا'))
+    if (file.size > 5 * 1024 * 1024) return reject(new Error('أقصى حجم للملف 5 ميجا'))
     const reader = new FileReader()
     reader.onload = () => post('/api/admin/upload', { filename: file.name, data: reader.result }).then(r => resolve(r.url), reject)
     reader.onerror = () => reject(new Error('تعذرت قراءة الملف'))

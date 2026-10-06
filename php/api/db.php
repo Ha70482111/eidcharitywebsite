@@ -82,6 +82,7 @@ function eid_ddl($dialect)
         'settings' => "k VARCHAR(100) NOT NULL PRIMARY KEY, v LONGTEXT NULL",
         'menu_items' => "id $pk, parent_id INT NULL, label_ar VARCHAR(255) NOT NULL DEFAULT '', label_en VARCHAR(255) NOT NULL DEFAULT '', url VARCHAR(500) NOT NULL DEFAULT '', sort_order INT NOT NULL DEFAULT 0, is_visible TINYINT NOT NULL DEFAULT 1, extra LONGTEXT NULL",
         'sections' => "id $pk, type VARCHAR(50) NOT NULL, name VARCHAR(255) NOT NULL DEFAULT '', sort_order INT NOT NULL DEFAULT 0, is_visible TINYINT NOT NULL DEFAULT 1, content LONGTEXT NULL",
+        'pages' => "id $pk, slug VARCHAR(120) NOT NULL UNIQUE, title_ar VARCHAR(255) NOT NULL DEFAULT '', title_en VARCHAR(255) NOT NULL DEFAULT '', sort_order INT NOT NULL DEFAULT 0, is_visible TINYINT NOT NULL DEFAULT 1, content LONGTEXT NULL",
         'section_items' => "id $pk, section_id INT NOT NULL, sort_order INT NOT NULL DEFAULT 0, is_visible TINYINT NOT NULL DEFAULT 1, content LONGTEXT NULL",
         'login_attempts' => "id $pk, ip VARCHAR(64) NOT NULL, attempted_at INT NOT NULL",
     ];
@@ -95,9 +96,58 @@ function eid_ensure_schema(PDO $pdo = null)
 {
     $pdo = $pdo ?: db();
     foreach (eid_ddl(db_dialect($pdo)) as $stmt) $pdo->exec($stmt);
+    eid_add_column($pdo, 'sections', 'page_id', 'INT NULL');
     $n = (int)q('SELECT COUNT(*) AS n FROM sections', [], $pdo)[0]['n'];
     $m = (int)q("SELECT COUNT(*) AS m FROM settings WHERE k = 'site'", [], $pdo)[0]['m'];
     if ($n === 0 && $m === 0) eid_seed($pdo);
+    eid_import_pages($pdo);
+}
+
+/** Adds a column to a table that already exists (databases created before the column was introduced). */
+function eid_add_column(PDO $pdo, $table, $column, $def)
+{
+    try {
+        $pdo->query("SELECT $column FROM $table LIMIT 1");
+    } catch (PDOException $e) {
+        $pdo->exec("ALTER TABLE $table ADD COLUMN $column $def");
+    }
+}
+
+/**
+ * One-time import of the sub-pages (content taken from the old website) into an existing database.
+ * The 'pages_imported' setting is written first and acts as a lock, so the pages are added only once
+ * and never come back after the owner edits or deletes them in /admin.
+ */
+function eid_import_pages(PDO $pdo)
+{
+    if (q("SELECT k FROM settings WHERE k = 'pages_imported'", [], $pdo)) return;
+    try {
+        q("INSERT INTO settings (k, v) VALUES ('pages_imported', ?)", [json_encode(gmdate('c'))], $pdo);
+    } catch (PDOException $e) {
+        return; // another request is importing right now
+    }
+    $data = json_decode(file_get_contents(__DIR__ . '/seed.json'), true);
+    $pdo->beginTransaction();
+    try {
+        foreach (array_values($data['pages'] ?? []) as $i => $p) {
+            if (q('SELECT id FROM pages WHERE slug = ?', [$p['slug']], $pdo)) continue;
+            $r = q('INSERT INTO pages (slug, title_ar, title_en, sort_order, is_visible, content) VALUES (?, ?, ?, ?, ?, ?)',
+                [$p['slug'], $p['title']['ar'], $p['title']['en'], $i + 1, ($p['visible'] ?? true) ? 1 : 0, jenc($p['content'] ?? [])], $pdo);
+            foreach (array_values($p['sections']) as $j => $s) {
+                $sr = q('INSERT INTO sections (type, name, sort_order, is_visible, content, page_id) VALUES (?, ?, ?, 1, ?, ?)',
+                    [$s['type'], $s['name'], $j + 1, jenc($s['content']), $r['insertId']], $pdo);
+                foreach (array_values($s['items'] ?? []) as $k => $item) {
+                    q('INSERT INTO section_items (section_id, sort_order, is_visible, content) VALUES (?, ?, 1, ?)',
+                        [$sr['insertId'], $k + 1, jenc($item)], $pdo);
+                }
+            }
+        }
+        $pdo->commit();
+    } catch (Throwable $e) {
+        $pdo->rollBack();
+        q("DELETE FROM settings WHERE k = 'pages_imported'", [], $pdo);
+        throw $e;
+    }
 }
 
 function eid_seed(PDO $pdo)

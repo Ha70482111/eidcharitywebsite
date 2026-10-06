@@ -1,5 +1,5 @@
 import { useEffect, useId, useRef, useState } from 'react'
-import { get, uploadImage } from './api.js'
+import { get, uploadImage, uploadPdf } from './api.js'
 import { useToast } from './ui.jsx'
 
 export function FieldList({ fields, value = {}, onChange }) {
@@ -14,7 +14,7 @@ export function FieldList({ fields, value = {}, onChange }) {
 
 export function Field({ field, value, onChange }) {
   const id = useId()
-  const wide = field.type === 'textarea' || field.type === 'list' || field.type === 'image'
+  const wide = field.type === 'textarea' || field.type === 'list' || field.type === 'image' || field.type === 'file'
 
   if (field.bi) {
     const v = value && typeof value === 'object' ? value : { ar: typeof value === 'string' ? value : '', en: '' }
@@ -63,6 +63,16 @@ export function Field({ field, value, onChange }) {
       <div className="ad-field ad-wide">
         <span className="ad-label" id={id}>{field.label}</span>
         <ImageInput value={value || ''} onChange={onChange} labelledBy={id} />
+        {field.help && <p className="ad-help">{field.help}</p>}
+      </div>
+    )
+  }
+
+  if (field.type === 'file') {
+    return (
+      <div className="ad-field ad-wide">
+        <span className="ad-label" id={id}>{field.label}</span>
+        <FileInput value={value || ''} onChange={onChange} labelledBy={id} />
         {field.help && <p className="ad-help">{field.help}</p>}
       </div>
     )
@@ -126,6 +136,32 @@ function ListInput({ field, value, onChange }) {
         </div>
       ))}
       <button type="button" className="ad-btn ad-btn-light" onClick={() => onChange([...value, blank()])}>+ إضافة {field.itemLabel || 'عنصر'}</button>
+    </div>
+  )
+}
+
+function FileInput({ value, onChange, labelledBy }) {
+  const toast = useToast()
+  const fileRef = useRef(null)
+  const [busy, setBusy] = useState(false)
+
+  const onFile = async e => {
+    const file = e.target.files?.[0]
+    e.target.value = ''
+    if (!file) return
+    setBusy(true)
+    try { onChange(await uploadPdf(file)); toast('تم رفع الملف') } catch (err) { toast(err.message, 'error') } finally { setBusy(false) }
+  }
+
+  return (
+    <div className="ad-image-controls" role="group" aria-labelledby={labelledBy}>
+      <input className="ad-input" dir="ltr" value={value} onChange={e => onChange(e.target.value)} placeholder="رابط الملف أو ارفع ملف PDF" aria-label="رابط الملف" />
+      <div className="ad-image-buttons">
+        <button type="button" className="ad-btn ad-btn-light" onClick={() => fileRef.current?.click()} disabled={busy}>{busy ? 'جارِ الرفع…' : 'رفع ملف PDF'}</button>
+        {value && <a className="ad-btn ad-btn-light" href={value} target="_blank" rel="noopener noreferrer">فتح الملف</a>}
+        {value && <button type="button" className="ad-btn ad-btn-light" onClick={() => onChange('')}>إزالة</button>}
+      </div>
+      <input ref={fileRef} type="file" accept="application/pdf" hidden onChange={onFile} />
     </div>
   )
 }

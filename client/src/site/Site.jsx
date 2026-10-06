@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { LangCtx, useLang, useT, Link } from './lang.jsx'
-import { SECTION_COMPONENTS } from './sections.jsx'
+import { SECTION_COMPONENTS, PageBanner } from './sections.jsx'
 import { ChevDown, Phone, Mail, Pin, SOCIAL_ICONS, SOCIAL_OPTIONS, M, G, N } from '../shared/icons.jsx'
 import './site.css'
 
@@ -8,16 +8,33 @@ function readLang() {
   try { return localStorage.getItem('ec-lang') === 'en' ? 'en' : 'ar' } catch { return 'ar' }
 }
 
+// Sub-pages live at /page/<slug>; everything else is the home page.
+const pageSlug = (/^\/page\/([A-Za-z0-9-]+)\/?$/.exec(window.location.pathname) || [])[1] || null
+
 export default function Site() {
   const [data, setData] = useState(null)
   const [error, setError] = useState(false)
   const [lang, setLang] = useState(readLang)
 
   useEffect(() => {
-    fetch('/api/site')
-      .then(r => { if (r.status === 503) throw new Error('setup'); if (!r.ok) throw new Error(); return r.json() })
-      .then(setData)
+    const notFound = () => fetch('/api/site').then(r => r.json()).then(d => setData({ ...d, sections: [], notFound: true }))
+    fetch(pageSlug ? `/api/page/${pageSlug}` : '/api/site')
+      .then(r => { if (r.status === 503) throw new Error('setup'); if (r.status === 404 && pageSlug) return notFound(); if (!r.ok) throw new Error(); return r.json().then(setData) })
       .catch(e => setError(e.message === 'setup' ? 'setup' : true))
+  }, [])
+
+  // On a sub-page, links to home-page sections (#impact, #donate…) go back to the home page.
+  useEffect(() => {
+    if (!pageSlug) return
+    const onClick = e => {
+      const a = e.target.closest?.('a[href^="#"]')
+      const hash = a?.getAttribute('href')
+      if (!hash || hash === '#' || document.getElementById(decodeURIComponent(hash.slice(1)))) return
+      e.preventDefault()
+      window.location.href = '/' + hash
+    }
+    document.addEventListener('click', onClick)
+    return () => document.removeEventListener('click', onClick)
   }, [])
 
   useEffect(() => {
@@ -29,7 +46,10 @@ export default function Site() {
   useEffect(() => {
     if (data?.settings?.site_name) {
       const n = data.settings.site_name
-      document.title = (lang === 'en' ? n.en : n.ar) || n.ar || ''
+      const site = (lang === 'en' ? n.en : n.ar) || n.ar || ''
+      const p = data.page
+      const page = p ? (lang === 'en' ? p.title_en : p.title_ar) || p.title_ar || p.title_en : data.notFound ? (lang === 'en' ? 'Page not found' : 'الصفحة غير موجودة') : ''
+      document.title = page ? `${page} | ${site}` : site
     }
   }, [data, lang])
 
@@ -55,6 +75,8 @@ export default function Site() {
         {settings.topbar_visible !== false && <TopBar />}
         <Header menu={data.menu || []} />
         <main id="main">
+          {data.page && <PageBanner page={data.page} />}
+          {data.notFound && <NotFound />}
           {data.sections.map(s => {
             const C = SECTION_COMPONENTS[s.type]
             return C ? <C key={s.id} section={s} content={s.content || {}} items={(s.items || []).map(i => i.content || {})} /> : null
@@ -63,6 +85,17 @@ export default function Site() {
         <Footer />
       </div>
     </LangCtx.Provider>
+  )
+}
+
+function NotFound() {
+  const { lang } = useLang()
+  return (
+    <section className="ec-notfound">
+      <h1 style={{ fontSize: 'clamp(26px,3vw,40px)', fontWeight: 900, color: N, margin: '0 0 12px' }}>{lang === 'ar' ? 'الصفحة غير موجودة' : 'Page not found'}</h1>
+      <p style={{ color: '#5A5450', fontSize: 16, margin: '0 0 28px' }}>{lang === 'ar' ? 'ربما تم نقل الصفحة أو حذفها.' : 'The page may have been moved or removed.'}</p>
+      <a className="ec-btn-primary" href="/">{lang === 'ar' ? 'العودة للرئيسية' : 'Back to home'}</a>
+    </section>
   )
 }
 

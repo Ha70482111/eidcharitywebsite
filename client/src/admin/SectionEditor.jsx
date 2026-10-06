@@ -33,6 +33,7 @@ export default function SectionEditor({ id }) {
 
   if (notFound) return <p>القسم غير موجود. <a href="#/sections">الرجوع للأقسام</a></p>
   if (!section || !draft) return <p>جارِ التحميل…</p>
+  const back = section.page_id ? `#/pages/${section.page_id}` : '#/sections'
 
   const save = async () => {
     setSaving(true)
@@ -70,12 +71,12 @@ export default function SectionEditor({ id }) {
   }
 
   if (!type) {
-    return <p>نوع القسم «{section.type}» غير معروف. <a href="#/sections">الرجوع للأقسام</a></p>
+    return <p>نوع القسم «{section.type}» غير معروف. <a href={back}>الرجوع للأقسام</a></p>
   }
 
   return (
     <>
-      <a href="#/sections" className="ad-back">→ كل الأقسام</a>
+      <a href={back} className="ad-back">→ كل الأقسام</a>
       <PageHead title={draft.name || type.label}>
         <VisibilityToggle visible={section.is_visible} onChange={toggleSection} label="القسم" />
         <button type="button" className="ad-btn ad-btn-primary" onClick={save} disabled={saving || !dirty}>{saving ? 'جارِ الحفظ…' : dirty ? 'حفظ التغييرات' : 'محفوظ'}</button>
