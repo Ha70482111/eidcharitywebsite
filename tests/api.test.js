@@ -65,7 +65,7 @@ test('seeded site content', async () => {
   assert.equal(data.sections[0].type, 'hero')
   assert.equal(data.sections[0].items.length, 4)
   assert.equal(data.menu.length, 6)
-  assert.equal(data.menu[0].children.length, 4)
+  assert.equal(data.menu[0].children.length, 5, 'includes the sub-pages group')
   assert.ok(data.menu[0].children[0].children.length > 3)
   assert.equal(data.settings.donate_label.ar, 'تبرع الآن')
   assert.equal(data.sections[0].is_visible, true)
@@ -183,6 +183,23 @@ test('sub-pages imported from the old website', async () => {
   assert.equal(docs.type, 'documents')
   assert.equal(docs.items.length, 8)
 
+  const site = (await call('GET', '/api/site', undefined, null)).data
+  const flat = []
+  const walk = l => l.forEach(m => { flat.push(m); walk(m.children || []) })
+  walk(site.menu)
+  const url = label => flat.find(m => m.label_ar === label)?.url
+  assert.equal(url('الإبلاغ'), '/page/whistleblowing')
+  assert.equal(url('اتصل بنا'), '/page/contact')
+  assert.equal(url('مركز ضيوف قطر'), '/page/qatar-guests-center')
+  assert.equal(url('مركز حفظ النعمة'), 'http://hifzalnaema.com/')
+  assert.equal(url('الهيكل التنظيمي'), '#', 'hidden pages are not linked')
+  assert.equal(url('الرؤية والرسالة'), '/page/vision-mission', 'pages missing from the menu get a new group')
+  assert.equal(site.menu[0].extra.featured.url, '/page/about')
+  assert.equal(site.settings.footer_columns[0].links[0].url, '/page/about')
+  assert.equal(site.settings.topbar_links.find(l => l.label.ar === 'تواصل معنا').url, '/page/contact')
+  assert.equal(site.sections.find(s => s.type === 'centers').items[1].content.url, '/page/qatar-guests-center')
+  assert.equal(site.sections.find(s => s.type === 'governance').content.button_url, '/page/governance-policies')
+
   const pages = (await call('GET', '/api/admin/pages')).data
   assert.equal(pages.length, require('../tools/pages.js').length)
   assert.ok(pages.every(p => p.section_count > 0))
@@ -193,10 +210,12 @@ test('existing database is upgraded once, without touching its content', () => {
   const script = `
     require ${JSON.stringify(path.join(ROOT, 'php/api/db.php'))};
     $pdo = db();
-    $pdo->exec("CREATE TABLE sections (id INTEGER PRIMARY KEY AUTOINCREMENT, type VARCHAR(50) NOT NULL, name VARCHAR(255) NOT NULL DEFAULT '', sort_order INT NOT NULL DEFAULT 0, is_visible TINYINT NOT NULL DEFAULT 1, content LONGTEXT NULL)");
-    $pdo->exec("CREATE TABLE settings (k VARCHAR(100) NOT NULL PRIMARY KEY, v LONGTEXT NULL)");
-    $pdo->exec("INSERT INTO settings (k, v) VALUES ('site', '{}')");
+    foreach (eid_ddl('sqlite') as $st) if (strpos($st, 'TABLE IF NOT EXISTS pages ') === false) $pdo->exec($st);
+    $pdo->exec("INSERT INTO settings (k, v) VALUES ('site', '{\\"footer_columns\\":[{\\"links\\":[{\\"label\\":{\\"ar\\":\\"الحوكمة\\"},\\"url\\":\\"#\\"}]}]}')");
     $pdo->exec("INSERT INTO sections (type, name, content) VALUES ('text_block', 'live', '{}')");
+    $pdo->exec("INSERT INTO menu_items (parent_id, label_ar, url) VALUES (NULL, 'من نحن', '')");
+    $pdo->exec("INSERT INTO menu_items (parent_id, label_ar, url) VALUES (1, 'الإبلاغ', '#')");
+    $pdo->exec("INSERT INTO menu_items (parent_id, label_ar, url) VALUES (1, 'اتصل بنا', 'https://example.com/contact')");
     eid_ensure_schema();
     eid_ensure_schema();
     q("DELETE FROM pages WHERE slug = 'about'");
@@ -205,12 +224,20 @@ test('existing database is upgraded once, without touching its content', () => {
       'home' => q('SELECT COUNT(*) AS n FROM sections WHERE page_id IS NULL')[0]['n'],
       'pages' => q('SELECT COUNT(*) AS n FROM pages')[0]['n'],
       'about' => count(q("SELECT id FROM pages WHERE slug = 'about'")),
+      'report' => q("SELECT url FROM menu_items WHERE label_ar = 'الإبلاغ'")[0]['url'],
+      'contact' => q("SELECT url FROM menu_items WHERE label_ar = 'اتصل بنا'")[0]['url'],
+      'footer' => get_setting('site')['footer_columns'][0]['links'][0]['url'],
+      'group' => count(q("SELECT id FROM menu_items WHERE label_ar = 'المؤسسة'")),
     ]);`
   const out = require('node:child_process').execFileSync('php', ['-r', script], { env: { ...process.env, EID_DB_DRIVER: 'sqlite', EID_SQLITE_FILE: file } })
   const res = JSON.parse(out)
   assert.equal(Number(res.home), 1, 'the live home-page section is kept and nothing is re-seeded')
   assert.equal(Number(res.pages), require('../tools/pages.js').length - 1)
   assert.equal(res.about, 0, 'a page deleted by the owner does not come back')
+  assert.equal(res.report, '/page/whistleblowing', 'placeholder menu links point at their page')
+  assert.equal(res.contact, 'https://example.com/contact', 'links the owner set are kept')
+  assert.equal(res.footer, '/page/governance-policies')
+  assert.equal(Number(res.group), 1, 'menu group added once for pages not yet in the menu')
 })
 
 test('pages: add, edit, sections, hide, reorder, delete', async () => {
