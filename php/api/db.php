@@ -101,6 +101,7 @@ function eid_ensure_schema(PDO $pdo = null)
     $m = (int)q("SELECT COUNT(*) AS m FROM settings WHERE k = 'site'", [], $pdo)[0]['m'];
     if ($n === 0 && $m === 0) eid_seed($pdo);
     eid_import_pages($pdo);
+    eid_link_pages($pdo);
 }
 
 /** Adds a column to a table that already exists (databases created before the column was introduced). */
@@ -190,4 +191,143 @@ function set_setting($k, $value)
     $v = is_string($value) ? json_encode($value) : jenc($value);
     if (q('SELECT k FROM settings WHERE k = ?', [$k])) q('UPDATE settings SET v = ? WHERE k = ?', [$v, $k]);
     else q('INSERT INTO settings (k, v) VALUES (?, ?)', [$k, $v]);
+}
+
+/** Arabic text normalized for matching labels (spaces, hamza forms, taa marbuta, alef maqsura). */
+function eid_norm($s)
+{
+    $s = trim(preg_replace('/\s+/u', ' ', (string)$s));
+    return strtr($s, ['أ' => 'ا', 'إ' => 'ا', 'آ' => 'ا', 'ة' => 'ه', 'ى' => 'ي']);
+}
+
+/** Which link each existing label should get once the sub-pages exist: label (Arabic) → page slug or full URL. */
+function eid_page_link_map()
+{
+    $map = [
+        'about' => ['عن عيد الخيرية', 'نبذة عن المؤسسة', 'عن المؤسسة', 'نبذة عن عيد الخيرية'],
+        'vision-mission' => ['الرؤية والرسالة', 'الرؤية والرسالة والقيم'],
+        'goals' => ['أهداف المؤسسة', 'أهدافنا'],
+        'organizational-structure' => ['الهيكل التنظيمي'],
+        'chairman' => ['رئيس مجلس الإدارة', 'نبذة عن مجلس الإدارة', 'مجلس الإدارة'],
+        'board-members' => ['أعضاء مجلس الإدارة'],
+        'governance-policies' => ['الحوكمة', 'سياسات الحوكمة', 'سياسة الإدارة المتكاملة', 'السياسات'],
+        'whistleblowing' => ['الإبلاغ', 'الإبلاغ عن المخالفات'],
+        'committees' => ['لجان المؤسسة'],
+        'annual-financial-reports' => ['المساءلة والشفافية', 'الشفافية والمساءلة', 'تقارير سنوية', 'التقارير السنوية', 'القوائم المالية',
+            'تقارير المدقق المستقل', 'التقارير المالية الختامية السنوية', 'البيانات المالية'],
+        'waqf-financial-reports' => ['التقارير المالية للأوقاف الخيرية', 'تقارير الأوقاف'],
+        'achievements' => ['إنجازات النشاط', 'إنجازاتنا'],
+        'qatar-guests-center' => ['مركز ضيوف قطر', 'ضيوف قطر'],
+        'eid-cultural-center' => ['مركز عيد الثقافي', 'عيد الثقافي'],
+        'eid-womens-center' => ['مركز عيد النسائي', 'عيد النسائي'],
+        'news' => ['أخبار', 'أخبار المؤسسة', 'المركز الإعلامي'],
+        'awards' => ['جوائز المؤسسة', 'الجوائز'],
+        'annual-harvest' => ['الحصاد السنوي', 'تقارير وإصدارات'],
+        'financial-reports' => ['التقارير المالية'],
+        'contact' => ['اتصل بنا', 'أتصل بنا', 'تواصل معنا'],
+        'http://hifzalnaema.com/' => ['مركز حفظ النعمة', 'حفظ النعمة'],
+    ];
+    $out = [];
+    foreach ($map as $target => $labels) foreach ($labels as $l) $out[eid_norm($l)] = $target;
+    return $out;
+}
+
+/**
+ * One-time pass (guarded by the 'pages_linked' setting) that points the existing menu, top bar, footer and
+ * home-page cards/buttons at the sub-pages. Only empty or "#" links are filled, so links the owner set stay
+ * as they are. Visible pages the menu still doesn't reach are added as a new group under "من نحن".
+ */
+function eid_link_pages(PDO $pdo)
+{
+    if (q("SELECT k FROM settings WHERE k = 'pages_linked'", [], $pdo)) return;
+    if (!q('SELECT id FROM pages', [], $pdo)) return; // nothing to link yet
+    try {
+        q("INSERT INTO settings (k, v) VALUES ('pages_linked', ?)", [json_encode(gmdate('c'))], $pdo);
+    } catch (PDOException $e) {
+        return;
+    }
+    $visible = [];
+    foreach (q('SELECT slug, title_ar, title_en FROM pages WHERE is_visible = 1 ORDER BY sort_order, id', [], $pdo) as $p) $visible[$p['slug']] = $p;
+    $map = eid_page_link_map();
+    // New link for a label, or null. $url is the current link; "#contact" (the footer) also counts as empty for the contact page.
+    $linkFor = function ($label, $url) use ($map, $visible) {
+        $url = trim((string)$url);
+        $target = $map[eid_norm($label)] ?? null;
+        if ($target === null) return null;
+        if (!($url === '' || $url === '#' || ($target === 'contact' && $url === '#contact'))) return null;
+        if (strpos($target, 'http') === 0) return $target;
+        return isset($visible[$target]) ? '/page/' . $target : null;
+    };
+    $pdo->beginTransaction();
+    try {
+        // Menu
+        $menu = q('SELECT * FROM menu_items ORDER BY sort_order, id', [], $pdo);
+        foreach ($menu as $m) {
+            $new = $linkFor($m['label_ar'], $m['url']);
+            if ($new !== null) q('UPDATE menu_items SET url = ? WHERE id = ?', [$new, (int)$m['id']], $pdo);
+            $extra = jparse($m['extra']);
+            if ($m['parent_id'] === null && eid_norm($m['label_ar']) === eid_norm('من نحن') && isset($extra['featured'])
+                && in_array(trim((string)($extra['featured']['url'] ?? '')), ['', '#'], true) && isset($visible['about'])) {
+                $extra['featured']['url'] = '/page/about';
+                q('UPDATE menu_items SET extra = ? WHERE id = ?', [jenc($extra), (int)$m['id']], $pdo);
+            }
+        }
+        // Top bar and footer
+        $site = jparse(q("SELECT v FROM settings WHERE k = 'site'", [], $pdo)[0]['v'] ?? '');
+        $fix = function (&$links) use ($linkFor) {
+            foreach ($links as &$l) {
+                $new = $linkFor($l['label']['ar'] ?? '', $l['url'] ?? '');
+                if ($new !== null) $l['url'] = $new;
+            }
+        };
+        if (!empty($site['topbar_links'])) $fix($site['topbar_links']);
+        if (!empty($site['footer_columns'])) foreach ($site['footer_columns'] as &$col) if (!empty($col['links'])) $fix($col['links']);
+        unset($col);
+        if ($site) q("UPDATE settings SET v = ? WHERE k = 'site'", [jenc($site)], $pdo);
+        // Home-page cards and section buttons
+        $buttons = ['governance' => 'governance-policies', 'media' => 'news'];
+        foreach (q('SELECT * FROM sections WHERE page_id IS NULL', [], $pdo) as $sec) {
+            $c = jparse($sec['content']);
+            if (isset($buttons[$sec['type']], $visible[$buttons[$sec['type']]]) && in_array(trim((string)($c['button_url'] ?? '')), ['', '#'], true)) {
+                $c['button_url'] = '/page/' . $buttons[$sec['type']];
+                q('UPDATE sections SET content = ? WHERE id = ?', [jenc($c), (int)$sec['id']], $pdo);
+            }
+            foreach (q('SELECT * FROM section_items WHERE section_id = ?', [(int)$sec['id']], $pdo) as $it) {
+                $ic = jparse($it['content']);
+                $label = $ic['name']['ar'] ?? ($ic['title']['ar'] ?? '');
+                $new = $label === '' ? null : $linkFor($label, $ic['url'] ?? '');
+                if ($new !== null) {
+                    $ic['url'] = $new;
+                    q('UPDATE section_items SET content = ? WHERE id = ?', [jenc($ic), (int)$it['id']], $pdo);
+                }
+            }
+        }
+        // Visible pages the menu still doesn't link to → new group under "من نحن"
+        $about = null;
+        foreach ($menu as $m) if ($m['parent_id'] === null && eid_norm($m['label_ar']) === eid_norm('من نحن')) { $about = $m; break; }
+        if (!$about) foreach ($menu as $m) if ($m['parent_id'] === null) { $about = $m; break; } // menu was renamed: use its first item
+        if ($about) {
+            $linked = array_column(q('SELECT url FROM menu_items', [], $pdo), 'url');
+            $missing = array_filter($visible, function ($p) use ($linked) { return !in_array('/page/' . $p['slug'], $linked, true); });
+            if ($missing) {
+                $groups = q('SELECT extra FROM menu_items WHERE parent_id = ?', [(int)$about['id']], $pdo);
+                $col = 1;
+                foreach ($groups as $g) $col = max($col, (int)(jparse($g['extra'])['col'] ?? 1));
+                $col = min(4, $col + ($groups ? 1 : 0));
+                $order = (int)q('SELECT COALESCE(MAX(sort_order), 0) AS m FROM menu_items WHERE parent_id = ?', [(int)$about['id']], $pdo)[0]['m'] + 1;
+                $g = q('INSERT INTO menu_items (parent_id, label_ar, label_en, url, sort_order, is_visible, extra) VALUES (?, ?, ?, ?, ?, 1, ?)',
+                    [(int)$about['id'], 'المؤسسة', 'The Foundation', '', $order, jenc(['col' => $col])], $pdo);
+                $i = 0;
+                foreach ($missing as $p) {
+                    q('INSERT INTO menu_items (parent_id, label_ar, label_en, url, sort_order, is_visible, extra) VALUES (?, ?, ?, ?, ?, 1, ?)',
+                        [$g['insertId'], $p['title_ar'], $p['title_en'], '/page/' . $p['slug'], ++$i, '{}'], $pdo);
+                }
+            }
+        }
+        $pdo->commit();
+    } catch (Throwable $e) {
+        $pdo->rollBack();
+        q("DELETE FROM settings WHERE k = 'pages_linked'", [], $pdo);
+        throw $e;
+    }
 }
