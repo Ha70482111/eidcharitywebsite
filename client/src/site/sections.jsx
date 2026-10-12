@@ -231,6 +231,7 @@ export const campaignHref = it => (it.url && it.url !== '#' && it.url !== '#dona
 
 function Campaigns({ content: c, items }) {
   const t = useT()
+  if (c.listing_only) return null // shown on the donations page (/donate) only
   const cur = c.currency || 'QAR'
   const fmt = n => Number(n || 0).toLocaleString('en-US')
   return (

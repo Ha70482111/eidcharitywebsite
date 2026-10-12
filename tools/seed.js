@@ -23,7 +23,7 @@ const settings = {
   site_name: b('مؤسسة عيد الخيرية', 'Eid Charity'),
   logo: '/logo.jpg',
   donate_label: b('تبرع الآن', 'Donate Now'),
-  donate_url: '#donate',
+  donate_url: '/donate',
   topbar_visible: true,
   topbar_links: [
     { label: b('دخول المتبرع', 'Donor Login'), url: '#' },
@@ -158,7 +158,7 @@ const sections = [
       anchor: 'campaigns', bg: 'warm',
       eyebrow: b('الحملات العاجلة', 'Urgent Campaigns'), title: b('حملات تحتاج دعمك الآن', 'Campaigns That Need Your Support'),
       subtitle: b('مساهمتك اليوم قد تصنع فرقًا حقيقيًا في حياة إنسان.', "Your contribution today can make a real difference in someone's life."),
-      button: b('جميع الحملات', 'All Campaigns'), button_url: '#',
+      button: b('جميع الحملات', 'All Campaigns'), button_url: '/donate',
       pct_label: b('مكتمل', 'Complete'), target_label: b('الهدف', 'Target'), raised_label: b('جُمع', 'Raised'),
       beneficiaries_label: b('المستفيدون', 'Beneficiaries'), cta: b('ساهم الآن', 'Contribute Now'), currency: 'QAR', amounts: '50, 100, 250, 500',
     },
@@ -273,4 +273,34 @@ const sections = [
       .map(n => ({ name: b(n, n), logo: '', url: '' })) },
 ]
 
-module.exports = { settings, menu, sections, pages: require('./pages.js') }
+// Donation projects from donate.eidcharity.net, imported once into every database (eid_import_donations).
+// They show on the donations page (/donate) only, not on the home page.
+const D = id => `https://donate.eidcharity.net/storage/donations/${id}.jpg`
+const donations = { type: 'campaigns', name: 'مشاريع التبرع (صفحة التبرعات)', content: {
+    anchor: 'projects', bg: 'warm', listing_only: true,
+    eyebrow: b('مشاريع التبرع', 'Donation Projects'), title: b('مشاريع التبرع', 'Donation Projects'), subtitle: b('', ''),
+    button: b('', ''), button_url: '',
+    pct_label: b('مكتمل', 'Complete'), target_label: b('الهدف', 'Target'), raised_label: b('حتى الآن', 'Raised so far'),
+    beneficiaries_label: b('المستفيدين', 'Beneficiaries'), cta: b('تبرع', 'Donate'), currency: 'QAR', amounts: '50, 100, 500, 1000',
+  },
+  items: [
+    ['mp1ANkbxGWiwmPJ7SGhNfE28DyUKSPeM2qKiJBHg', b('زكاة المال', 'Zakat al-Mal'), b('زكاة', 'Zakat'),
+      b('زكاة المال طهرةٌ للمال ونماءٌ له، وسببٌ لبركة الرزق.', 'Zakat purifies and grows wealth, and brings blessing to provision.'), 239522, 10000000, 0],
+    ['CgyQGmDNlOhTGrp2ZMEUwCIu09NhNtkyWE7vtcv2', b('مشروع إطعام الفقراء', 'Feeding the Poor'), b('مشاريع طعام', 'Food Projects'),
+      b('شراء وجبات غذائية وتوزيعها على العمال والأسر المحتاجة.', 'Buying meals and distributing them to workers and families in need.'), 23183, 2970000, 110000],
+    ['g74hIIYo1VS5iuPW1rCKJvkwq6SvQKwHDQBBSlgv', b('مشروع السلال الغذائية', 'Food Baskets'), b('سلال غذائية', 'Food Baskets'),
+      b('صرف مساعدة شهرية على شكل بطاقات شراء من المجمعات التجارية.', 'A monthly allowance in the form of shopping cards for supermarkets.'), 6927, 9900000, 2000],
+    ['gSKazLsC3EaPfiTkbFwhii68wEGTA7IssHhywzSo', b('علاج المرضى', 'Medical Treatment'), b('علاج مرضى', 'Medical Treatment'),
+      b('المساهمة في تكاليف علاج المرضى المحتاجين وتخفيف معاناتهم.', 'Helping patients in need cover the cost of their treatment.'), 392859, 9900000, 12000],
+    ['wGbuuwzm8bb8fp7K6XCGXTtWCr0SyaP6DOVCNfsA', b('دعم محدودي الدخل', 'Low-Income Support'), b('تفريج كربة', 'Relieving Hardship'),
+      b('تقديم دعم مباشر للأسر المتعففة والأفراد ذوي الدخل المحدود في المجتمع التي تعاني من صعوبات مالية.', 'Direct support for families and individuals with limited income facing financial hardship.'), 176994, 9900000, 12000],
+    ['wqXmbQssTAduFkPOnB6G0ICDuY4lMY8ugmzAjgV3', b('كفالة الأيتام داخل قطر', 'Orphan Sponsorship in Qatar'), b('كفالة ورعاية أيتام', 'Orphan Care'),
+      b('توفير كفالة مالية شهرية للأيتام الذين فقدوا معيلهم.', 'A monthly sponsorship for orphans who have lost their provider.'), 105451, 3712500, 500],
+    ['WydMlSft2HsukShn8I4jpHHoU3A8Uqpm86nccsht', b('دعم الأرامل والمطلقات', 'Supporting Widows and Divorced Women'), b('دعم الأرامل والمطلقات', 'Widows Support'),
+      b('الساعي هو برنامج خيري وتنموي شامل، يركز على دعم الأرامل والمطلقات ومن في حكمهن داخل قطر.', 'Al-Saei is a charitable and development program supporting widows, divorced women and those in similar situations in Qatar.'), 194910, 5610000, 1700],
+    ['9t0x288rj85IHdejHB81sAUW9m42loZuDFRAsapt', b('رعاية كبار القدر', 'Elderly Care'), b('رعاية كبار القدر', 'Elderly Care'),
+      b('برامج كبار القدر منظومة شاملة تهدف إلى تحسين نوعية الحياة للمسنين وتمكينهم من حياة كريمة تحافظ على مكانتهم وتعزز مشاركتهم الفاعلة في المجتمع.', 'A comprehensive program that improves the quality of life of older people and supports their dignity and active role in society.'), 5390, 550000, 1500],
+  ].map(([img, name, category, desc, raised, target, beneficiaries]) => ({
+    image: D(img), name, category, desc, location: b('قطر', 'Qatar'), raised, target, beneficiaries, url: '' })) }
+
+module.exports = { settings, menu, sections, donations, pages: require('./pages.js') }

@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { LangCtx, useLang, useT, Link } from './lang.jsx'
 import { SECTION_COMPONENTS, PageBanner } from './sections.jsx'
 import DonationPage from './DonationPage.jsx'
+import DonationsPage from './DonationsPage.jsx'
 import { ChevDown, Phone, Mail, Pin, SOCIAL_ICONS, SOCIAL_OPTIONS, M, G, N } from '../shared/icons.jsx'
 import './site.css'
 
@@ -13,7 +14,13 @@ function readLang() {
 const pageSlug = (/^\/page\/([A-Za-z0-9-]+)\/?$/.exec(window.location.pathname) || [])[1] || null
 // Donation details for one campaign live at /donate/<id>.
 const donateId = (/^\/donate\/(\d+)\/?$/.exec(window.location.pathname) || [])[1] || null
-const apiUrl = pageSlug ? `/api/page/${pageSlug}` : donateId ? `/api/donate/${donateId}` : '/api/site'
+// The donations listing (every campaign) lives at /donate.
+const donateList = /^\/donate\/?$/.test(window.location.pathname)
+const apiUrl = pageSlug ? `/api/page/${pageSlug}` : donateId ? `/api/donate/${donateId}` : donateList ? '/api/donations' : '/api/site'
+const isSubPage = Boolean(pageSlug || donateId || donateList)
+
+// The header's donate button opens the donations page unless another link was set in the admin.
+const donateHref = s => (s.donate_url && s.donate_url !== '#donate' ? s.donate_url : '/donate')
 
 export default function Site() {
   const [data, setData] = useState(null)
@@ -23,13 +30,13 @@ export default function Site() {
   useEffect(() => {
     const notFound = () => fetch('/api/site').then(r => r.json()).then(d => setData({ ...d, sections: [], notFound: true }))
     fetch(apiUrl)
-      .then(r => { if (r.status === 503) throw new Error('setup'); if (r.status === 404 && (pageSlug || donateId)) return notFound(); if (!r.ok) throw new Error(); return r.json().then(setData) })
+      .then(r => { if (r.status === 503) throw new Error('setup'); if (r.status === 404 && isSubPage) return notFound(); if (!r.ok) throw new Error(); return r.json().then(setData) })
       .catch(e => setError(e.message === 'setup' ? 'setup' : true))
   }, [])
 
   // On a sub-page, links to home-page sections (#impact, #donate…) go back to the home page.
   useEffect(() => {
-    if (!pageSlug && !donateId) return
+    if (!isSubPage) return
     const onClick = e => {
       const a = e.target.closest?.('a[href^="#"]')
       const hash = a?.getAttribute('href')
@@ -53,7 +60,8 @@ export default function Site() {
       const site = (lang === 'en' ? n.en : n.ar) || n.ar || ''
       const p = data.page
       const cn = data.campaign?.content?.name
-      const page = p ? (lang === 'en' ? p.title_en : p.title_ar) || p.title_ar || p.title_en : cn ? (lang === 'en' ? cn.en : cn.ar) || cn.ar || cn.en || '' : data.notFound ? (lang === 'en' ? 'Page not found' : 'الصفحة غير موجودة') : ''
+      const dt = data.settings.donations_title
+      const page = p ? (lang === 'en' ? p.title_en : p.title_ar) || p.title_ar || p.title_en : data.donations ? (dt && ((lang === 'en' ? dt.en : dt.ar) || dt.ar)) || (lang === 'en' ? 'Donations' : 'التبرعات') : cn ? (lang === 'en' ? cn.en : cn.ar) || cn.ar || cn.en || '' : data.notFound ? (lang === 'en' ? 'Page not found' : 'الصفحة غير موجودة') : ''
       document.title = page ? `${page} | ${site}` : site
     }
   }, [data, lang])
@@ -83,6 +91,7 @@ export default function Site() {
           {data.page && <PageBanner page={data.page} />}
           {data.notFound && <NotFound />}
           {data.campaign && <DonationPage data={data} />}
+          {data.donations && <DonationsPage data={data} />}
           {(data.sections || []).map(s => {
             const C = SECTION_COMPONENTS[s.type]
             return C ? <C key={s.id} section={s} content={s.content || {}} items={(s.items || []).map(i => ({ ...i.content, _id: i.id }))} /> : null
@@ -252,7 +261,7 @@ function Header({ menu }) {
         </nav>
 
         <div className="ec-desktop-donate" style={{ flexShrink: 0 }}>
-          <a className="ec-btn-primary" href={settings.donate_url || '#donate'} style={{ padding: '13px 36px', fontSize: 16 }}>{t(settings.donate_label) || 'تبرع الآن'}</a>
+          <a className="ec-btn-primary" href={donateHref(settings)} style={{ padding: '13px 36px', fontSize: 16 }}>{t(settings.donate_label) || 'تبرع الآن'}</a>
         </div>
 
         <button className="ec-mobile-toggle" aria-label={lang === 'ar' ? 'القائمة' : 'Menu'} aria-expanded={mobileOpen} aria-controls="ec-mobile-menu"
@@ -297,7 +306,7 @@ function Header({ menu }) {
             )
           })}
           <div style={{ display: 'flex', gap: 10, margin: '16px 0 0' }}>
-            <a className="ec-btn-primary" href={settings.donate_url || '#donate'} onClick={() => setMobileOpen(false)} style={{ flex: 1, padding: 14, fontSize: 15 }}>{t(settings.donate_label) || 'تبرع الآن'}</a>
+            <a className="ec-btn-primary" href={donateHref(settings)} onClick={() => setMobileOpen(false)} style={{ flex: 1, padding: 14, fontSize: 15 }}>{t(settings.donate_label) || 'تبرع الآن'}</a>
             <button onClick={toggle} lang={lang === 'ar' ? 'en' : 'ar'}
               style={{ minHeight: 48, padding: '0 18px', border: `1.5px solid ${N}55`, borderRadius: 50, fontSize: 14, fontWeight: 700, color: N, background: 'none', cursor: 'pointer' }}>
               {lang === 'ar' ? 'English' : 'العربية'}

@@ -246,6 +246,28 @@ route('GET', '/api/donate/:id', function ($ctx) {
         'related' => array_slice($related, 0, 3), 'donate_action_url' => $payUrl];
 });
 
+// The donations page (/donate): every visible campaign card from the home page and visible sub-pages,
+// grouped by section so each card keeps its section's currency, labels and payment link.
+route('GET', '/api/donations', function () {
+    $heroPay = '';
+    foreach (q("SELECT * FROM sections WHERE type = 'hero' AND is_visible = 1 ORDER BY sort_order, id") as $h) {
+        $hc = jparse($h['content']);
+        if (!empty($hc['donate_action_url'])) { $heroPay = str($hc['donate_action_url']); break; }
+    }
+    $rows = q("SELECT s.* FROM sections s LEFT JOIN pages p ON p.id = s.page_id
+        WHERE s.type = 'campaigns' AND s.is_visible = 1 AND (s.page_id IS NULL OR p.is_visible = 1) ORDER BY s.page_id IS NOT NULL, s.sort_order, s.id");
+    $groups = [];
+    foreach (array_map('section_row', $rows) as $s) {
+        $items = array_map('item_row', q('SELECT * FROM section_items WHERE section_id = ? AND is_visible = 1 ORDER BY sort_order, id', [$s['id']]));
+        if (!$items) continue;
+        $c = (array)$s['content'];
+        $pay = str($c['donate_action_url'] ?? '');
+        $groups[] = ['id' => $s['id'], 'content' => $s['content'], 'items' => $items, 'donate_action_url' => $pay !== '' ? $pay : $heroPay];
+    }
+    $menu = array_map('menu_row', q('SELECT * FROM menu_items WHERE is_visible = 1'));
+    return ['settings' => (object)get_setting('site', []), 'menu' => build_tree($menu), 'donations' => $groups];
+});
+
 route('GET', '/api/auth/status', function ($ctx) {
     return ['needsInstall' => false, 'needsSetup' => admin_count() === 0, 'user' => $ctx['user']];
 });
