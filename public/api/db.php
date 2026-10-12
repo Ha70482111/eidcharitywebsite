@@ -101,6 +101,7 @@ function eid_ensure_schema(PDO $pdo = null)
     $m = (int)q("SELECT COUNT(*) AS m FROM settings WHERE k = 'site'", [], $pdo)[0]['m'];
     if ($n === 0 && $m === 0) eid_seed($pdo);
     eid_import_pages($pdo);
+    eid_import_donations($pdo);
     eid_link_pages($pdo);
 }
 
@@ -147,6 +148,54 @@ function eid_import_pages(PDO $pdo)
     } catch (Throwable $e) {
         $pdo->rollBack();
         q("DELETE FROM settings WHERE k = 'pages_imported'", [], $pdo);
+        throw $e;
+    }
+}
+
+/**
+ * One-time import of the donation projects (taken from donate.eidcharity.net) as a campaigns section that
+ * shows on the donations page (/donate) only. Guarded by the 'donations_imported' setting like the pages.
+ */
+function eid_import_donations(PDO $pdo)
+{
+    if (q("SELECT k FROM settings WHERE k = 'donations_imported'", [], $pdo)) return;
+    try {
+        q("INSERT INTO settings (k, v) VALUES ('donations_imported', ?)", [json_encode(gmdate('c'))], $pdo);
+    } catch (PDOException $e) {
+        return; // another request is importing right now
+    }
+    $s = json_decode(file_get_contents(__DIR__ . '/seed.json'), true)['donations'] ?? null;
+    if (!$s) return;
+    $pdo->beginTransaction();
+    try {
+        $order = (int)q('SELECT COALESCE(MAX(sort_order), 0) AS m FROM sections WHERE page_id IS NULL', [], $pdo)[0]['m'];
+        $r = q('INSERT INTO sections (type, name, sort_order, is_visible, content, page_id) VALUES (?, ?, ?, 1, ?, NULL)',
+            [$s['type'], $s['name'], $order + 1, jenc($s['content'])], $pdo);
+        foreach (array_values($s['items']) as $k => $item) {
+            q('INSERT INTO section_items (section_id, sort_order, is_visible, content) VALUES (?, ?, 1, ?)',
+                [$r['insertId'], $k + 1, jenc($item)], $pdo);
+        }
+        // The home page's "All campaigns" buttons that link nowhere now open the donations page.
+        foreach (q("SELECT id, content FROM sections WHERE type = 'campaigns' AND id <> ?", [$r['insertId']], $pdo) as $c) {
+            $cc = jparse($c['content']);
+            if (in_array($cc['button_url'] ?? '', ['', '#'], true) && !empty($cc['button'])) {
+                $cc['button_url'] = '/donate';
+                q('UPDATE sections SET content = ? WHERE id = ?', [jenc($cc), $c['id']], $pdo);
+            }
+        }
+        // The header's donate button used to point at the home page's quick-donation card; send it to the new page.
+        $site = q("SELECT v FROM settings WHERE k = 'site'", [], $pdo);
+        if ($site) {
+            $v = jparse($site[0]['v']);
+            if (($v['donate_url'] ?? '') === '#donate' || ($v['donate_url'] ?? '') === '') {
+                $v['donate_url'] = '/donate';
+                q("UPDATE settings SET v = ? WHERE k = 'site'", [jenc($v)], $pdo);
+            }
+        }
+        $pdo->commit();
+    } catch (Throwable $e) {
+        $pdo->rollBack();
+        q("DELETE FROM settings WHERE k = 'donations_imported'", [], $pdo);
         throw $e;
     }
 }

@@ -9,7 +9,7 @@
    "ar": "تبرع الآن",
    "en": "Donate Now"
   },
-  "donate_url": "#donate",
+  "donate_url": "/donate",
   "topbar_visible": true,
   "topbar_links": [
    {
@@ -1173,7 +1173,7 @@
      "ar": "جميع الحملات",
      "en": "All Campaigns"
     },
-    "button_url": "#",
+    "button_url": "/donate",
     "pct_label": {
      "ar": "مكتمل",
      "en": "Complete"
@@ -1932,6 +1932,240 @@
    ]
   }
  ],
+ "donations": {
+  "type": "campaigns",
+  "name": "مشاريع التبرع (صفحة التبرعات)",
+  "content": {
+   "anchor": "projects",
+   "bg": "warm",
+   "listing_only": true,
+   "eyebrow": {
+    "ar": "مشاريع التبرع",
+    "en": "Donation Projects"
+   },
+   "title": {
+    "ar": "مشاريع التبرع",
+    "en": "Donation Projects"
+   },
+   "subtitle": {
+    "ar": "",
+    "en": ""
+   },
+   "button": {
+    "ar": "",
+    "en": ""
+   },
+   "button_url": "",
+   "pct_label": {
+    "ar": "مكتمل",
+    "en": "Complete"
+   },
+   "target_label": {
+    "ar": "الهدف",
+    "en": "Target"
+   },
+   "raised_label": {
+    "ar": "حتى الآن",
+    "en": "Raised so far"
+   },
+   "beneficiaries_label": {
+    "ar": "المستفيدين",
+    "en": "Beneficiaries"
+   },
+   "cta": {
+    "ar": "تبرع",
+    "en": "Donate"
+   },
+   "currency": "QAR",
+   "amounts": "50, 100, 500, 1000"
+  },
+  "items": [
+   {
+    "image": "https://donate.eidcharity.net/storage/donations/mp1ANkbxGWiwmPJ7SGhNfE28DyUKSPeM2qKiJBHg.jpg",
+    "name": {
+     "ar": "زكاة المال",
+     "en": "Zakat al-Mal"
+    },
+    "category": {
+     "ar": "زكاة",
+     "en": "Zakat"
+    },
+    "desc": {
+     "ar": "زكاة المال طهرةٌ للمال ونماءٌ له، وسببٌ لبركة الرزق.",
+     "en": "Zakat purifies and grows wealth, and brings blessing to provision."
+    },
+    "location": {
+     "ar": "قطر",
+     "en": "Qatar"
+    },
+    "raised": 239522,
+    "target": 10000000,
+    "beneficiaries": 0,
+    "url": ""
+   },
+   {
+    "image": "https://donate.eidcharity.net/storage/donations/CgyQGmDNlOhTGrp2ZMEUwCIu09NhNtkyWE7vtcv2.jpg",
+    "name": {
+     "ar": "مشروع إطعام الفقراء",
+     "en": "Feeding the Poor"
+    },
+    "category": {
+     "ar": "مشاريع طعام",
+     "en": "Food Projects"
+    },
+    "desc": {
+     "ar": "شراء وجبات غذائية وتوزيعها على العمال والأسر المحتاجة.",
+     "en": "Buying meals and distributing them to workers and families in need."
+    },
+    "location": {
+     "ar": "قطر",
+     "en": "Qatar"
+    },
+    "raised": 23183,
+    "target": 2970000,
+    "beneficiaries": 110000,
+    "url": ""
+   },
+   {
+    "image": "https://donate.eidcharity.net/storage/donations/g74hIIYo1VS5iuPW1rCKJvkwq6SvQKwHDQBBSlgv.jpg",
+    "name": {
+     "ar": "مشروع السلال الغذائية",
+     "en": "Food Baskets"
+    },
+    "category": {
+     "ar": "سلال غذائية",
+     "en": "Food Baskets"
+    },
+    "desc": {
+     "ar": "صرف مساعدة شهرية على شكل بطاقات شراء من المجمعات التجارية.",
+     "en": "A monthly allowance in the form of shopping cards for supermarkets."
+    },
+    "location": {
+     "ar": "قطر",
+     "en": "Qatar"
+    },
+    "raised": 6927,
+    "target": 9900000,
+    "beneficiaries": 2000,
+    "url": ""
+   },
+   {
+    "image": "https://donate.eidcharity.net/storage/donations/gSKazLsC3EaPfiTkbFwhii68wEGTA7IssHhywzSo.jpg",
+    "name": {
+     "ar": "علاج المرضى",
+     "en": "Medical Treatment"
+    },
+    "category": {
+     "ar": "علاج مرضى",
+     "en": "Medical Treatment"
+    },
+    "desc": {
+     "ar": "المساهمة في تكاليف علاج المرضى المحتاجين وتخفيف معاناتهم.",
+     "en": "Helping patients in need cover the cost of their treatment."
+    },
+    "location": {
+     "ar": "قطر",
+     "en": "Qatar"
+    },
+    "raised": 392859,
+    "target": 9900000,
+    "beneficiaries": 12000,
+    "url": ""
+   },
+   {
+    "image": "https://donate.eidcharity.net/storage/donations/wGbuuwzm8bb8fp7K6XCGXTtWCr0SyaP6DOVCNfsA.jpg",
+    "name": {
+     "ar": "دعم محدودي الدخل",
+     "en": "Low-Income Support"
+    },
+    "category": {
+     "ar": "تفريج كربة",
+     "en": "Relieving Hardship"
+    },
+    "desc": {
+     "ar": "تقديم دعم مباشر للأسر المتعففة والأفراد ذوي الدخل المحدود في المجتمع التي تعاني من صعوبات مالية.",
+     "en": "Direct support for families and individuals with limited income facing financial hardship."
+    },
+    "location": {
+     "ar": "قطر",
+     "en": "Qatar"
+    },
+    "raised": 176994,
+    "target": 9900000,
+    "beneficiaries": 12000,
+    "url": ""
+   },
+   {
+    "image": "https://donate.eidcharity.net/storage/donations/wqXmbQssTAduFkPOnB6G0ICDuY4lMY8ugmzAjgV3.jpg",
+    "name": {
+     "ar": "كفالة الأيتام داخل قطر",
+     "en": "Orphan Sponsorship in Qatar"
+    },
+    "category": {
+     "ar": "كفالة ورعاية أيتام",
+     "en": "Orphan Care"
+    },
+    "desc": {
+     "ar": "توفير كفالة مالية شهرية للأيتام الذين فقدوا معيلهم.",
+     "en": "A monthly sponsorship for orphans who have lost their provider."
+    },
+    "location": {
+     "ar": "قطر",
+     "en": "Qatar"
+    },
+    "raised": 105451,
+    "target": 3712500,
+    "beneficiaries": 500,
+    "url": ""
+   },
+   {
+    "image": "https://donate.eidcharity.net/storage/donations/WydMlSft2HsukShn8I4jpHHoU3A8Uqpm86nccsht.jpg",
+    "name": {
+     "ar": "دعم الأرامل والمطلقات",
+     "en": "Supporting Widows and Divorced Women"
+    },
+    "category": {
+     "ar": "دعم الأرامل والمطلقات",
+     "en": "Widows Support"
+    },
+    "desc": {
+     "ar": "الساعي هو برنامج خيري وتنموي شامل، يركز على دعم الأرامل والمطلقات ومن في حكمهن داخل قطر.",
+     "en": "Al-Saei is a charitable and development program supporting widows, divorced women and those in similar situations in Qatar."
+    },
+    "location": {
+     "ar": "قطر",
+     "en": "Qatar"
+    },
+    "raised": 194910,
+    "target": 5610000,
+    "beneficiaries": 1700,
+    "url": ""
+   },
+   {
+    "image": "https://donate.eidcharity.net/storage/donations/9t0x288rj85IHdejHB81sAUW9m42loZuDFRAsapt.jpg",
+    "name": {
+     "ar": "رعاية كبار القدر",
+     "en": "Elderly Care"
+    },
+    "category": {
+     "ar": "رعاية كبار القدر",
+     "en": "Elderly Care"
+    },
+    "desc": {
+     "ar": "برامج كبار القدر منظومة شاملة تهدف إلى تحسين نوعية الحياة للمسنين وتمكينهم من حياة كريمة تحافظ على مكانتهم وتعزز مشاركتهم الفاعلة في المجتمع.",
+     "en": "A comprehensive program that improves the quality of life of older people and supports their dignity and active role in society."
+    },
+    "location": {
+     "ar": "قطر",
+     "en": "Qatar"
+    },
+    "raised": 5390,
+    "target": 550000,
+    "beneficiaries": 1500,
+    "url": ""
+   }
+  ]
+ },
  "pages": [
   {
    "slug": "about",
