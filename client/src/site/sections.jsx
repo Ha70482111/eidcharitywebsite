@@ -226,6 +226,9 @@ function Gates({ content: c, items }) {
 }
 
 // ─── CAMPAIGNS ───────────────────────────────────────────────────────────────
+// A campaign without its own link opens its donation details page.
+export const campaignHref = it => (it.url && it.url !== '#' && it.url !== '#donate' ? it.url : it._id ? `/donate/${it._id}` : it.url || '#donate')
+
 function Campaigns({ content: c, items }) {
   const t = useT()
   const cur = c.currency || 'QAR'
@@ -238,16 +241,16 @@ function Campaigns({ content: c, items }) {
           const pct = it.target ? Math.min(100, Math.round((Number(it.raised) / Number(it.target)) * 100)) : 0
           return (
             <article key={i} className="ec-card-hover" style={{ background: '#fff', borderRadius: CR, overflow: 'hidden', boxShadow: CS, display: 'flex', flexDirection: 'column' }}>
-              <div style={{ position: 'relative', height: 218, overflow: 'hidden' }} className="ec-img-zoom">
-                {it.image && <img src={it.image} alt={t(it.name)} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />}
+              <a href={campaignHref(it)} tabIndex={-1} aria-hidden="true" style={{ position: 'relative', height: 218, overflow: 'hidden', display: 'block' }} className="ec-img-zoom">
+                {it.image && <img src={it.image} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />}
                 {t(it.location) && (
                   <div style={{ position: 'absolute', top: 12, insetInlineEnd: 12, background: 'rgba(255,255,255,0.95)', borderRadius: 20, padding: '4px 12px', fontSize: 13, fontWeight: 700, color: N, display: 'flex', alignItems: 'center', gap: 5 }}>
                     <Pin c={M} s={12} /> {t(it.location)}
                   </div>
                 )}
-              </div>
+              </a>
               <div style={{ padding: '22px 22px 20px', display: 'flex', flexDirection: 'column', flex: 1 }}>
-                <h3 style={{ fontFamily: 'Cairo, sans-serif', fontSize: 18.5, fontWeight: 800, color: N, margin: '0 0 7px', lineHeight: 1.3 }}>{t(it.name)}</h3>
+                <h3 style={{ fontFamily: 'Cairo, sans-serif', fontSize: 18.5, fontWeight: 800, color: N, margin: '0 0 7px', lineHeight: 1.3 }}><a href={campaignHref(it)} className="ec-title-link">{t(it.name)}</a></h3>
                 <p style={{ fontSize: 14.5, color: '#5A5450', lineHeight: 1.75, margin: '0 0 18px' }}>{t(it.desc)}</p>
                 {Number(it.target) > 0 && <>
                   <div className="ec-progress-track" role="progressbar" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100} aria-label={t(it.name)} style={{ margin: '0 0 9px' }}>
@@ -264,7 +267,7 @@ function Campaigns({ content: c, items }) {
                 </>}
                 <div style={{ flex: 1 }} />
                 {t(it.permit) && <div style={{ fontSize: 12.5, color: '#6A6560', padding: '11px 0', borderTop: '1px solid #F0EDE8', margin: '12px 0 14px' }}>{t(it.permit)}</div>}
-                {t(c.cta) && <a className="ec-btn-primary" href={it.url || '#donate'} style={{ width: '100%', padding: 13, fontSize: 15.5 }}>{t(c.cta)}</a>}
+                {t(c.cta) && <a className="ec-btn-primary" href={campaignHref(it)} style={{ width: '100%', padding: 13, fontSize: 15.5 }}>{t(c.cta)}</a>}
               </div>
             </article>
           )

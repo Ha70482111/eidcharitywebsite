@@ -170,6 +170,32 @@ test('items: add, edit, hide, reorder, delete', async () => {
   assert.equal((await call('DELETE', `/api/admin/items/${item.id}`)).status, 200)
 })
 
+test('donation details page for a campaign', async () => {
+  const site = (await call('GET', '/api/site', undefined, null)).data
+  const sec = site.sections.find(s => s.type === 'campaigns')
+  const [first, second] = sec.items
+  let r = await call('GET', `/api/donate/${first.id}`, undefined, null)
+  assert.equal(r.status, 200)
+  assert.equal(r.data.campaign.id, first.id)
+  assert.equal(r.data.campaign.content.name.ar, first.content.name.ar)
+  assert.equal(r.data.section.content.currency, 'QAR')
+  assert.deepEqual(r.data.related.map(i => i.id), sec.items.slice(1).map(i => i.id))
+  assert.ok(r.data.menu.length > 0 && r.data.settings.site_name)
+  assert.equal(typeof r.data.donate_action_url, 'string')
+  // hidden campaigns and non-campaign items have no donation page
+  await call('PUT', `/api/admin/items/${second.id}`, { is_visible: false })
+  assert.equal((await call('GET', `/api/donate/${second.id}`, undefined, null)).status, 404)
+  assert.ok(!(await call('GET', `/api/donate/${first.id}`, undefined, null)).data.related.some(i => i.id === second.id))
+  await call('PUT', `/api/admin/items/${second.id}`, { is_visible: true })
+  const hero = site.sections.find(s => s.type === 'hero')
+  assert.equal((await call('GET', `/api/donate/${hero.items[0].id}`, undefined, null)).status, 404)
+  assert.equal((await call('GET', '/api/donate/999999', undefined, null)).status, 404)
+  // the campaign section's payment link wins over the hero's
+  await call('PUT', `/api/admin/sections/${sec.id}`, { content: { ...sec.content, donate_action_url: 'https://pay.example/c' } })
+  assert.equal((await call('GET', `/api/donate/${first.id}`, undefined, null)).data.donate_action_url, 'https://pay.example/c')
+  await call('PUT', `/api/admin/sections/${sec.id}`, { content: sec.content })
+})
+
 test('sub-pages imported from the old website', async () => {
   let r = await call('GET', '/api/page/about', undefined, null)
   assert.equal(r.status, 200)
