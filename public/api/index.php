@@ -222,6 +222,30 @@ route('GET', '/api/page/:slug', function ($ctx) {
     return ['settings' => (object)get_setting('site', []), 'menu' => build_tree($menu), 'page' => $page, 'sections' => public_sections($page['id'])];
 });
 
+// A donation details page for one campaign card: its section's labels, the payment link and the other campaigns.
+route('GET', '/api/donate/:id', function ($ctx) {
+    $rows = q("SELECT i.* FROM section_items i JOIN sections s ON s.id = i.section_id
+        WHERE i.id = ? AND i.is_visible = 1 AND s.is_visible = 1 AND s.type = 'campaigns'", [intv($ctx['params']['id'])]);
+    if (!$rows) throw new HttpError(404, 'الحملة غير موجودة');
+    $item = item_row($rows[0]);
+    $section = section_row(must_find('sections', $item['section_id'], 'القسم'));
+    $c = (array)$section['content'];
+    $payUrl = str($c['donate_action_url'] ?? '');
+    if ($payUrl === '') {
+        // Fall back to the payment link set on the home page's quick-donation card.
+        foreach (q("SELECT * FROM sections WHERE type = 'hero' AND is_visible = 1 ORDER BY sort_order, id") as $h) {
+            $hc = jparse($h['content']);
+            if (!empty($hc['donate_action_url'])) { $payUrl = str($hc['donate_action_url']); break; }
+        }
+    }
+    $related = array_map('item_row', q('SELECT * FROM section_items WHERE section_id = ? AND id <> ? AND is_visible = 1 ORDER BY sort_order, id',
+        [$item['section_id'], $item['id']]));
+    $menu = array_map('menu_row', q('SELECT * FROM menu_items WHERE is_visible = 1'));
+    return ['settings' => (object)get_setting('site', []), 'menu' => build_tree($menu),
+        'campaign' => $item, 'section' => ['id' => $section['id'], 'content' => $section['content']],
+        'related' => array_slice($related, 0, 3), 'donate_action_url' => $payUrl];
+});
+
 route('GET', '/api/auth/status', function ($ctx) {
     return ['needsInstall' => false, 'needsSetup' => admin_count() === 0, 'user' => $ctx['user']];
 });

@@ -1194,7 +1194,8 @@
      "ar": "ساهم الآن",
      "en": "Contribute Now"
     },
-    "currency": "QAR"
+    "currency": "QAR",
+    "amounts": "50, 100, 250, 500"
    },
    "items": [
     {
@@ -1214,11 +1215,24 @@
      "raised": 186000,
      "target": 300000,
      "beneficiaries": 240,
+     "donors": 1240,
+     "duration": {
+      "ar": "12 شهرًا",
+      "en": "12 months"
+     },
+     "category": {
+      "ar": "كفالة الأيتام",
+      "en": "Orphan Care"
+     },
+     "details": {
+      "ar": "تشمل الكفالة الغذاء والتعليم والرعاية الصحية والدعم النفسي لكل يتيم طوال مدة المشروع.",
+      "en": "Sponsorship covers food, education, healthcare and psychological support for each orphan throughout the project."
+     },
      "permit": {
       "ar": "رقم الترخيص: KH/2024/012",
       "en": "License No: KH/2024/012"
      },
-     "url": "#"
+     "url": ""
     },
     {
      "image": "https://images.unsplash.com/photo-1599059813005-11265ba4b4ce?w=800&h=600&fit=crop&auto=format",
@@ -1237,11 +1251,21 @@
      "raised": 412000,
      "target": 600000,
      "beneficiaries": 5200,
+     "donors": 3105,
+     "duration": {
+      "ar": "شهر رمضان",
+      "en": "Ramadan"
+     },
+     "category": {
+      "ar": "إطعام الطعام",
+      "en": "Food Aid"
+     },
+     "share_price": 25,
      "permit": {
       "ar": "رقم الترخيص: KH/2024/035",
       "en": "License No: KH/2024/035"
      },
-     "url": "#"
+     "url": ""
     },
     {
      "image": "https://images.unsplash.com/photo-1601662583164-1c61cb71b182?w=800&h=600&fit=crop&auto=format",
@@ -1260,11 +1284,20 @@
      "raised": 98000,
      "target": 200000,
      "beneficiaries": 1800,
+     "donors": 640,
+     "duration": {
+      "ar": "4 شهور",
+      "en": "4 months"
+     },
+     "category": {
+      "ar": "سقيا الماء",
+      "en": "Clean Water"
+     },
      "permit": {
       "ar": "رقم الترخيص: KH/2024/028",
       "en": "License No: KH/2024/028"
      },
-     "url": "#"
+     "url": ""
     }
    ]
   },
