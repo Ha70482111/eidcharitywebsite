@@ -3,6 +3,8 @@
 import { useEffect, useRef, useState } from 'react'
 import { useLang, useT, lines } from './lang.jsx'
 import { campaignHref } from './sections.jsx'
+import { addToCart } from './cart.js'
+import { CartToast, CartIcon } from './CartPage.jsx'
 import { Pin, Lock, Check, Arrow, SOCIAL_ICONS, M, MD, N } from '../shared/icons.jsx'
 
 const TXT = {
@@ -33,6 +35,7 @@ const TXT = {
   more: ['زيادة', 'Increase'],
   total: ['إجمالي المبلغ', 'Total amount'],
   donate: ['تبرع الآن', 'Donate Now'],
+  addCart: ['أضف إلى السلة', 'Add to cart'],
   chooseAmount: ['اختر مبلغ التبرع أولًا', 'Please choose an amount'],
   noGateway: ['بوابة الدفع غير مفعلة بعد', 'Online payment is not available yet'],
   secure: ['دفع آمن ومشفّر', 'Secure, encrypted payment'],
@@ -187,6 +190,7 @@ function DonateCard({ it, id, cur, amountsText, payUrl, pct, L }) {
   const [custom, setCustom] = useState(asked && !amounts.includes(asked) ? String(asked) : '')
   const [qty, setQty] = useState(sharePrice && asked ? Math.max(1, Math.round(asked / sharePrice)) : 1)
   const [notice, setNotice] = useState('')
+  const [added, setAdded] = useState(0)
   const target = Number(it.target) || 0
   const raised = Number(it.raised) || 0
   const total = sharePrice ? sharePrice * qty : custom ? Number(custom) : amount
@@ -201,6 +205,13 @@ function DonateCard({ it, id, cur, amountsText, payUrl, pct, L }) {
     url.searchParams.set('category', (it.name && (it.name.ar || it.name.en)) || '')
     if (sharePrice) url.searchParams.set('quantity', String(qty))
     window.location.href = url.toString()
+  }
+
+  const addCart = () => {
+    if (!total || total <= 0) { setNotice(L('chooseAmount')); return }
+    addToCart({ id, name: it.name, image: it.image || '', cur, pay: payUrl || '', type, amount: total, ...(sharePrice ? { sharePrice, qty } : {}) })
+    setNotice('')
+    setAdded(n => n + 1)
   }
 
   return (
@@ -276,6 +287,8 @@ function DonateCard({ it, id, cur, amountsText, payUrl, pct, L }) {
         <button type="button" onClick={donate} className="ec-btn-primary" style={{ width: '100%', padding: 15, fontSize: 17, borderRadius: 12, background: `linear-gradient(135deg,${M},${MD})` }}>
           {L('donate')}
         </button>
+        <button type="button" onClick={addCart} className="ec-btn-cart"><CartIcon c="currentColor" s={20} /> {L('addCart')}</button>
+        <CartToast show={added} />
         {notice && <p role="status" className="ec-dn-notice">{notice}</p>}
         <p className="ec-dn-secure"><Lock /> {L('secure')}</p>
 
