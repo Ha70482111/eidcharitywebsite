@@ -53,7 +53,8 @@ export const SECTION_TYPES = {
       bi('pct_label', 'نص «مكتمل»'), bi('target_label', 'نص «الهدف»'), bi('raised_label', 'نص «جُمع»'),
       bi('beneficiaries_label', 'نص «المستفيدون»'), bi('cta', 'نص زر البطاقة'), f('currency', 'العملة', 'text', { dir: 'ltr' }),
       f('amounts', 'المبالغ المقترحة في صفحة التبرع (مفصولة بفاصلة)', 'text', { dir: 'ltr', help: 'مثال: 50, 100, 250, 500' }),
-      f('donate_action_url', 'رابط صفحة الدفع', 'url', { help: 'يُضاف له تلقائيًا: amount و type و campaign. لو تركته فارغًا يُستخدم رابط الدفع الموجود في قسم الواجهة الرئيسية.' })],
+      f('donate_action_url', 'رابط صفحة الدفع', 'url', { help: 'يُضاف له تلقائيًا: amount و type و campaign. لو تركته فارغًا يُستخدم رابط الدفع الموجود في قسم الواجهة الرئيسية.' }),
+      f('listing_only', 'إظهار الحملات في صفحة التبرعات فقط (مش في الصفحة)', 'bool', { help: 'كل الحملات بتظهر في صفحة التبرعات /donate. علّم هنا لو عايز القسم ده يختفي من الصفحة نفسها.' })],
     item: { label: 'حملة', title: c => c.name, fields: [f('image', 'الصورة', 'image'), bi('name', 'اسم الحملة'), bi('location', 'المكان'),
       bi('category', 'التصنيف (مثال: كفالة الأيتام)'),
       bi('desc', 'الوصف المختصر', 'textarea'), bi('details', 'تفاصيل المشروع (تظهر في صفحة التبرع)', 'textarea'),
@@ -176,7 +177,8 @@ export const SECTION_TYPES = {
 const linkList = (key, label) => f(key, label, 'list', { itemLabel: 'رابط', fields: [bi('label', 'النص'), f('url', 'الرابط', 'url')] })
 
 export const SETTINGS_GROUPS = [
-  { title: 'عام', fields: [bi('site_name', 'اسم الموقع'), f('logo', 'الشعار', 'image'), bi('donate_label', 'نص زر التبرع في الهيدر'), f('donate_url', 'رابط زر التبرع', 'url')] },
+  { title: 'عام', fields: [bi('site_name', 'اسم الموقع'), f('logo', 'الشعار', 'image'), bi('donate_label', 'نص زر التبرع في الهيدر'), f('donate_url', 'رابط زر التبرع', 'url', { help: 'اكتب /donate عشان يفتح صفحة التبرعات.' })] },
+  { title: 'صفحة التبرعات (/donate)', fields: [bi('donations_title', 'العنوان'), bi('donations_subtitle', 'الوصف', 'textarea'), f('donations_image', 'صورة الخلفية', 'image')] },
   { title: 'الشريط العلوي', fields: [f('topbar_visible', 'إظهار الشريط العلوي', 'bool'), linkList('topbar_links', 'روابط الشريط العلوي')] },
   { title: 'السوشيال ميديا', fields: [f('socials', 'الحسابات', 'list', { itemLabel: 'حساب', fields: [f('platform', 'المنصة', 'select', { options: SOCIAL_OPTIONS }), f('url', 'الرابط', 'url')] })] },
   { title: 'الفوتر', fields: [bi('footer_desc', 'وصف المؤسسة', 'textarea'),

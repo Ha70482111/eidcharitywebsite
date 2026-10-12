@@ -61,13 +61,14 @@ test('first-run installer', async () => {
 test('seeded site content', async () => {
   const { status, data } = await call('GET', '/api/site')
   assert.equal(status, 200)
-  assert.equal(data.sections.length, 11)
+  assert.equal(data.sections.length, 12, 'includes the imported donation projects section')
   assert.equal(data.sections[0].type, 'hero')
   assert.equal(data.sections[0].items.length, 4)
   assert.equal(data.menu.length, 6)
   assert.equal(data.menu[0].children.length, 5, 'includes the sub-pages group')
   assert.ok(data.menu[0].children[0].children.length > 3)
   assert.equal(data.settings.donate_label.ar, 'تبرع الآن')
+  assert.equal(data.settings.donate_url, '/donate')
   assert.equal(data.sections[0].is_visible, true)
   assert.equal(typeof data.sections[0].id, 'number')
 })
@@ -196,6 +197,33 @@ test('donation details page for a campaign', async () => {
   await call('PUT', `/api/admin/sections/${sec.id}`, { content: sec.content })
 })
 
+test('donations page lists every visible campaign', async () => {
+  const site = (await call('GET', '/api/site', undefined, null)).data
+  const secs = site.sections.filter(s => s.type === 'campaigns')
+  const imported = secs.find(s => s.content.listing_only)
+  assert.ok(imported, 'the donation projects were imported once')
+  assert.equal(imported.items.length, 8)
+  assert.equal(imported.items[0].content.name.ar, 'زكاة المال')
+  let r = await call('GET', '/api/donations', undefined, null)
+  assert.equal(r.status, 200)
+  assert.ok(r.data.menu.length > 0 && r.data.settings.site_name)
+  assert.deepEqual(r.data.donations.map(g => g.id), secs.map(s => s.id))
+  assert.equal(r.data.donations.reduce((n, g) => n + g.items.length, 0), secs.reduce((n, s) => n + s.items.length, 0))
+  assert.equal(typeof r.data.donations[0].donate_action_url, 'string')
+  // the imported projects open their own details page
+  assert.equal((await call('GET', `/api/donate/${imported.items[0].id}`, undefined, null)).status, 200)
+  // hidden items and sections drop out
+  const item = imported.items[0]
+  await call('PUT', `/api/admin/items/${item.id}`, { is_visible: false })
+  r = await call('GET', '/api/donations', undefined, null)
+  assert.ok(!r.data.donations.find(g => g.id === imported.id).items.some(i => i.id === item.id))
+  await call('PUT', `/api/admin/items/${item.id}`, { is_visible: true })
+  await call('PUT', `/api/admin/sections/${imported.id}`, { is_visible: false })
+  r = await call('GET', '/api/donations', undefined, null)
+  assert.ok(!r.data.donations.some(g => g.id === imported.id))
+  await call('PUT', `/api/admin/sections/${imported.id}`, { is_visible: true })
+})
+
 test('sub-pages imported from the old website', async () => {
   let r = await call('GET', '/api/page/about', undefined, null)
   assert.equal(r.status, 200)
@@ -204,7 +232,7 @@ test('sub-pages imported from the old website', async () => {
   assert.ok(r.data.menu.length > 0 && r.data.settings.donate_label, 'sub-pages get the header and footer data too')
   assert.equal((await call('GET', '/api/page/organizational-structure', undefined, null)).status, 404, 'empty pages are imported hidden')
   assert.equal((await call('GET', '/api/page/no-such-page', undefined, null)).status, 404)
-  assert.equal((await call('GET', '/api/site', undefined, null)).data.sections.length, 11, 'home page keeps only its own sections')
+  assert.equal((await call('GET', '/api/site', undefined, null)).data.sections.length, 12, 'home page keeps only its own sections')
   const docs = (await call('GET', '/api/page/governance-policies', undefined, null)).data.sections[0]
   assert.equal(docs.type, 'documents')
   assert.equal(docs.items.length, 8)
@@ -254,10 +282,14 @@ test('existing database is upgraded once, without touching its content', () => {
       'contact' => q("SELECT url FROM menu_items WHERE label_ar = 'اتصل بنا'")[0]['url'],
       'footer' => get_setting('site')['footer_columns'][0]['links'][0]['url'],
       'group' => count(q("SELECT id FROM menu_items WHERE label_ar = 'المؤسسة'")),
+      'projects' => count(q("SELECT id FROM sections WHERE type = 'campaigns'")),
+      'donate' => get_setting('site')['donate_url'],
     ]);`
   const out = require('node:child_process').execFileSync('php', ['-r', script], { env: { ...process.env, EID_DB_DRIVER: 'sqlite', EID_SQLITE_FILE: file } })
   const res = JSON.parse(out)
-  assert.equal(Number(res.home), 1, 'the live home-page section is kept and nothing is re-seeded')
+  assert.equal(Number(res.home), 2, 'the live home-page section is kept and nothing is re-seeded')
+  assert.equal(res.projects, 1, 'donation projects are imported once')
+  assert.equal(res.donate, '/donate', 'the header donate button opens the donations page')
   assert.equal(Number(res.pages), require('../tools/pages.js').length - 1)
   assert.equal(res.about, 0, 'a page deleted by the owner does not come back')
   assert.equal(res.report, '/page/whistleblowing', 'placeholder menu links point at their page')

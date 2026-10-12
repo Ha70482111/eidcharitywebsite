@@ -7,7 +7,7 @@ import { Pin, Lock, Check, Arrow, SOCIAL_ICONS, M, MD, N } from '../shared/icons
 
 const TXT = {
   home: ['الرئيسية', 'Home'],
-  campaigns: ['الحملات', 'Campaigns'],
+  donations: ['التبرعات', 'Donations'],
   donorsBefore: ['متبرعًا سبقوك في فعل الخير', 'donors have given before you'],
   firstDonor: ['كن أول من يساهم في هذه الحملة', 'Be the first to give to this campaign'],
   ref: ['الرقم المرجعي', 'Reference'],
@@ -73,7 +73,6 @@ export default function DonationPage({ data }) {
   ].filter(Boolean)
   const paragraphs = [...lines(t(it.desc)), ...lines(t(it.details))]
   const showPhotos = images.length > 1
-  const crumb = t(sc.eyebrow) || t(sc.title) || L('campaigns')
 
   return (
     <>
@@ -81,7 +80,7 @@ export default function DonationPage({ data }) {
         <div className="ec-inner">
           <a href="/">{L('home')}</a>
           <span aria-hidden="true">/</span>
-          <a href={`/#${sc.anchor || 'campaigns'}`}>{crumb}</a>
+          <a href="/donate">{L('donations')}</a>
           <span aria-hidden="true">/</span>
           <span aria-current="page">{name}</span>
         </div>
@@ -181,10 +180,12 @@ function DonateCard({ it, id, cur, amountsText, payUrl, pct, L }) {
   const t = useT()
   const sharePrice = Number(it.share_price) || 0
   const amounts = String(amountsText || '50, 100, 250, 500').split(',').map(s => Number(s.trim())).filter(n => n > 0)
+  // An amount picked on the donations page arrives as ?amount=…
+  const asked = Number(new URLSearchParams(window.location.search).get('amount')) || 0
   const [type, setType] = useState('once')
-  const [amount, setAmount] = useState(amounts[1] || amounts[0] || null)
-  const [custom, setCustom] = useState('')
-  const [qty, setQty] = useState(1)
+  const [amount, setAmount] = useState(asked && amounts.includes(asked) ? asked : asked ? null : amounts[1] || amounts[0] || null)
+  const [custom, setCustom] = useState(asked && !amounts.includes(asked) ? String(asked) : '')
+  const [qty, setQty] = useState(sharePrice && asked ? Math.max(1, Math.round(asked / sharePrice)) : 1)
   const [notice, setNotice] = useState('')
   const target = Number(it.target) || 0
   const raised = Number(it.raised) || 0
