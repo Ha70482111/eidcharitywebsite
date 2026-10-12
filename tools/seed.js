@@ -160,18 +160,19 @@ const sections = [
       subtitle: b('مساهمتك اليوم قد تصنع فرقًا حقيقيًا في حياة إنسان.', "Your contribution today can make a real difference in someone's life."),
       button: b('جميع الحملات', 'All Campaigns'), button_url: '#',
       pct_label: b('مكتمل', 'Complete'), target_label: b('الهدف', 'Target'), raised_label: b('جُمع', 'Raised'),
-      beneficiaries_label: b('المستفيدون', 'Beneficiaries'), cta: b('ساهم الآن', 'Contribute Now'), currency: 'QAR',
+      beneficiaries_label: b('المستفيدون', 'Beneficiaries'), cta: b('ساهم الآن', 'Contribute Now'), currency: 'QAR', amounts: '50, 100, 250, 500',
     },
     items: [
       { image: IMG.children, name: b('كفالة أيتام اليمن', 'Yemen Orphan Care'), location: b('اليمن', 'Yemen'),
         desc: b('توفير الرعاية الكاملة لأيتام في ظروف نزاع مستمر.', 'Providing full care for orphans living in conflict zones.'),
-        raised: 186000, target: 300000, beneficiaries: 240, permit: b('رقم الترخيص: KH/2024/012', 'License No: KH/2024/012'), url: '#' },
+        raised: 186000, target: 300000, beneficiaries: 240, donors: 1240, duration: b('12 شهرًا', '12 months'), category: b('كفالة الأيتام', 'Orphan Care'),
+        details: b('تشمل الكفالة الغذاء والتعليم والرعاية الصحية والدعم النفسي لكل يتيم طوال مدة المشروع.', 'Sponsorship covers food, education, healthcare and psychological support for each orphan throughout the project.'), permit: b('رقم الترخيص: KH/2024/012', 'License No: KH/2024/012'), url: '' },
       { image: IMG.food, name: b('حملة إطعام رمضان', 'Ramadan Food Campaign'), location: b('دول متعددة', 'Multiple Countries'),
         desc: b('وجبات يومية لآلاف الأسر خلال شهر رمضان المبارك.', 'Daily meals for thousands of families during Ramadan.'),
-        raised: 412000, target: 600000, beneficiaries: 5200, permit: b('رقم الترخيص: KH/2024/035', 'License No: KH/2024/035'), url: '#' },
+        raised: 412000, target: 600000, beneficiaries: 5200, donors: 3105, duration: b('شهر رمضان', 'Ramadan'), category: b('إطعام الطعام', 'Food Aid'), share_price: 25, permit: b('رقم الترخيص: KH/2024/035', 'License No: KH/2024/035'), url: '' },
       { image: IMG.water, name: b('مشروع سقيا الماء — الصومال', 'Clean Water Project — Somalia'), location: b('الصومال', 'Somalia'),
         desc: b('حفر وتأهيل آبار مياه نظيفة في المناطق المحرومة.', 'Drilling and rehabilitating clean water wells in underserved areas.'),
-        raised: 98000, target: 200000, beneficiaries: 1800, permit: b('رقم الترخيص: KH/2024/028', 'License No: KH/2024/028'), url: '#' },
+        raised: 98000, target: 200000, beneficiaries: 1800, donors: 640, duration: b('4 شهور', '4 months'), category: b('سقيا الماء', 'Clean Water'), permit: b('رقم الترخيص: KH/2024/028', 'License No: KH/2024/028'), url: '' },
     ] },
 
   { type: 'centers', name: 'مراكز عيد', content: {
