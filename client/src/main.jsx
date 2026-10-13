@@ -9,7 +9,7 @@ const isAdmin = window.location.pathname === '/admin' || window.location.pathnam
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     {isAdmin
-      ? <Suspense fallback={<div style={{ padding: 40, fontFamily: 'Cairo, sans-serif', direction: 'rtl' }}>جارِ التحميل…</div>}><Admin /></Suspense>
+      ? <Suspense fallback={<div style={{ padding: 40, fontFamily: 'var(--font)', direction: 'rtl' }}>جارِ التحميل…</div>}><Admin /></Suspense>
       : <Site />}
   </StrictMode>
 )
