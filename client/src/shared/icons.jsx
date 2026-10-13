@@ -1,9 +1,9 @@
-export const M = '#7C1A44'
-export const MD = '#5E1334'
-export const G = '#B69030'   // gold: decorative lines and text on dark backgrounds
-export const GT = '#8A6A20'  // darker gold: text on light backgrounds (passes WCAG AA)
-export const N = '#0D1B35'
-export const NM = '#1A2E52'
+export const M = '#8A0047'
+export const MD = '#6B0037'
+export const G = '#B69D67'   // light brand gold: decorative lines and text on dark backgrounds
+export const GT = '#7E6124'  // darker gold: text on light backgrounds (passes WCAG AA)
+export const N = '#003049'
+export const NM = '#0F4562'
 
 const s = (props, d) => ({ fill: 'none', ...props })
 

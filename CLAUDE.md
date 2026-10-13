@@ -22,4 +22,9 @@ Dynamic charity website with an admin dashboard. Owner communicates in Egyptian 
 - Content changes (texts, images, menu, sections) are done by the owner in `/admin` — no code needed.
 - Never remove or rename existing JSON content keys without migrating data; the live database already has content.
 - Keep API responses and routes backward compatible with the deployed admin.
-- Accessibility: gold text on light backgrounds uses `GT` (#8A6A20); keep 44px touch targets and visible focus.
+- Accessibility: gold text on light backgrounds uses `GT` (#7E6124); gold on dark backgrounds uses `G` (#B69D67); keep 44px touch targets and visible focus.
+
+## Brand identity
+- Source: brand guide PDF ("identty eid charity ENG.pdf"). Palette: Maroon #8A0047, Old Gold #9B782D, White; text navy #003049.
+- Logos in `client/public/`: `logo.svg` (main lockup), `logo-light.svg` (white text, for dark backgrounds), `logo-mark.svg` (symbol only, favicon/admin).
+- Fonts: brand fonts are Lusail (Arabic) and Neue Regrade (Latin); the site uses `var(--font)` (set in `client/index.html`) with Readex Pro as the web fallback.
