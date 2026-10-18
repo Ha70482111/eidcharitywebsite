@@ -21,7 +21,7 @@ const IMG = {
 
 const settings = {
   site_name: b('مؤسسة عيد الخيرية', 'Eid Charity'),
-  logo: '/logo.jpg',
+  logo: '/logo.svg',
   donate_label: b('تبرع الآن', 'Donate Now'),
   donate_url: '/donate',
   topbar_visible: true,

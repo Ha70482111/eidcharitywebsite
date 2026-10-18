@@ -75,7 +75,7 @@ function InstallForm({ onDone }) {
   return (
     <div className="ad-auth">
       <form className="ad-auth-card" onSubmit={submit} style={{ width: 'min(480px, 100%)' }}>
-        <img src="/logo.jpg" alt="" className="ad-auth-logo" />
+        <img src="/logo.svg" alt="" className="ad-auth-logo" />
         <h1>تجهيز الموقع لأول مرة</h1>
         <p className="ad-help">اكتب بيانات قاعدة البيانات اللي عملتها في cPanel، وبيانات حساب المدير. الخطوة دي بتحصل مرة واحدة بس.</p>
         <h2 style={{ fontSize: 16, margin: '14px 0 0' }}>قاعدة البيانات</h2>
@@ -114,7 +114,7 @@ function AuthForm({ setup, onAuth }) {
   return (
     <div className="ad-auth">
       <form className="ad-auth-card" onSubmit={submit}>
-        <img src="/logo.jpg" alt="" className="ad-auth-logo" />
+        <img src="/logo.svg" alt="" className="ad-auth-logo" />
         <h1>{setup ? 'إنشاء حساب المدير' : 'تسجيل الدخول'}</h1>
         {setup && <p className="ad-help">هذه أول مرة تفتح فيها لوحة التحكم. أنشئ حساب المدير الآن.</p>}
         <label className="ad-label" htmlFor="u">اسم المستخدم</label>
@@ -159,7 +159,7 @@ function Shell({ user, onLogout }) {
     <div className="ad-shell">
       <aside className={`ad-side ${navOpen ? 'open' : ''}`}>
         <div className="ad-brand">
-          <img src="/logo.jpg" alt="" />
+          <img src="/logo-mark.svg" alt="" />
           <span>لوحة التحكم</span>
         </div>
         <nav aria-label="أقسام لوحة التحكم">
