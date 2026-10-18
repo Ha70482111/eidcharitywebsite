@@ -282,10 +282,12 @@ function DonateCard({ it, id, cur, amountsText, payUrl, pct, L }) {
           <strong>{total ? fmt(total) : 0} {cur}{type === 'monthly' && <small> / {L('monthly')}</small>}</strong>
         </div>
 
-        <button type="button" onClick={donate} className="ec-btn-primary" style={{ width: '100%', padding: 15, fontSize: 17, borderRadius: 12, background: `linear-gradient(135deg,${M},${MD})` }}>
-          {L('donate')}
-        </button>
-        <button type="button" onClick={addCart} className="ec-btn-cart"><CartIcon c="currentColor" s={20} /> {L('addCart')}</button>
+        <div className="ec-donate-row">
+          <button type="button" onClick={donate} className="ec-btn-primary" style={{ padding: 15, fontSize: 17, borderRadius: 12, background: `linear-gradient(135deg,${M},${MD})` }}>
+            {L('donate')}
+          </button>
+          <button type="button" onClick={addCart} className="ec-btn-cart" aria-label={L('addCart')} title={L('addCart')}><CartIcon s={24} /></button>
+        </div>
         {notice && <p role="status" className="ec-dn-notice">{notice}</p>}
         <p className="ec-dn-secure"><Lock /> {L('secure')}</p>
 

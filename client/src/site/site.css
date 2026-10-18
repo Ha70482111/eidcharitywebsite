@@ -389,7 +389,7 @@ a.ec-card-hover:focus-visible, a.ec-img-zoom:focus-visible { outline: 3px solid 
 .ec-dl-seg button { display: inline-flex; align-items: center; gap: 6px; min-height: 40px; padding: 0 18px; border: none; border-radius: 50px; background: none; cursor: pointer; font-size: 14px; font-weight: 700; color: var(--text-secondary); }
 .ec-dl-seg button[aria-pressed='true'] { background: var(--maroon); color: #fff; }
 .ec-dl-seg button:focus-visible { outline: 2px solid var(--maroon); outline-offset: 2px; }
-.ec-dl-quick-row { display: grid; grid-template-columns: minmax(200px, 280px) minmax(0, 1fr) auto auto; gap: 18px; align-items: end; }
+.ec-dl-quick-row { display: grid; grid-template-columns: minmax(200px, 280px) minmax(0, 1fr) auto; gap: 18px; align-items: end; }
 .ec-dl-quick-project, .ec-dl-quick-amounts { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
 .ec-dl-quick-project > span, .ec-dl-quick-amounts > span { font-size: 13.5px; font-weight: 700; color: var(--text-secondary); }
 .ec-dl-quick-project select { min-height: 48px; width: 100%; }
@@ -440,7 +440,7 @@ a.ec-card-hover:focus-visible, a.ec-img-zoom:focus-visible { outline: 3px solid 
 
 @media (max-width: 1024px) {
   .ec-dl-quick-row { grid-template-columns: 1fr; }
-  .ec-dl-quick-go, .ec-dl-quick-cart { width: 100%; }
+  .ec-dl-quick-go { width: 100%; }
 }
 @media (max-width: 900px) and (min-width: 769px) {
   .ec-dl-wrap .ec-grid-3 { grid-template-columns: repeat(2, 1fr); }
@@ -497,10 +497,12 @@ a.ec-card-hover:focus-visible, a.ec-img-zoom:focus-visible { outline: 3px solid 
 .ec-btn-cart { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 48px; padding: 0 18px; border: 2px solid var(--maroon); border-radius: 12px; background: #fff; color: var(--maroon); font-size: 16px; font-weight: 800; cursor: pointer; transition: background 0.15s, color 0.15s; }
 .ec-btn-cart:hover { background: #FDF0F4; }
 .ec-btn-cart:focus-visible { outline: 2px solid var(--maroon); outline-offset: 2px; }
-.ec-dn-card .ec-btn-cart { width: 100%; margin-top: 10px; }
+/* Donate button with the cart icon next to it */
+.ec-donate-row { display: flex; gap: 10px; align-items: stretch; }
+.ec-donate-row > .ec-btn-primary { flex: 1; min-width: 0; }
+.ec-donate-row > .ec-btn-cart { width: 56px; min-width: 56px; padding: 0; flex-shrink: 0; }
 .ec-dl-actions .ec-btn-cart, .ec-dn-ractions .ec-btn-cart { width: 48px; min-width: 48px; padding: 0; flex-shrink: 0; }
 .ec-dn-ractions { margin-top: auto; display: flex; align-items: center; justify-content: space-between; gap: 10px; }
-.ec-dl-quick-cart { white-space: nowrap; }
 
 .ec-cart-toast { position: fixed; z-index: 120; bottom: 24px; left: 50%; transform: translateX(-50%); display: none; align-items: center; gap: 8px; background: var(--navy); color: #fff; border-radius: 50px; padding: 10px 10px 10px 20px; box-shadow: 0 10px 30px rgba(13,27,53,0.3); font-size: 14.5px; font-weight: 700; white-space: nowrap; }
 .ec-cart-toast[data-open='true'] { display: flex; animation: megaSlideIn 0.18s ease; }

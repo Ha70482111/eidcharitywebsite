@@ -197,12 +197,14 @@ function Hero({ content: c, items }) {
                     <span style={{ fontSize: 14, color: '#6A6560', whiteSpace: 'nowrap', flexShrink: 0 }}>{currency}</span>
                   </div>
 
-                  <button type="button" onClick={donate} className="ec-btn-primary" style={{ width: '100%', padding: 14, fontSize: 16, borderRadius: 12, background: `linear-gradient(135deg,${M},${MD})` }}>
-                    {t(c.donate_button)} — {finalAmount ? `${Number(finalAmount).toLocaleString('en-US')} ${currency}` : currency}
-                  </button>
-                  <button type="button" onClick={addCart} className="ec-btn-cart" style={{ width: '100%', marginTop: 10 }}>
-                    <CartIcon s={20} /> {lang === 'ar' ? 'أضف إلى السلة' : 'Add to cart'}
-                  </button>
+                  <div className="ec-donate-row">
+                    <button type="button" onClick={donate} className="ec-btn-primary" style={{ padding: 14, fontSize: 16, borderRadius: 12, background: `linear-gradient(135deg,${M},${MD})` }}>
+                      {t(c.donate_button)} — {finalAmount ? `${Number(finalAmount).toLocaleString('en-US')} ${currency}` : currency}
+                    </button>
+                    <button type="button" onClick={addCart} className="ec-btn-cart" aria-label={lang === 'ar' ? 'أضف إلى السلة' : 'Add to cart'} title={lang === 'ar' ? 'أضف إلى السلة' : 'Add to cart'}>
+                      <CartIcon s={24} />
+                    </button>
+                  </div>
                   {notice && <p role="status" style={{ textAlign: 'center', fontSize: 13.5, color: M, fontWeight: 700, margin: '10px 0 0' }}>{notice}</p>}
                   {t(c.secure_note) && (
                     <p style={{ textAlign: 'center', fontSize: 12.5, color: '#6A6560', margin: '10px 0 0', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5 }}>

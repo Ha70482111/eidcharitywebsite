@@ -174,10 +174,12 @@ function QuickDonate({ projects, L }) {
               onChange={e => { setCustom(e.target.value); setAmount(null); setNotice('') }} style={{ borderColor: custom ? M : undefined }} />
           </div>
         </div>
-        <button type="submit" className="ec-btn-primary ec-dl-quick-go" style={{ background: `linear-gradient(135deg,${M},${MD})` }}>
-          {L('donate')}{total > 0 && <> {fmt(total)} {p._cur}</>}
-        </button>
-        <button type="button" className="ec-btn-cart ec-dl-quick-cart" onClick={addCart}><CartIcon s={20} /> {L('addCart')}</button>
+        <div className="ec-donate-row">
+          <button type="submit" className="ec-btn-primary ec-dl-quick-go" style={{ background: `linear-gradient(135deg,${M},${MD})` }}>
+            {L('donate')}{total > 0 && <> {fmt(total)} {p._cur}</>}
+          </button>
+          <button type="button" className="ec-btn-cart" onClick={addCart} aria-label={L('addCart')} title={L('addCart')}><CartIcon s={24} /></button>
+        </div>
       </div>
       {notice ? <p role="status" className="ec-dn-notice">{notice}</p> : <p className="ec-dn-secure"><Lock /> {L('secure')}</p>}
     </form>
