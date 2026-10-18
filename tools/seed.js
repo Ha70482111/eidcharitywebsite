@@ -303,4 +303,26 @@ const donations = { type: 'campaigns', name: 'مشاريع التبرع (صفح�
   ].map(([img, name, category, desc, raised, target, beneficiaries]) => ({
     image: D(img), name, category, desc, location: b('قطر', 'Qatar'), raised, target, beneficiaries, url: '' })) }
 
-module.exports = { settings, menu, sections, donations, pages: require('./pages.js') }
+// The «أغلى هدية» gift section, added once to every database's home page (eid_add_gift). Its texts and occasions
+// also drive the gift page (/gift).
+const gift = { type: 'gift', name: 'أغلى هدية (الإهداء)', content: {
+    anchor: 'gift', bg: 'cream',
+    eyebrow: b('تهادوا تحابوا', 'Give gifts, grow in love'), title: b('أغلى هدية', 'The Most Precious Gift'),
+    subtitle: b('اجعل هديتك لمن تحب صدقةً يبقى أثرها: تبرّع باسمه في مشروع خيري، وأرسل له بطاقة إهداء أنيقة باسمك.',
+      'Make your gift a charity that lasts: donate in the name of someone you love and send them an elegant gift card from you.'),
+    button: b('أهدِ الآن', 'Send a gift'), button_url: '/gift', image: '',
+    page_subtitle: b('اختر المناسبة والمشروع، واكتب إهداءك، وأرسل لمن تحب بطاقةً تبقى في ميزان حسناته وحسناتك.',
+      'Choose the occasion and the project, write your dedication, and send a card that counts for both of you.'),
+    hadith: b('قال رسول الله ﷺ: «تهادوا تحابوا»', 'The Prophet ﷺ said: “Give gifts to one another, and you will love one another.”'),
+    amounts: '50, 100, 250, 500', currency: 'QAR', donate_action_url: '',
+  },
+  items: [
+    ['rings', b('زواج', 'Wedding'), b('بارك الله لكما وبارك عليكما وجمع بينكما في خير. أهديتكما هذه الصدقة فرحًا بكما.', 'May God bless you both and unite you in goodness. I give this charity in your name to celebrate you.')],
+    ['baby', b('مولود جديد', 'New baby'), b('مبارك المولود، جعله الله من الصالحين وقرّة عين لكم.', 'Congratulations on your new baby. May they grow up righteous and be the joy of your eyes.')],
+    ['graduation', b('نجاح وتخرّج', 'Graduation'), b('ألف مبروك النجاح، ومنه إلى أعلى المراتب.', 'Congratulations on your success, and on to even greater heights.')],
+    ['healing', b('شفاء', 'Get well'), b('أسأل الله أن يشفيك شفاءً لا يغادر سقمًا، وأن تكون هذه الصدقة سببًا في عافيتك.', 'May God grant you a complete recovery, and may this charity be a cause of your good health.')],
+    ['crescent', b('عيد', 'Eid'), b('كل عام وأنت بخير، تقبّل الله منا ومنكم صالح الأعمال.', 'Eid Mubarak! May God accept our good deeds and yours.')],
+    ['gift', b('إهداء لمن تحب', 'For someone I love'), b('أهديتك هذه الصدقة محبةً لك، جعلها الله في ميزان حسناتك.', 'I give this charity in your name out of love. May it count among your good deeds.')],
+  ].map(([icon, name, message]) => ({ icon, name, message })) }
+
+module.exports = { settings, menu, sections, donations, gift, pages: require('./pages.js') }

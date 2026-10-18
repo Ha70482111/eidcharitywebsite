@@ -172,6 +172,20 @@ export const SECTION_TYPES = {
     item: null,
     defaults: () => ({ content: { anchor: '', bg: 'maroon', title: b('ساهم معنا اليوم', 'Give today'), subtitle: b('', ''), button: b('تبرع الآن', 'Donate Now'), button_url: '#donate' }, items: [] }),
   },
+
+  gift: {
+    label: 'أغلى هدية (الإهداء)',
+    description: 'دعوة للتبرع كهدية باسم من تحب، وتتحكم في صفحة الإهداء /gift',
+    fields: [anchor, bgLight, ...heading, ...button(), f('image', 'صورة (اختياري)', 'image', { help: 'لو تركتها فارغة يظهر شكل بطاقة الإهداء.' }),
+      bi('page_subtitle', 'وصف صفحة الإهداء', 'textarea'), bi('hadith', 'الحديث أو العبارة في صفحة الإهداء'),
+      f('amounts', 'المبالغ المقترحة (مفصولة بفاصلة)', 'text', { dir: 'ltr' }), f('currency', 'العملة', 'text', { dir: 'ltr' }),
+      f('donate_action_url', 'رابط صفحة الدفع', 'url', { help: 'يُضاف له تلقائيًا: amount و campaign و gift وبيانات الإهداء. لو تركته فارغًا يُستخدم رابط الدفع الموجود في قسم الواجهة الرئيسية.' })],
+    item: { label: 'مناسبة', title: c => c.name, fields: [bi('name', 'اسم المناسبة'), f('icon', 'الأيقونة', 'select', { options: ICON_OPTIONS }),
+      bi('message', 'نص الإهداء المقترح', 'textarea')] },
+    defaults: () => ({ content: { anchor: 'gift', bg: 'cream', eyebrow: b('تهادوا تحابوا', 'Give gifts, grow in love'), title: b('أغلى هدية', 'The Most Precious Gift'),
+      subtitle: b('', ''), button: b('أهدِ الآن', 'Send a gift'), button_url: '/gift', image: '', amounts: '50, 100, 250, 500', currency: 'QAR' },
+      items: [{ icon: 'gift', name: b('إهداء لمن تحب', 'For someone I love'), message: b('أهديتك هذه الصدقة محبةً لك، جعلها الله في ميزان حسناتك.', 'I give this charity in your name out of love.') }] }),
+  },
 }
 
 const linkList = (key, label) => f(key, label, 'list', { itemLabel: 'رابط', fields: [bi('label', 'النص'), f('url', 'الرابط', 'url')] })

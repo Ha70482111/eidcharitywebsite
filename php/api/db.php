@@ -103,6 +103,7 @@ function eid_ensure_schema(PDO $pdo = null)
     eid_import_pages($pdo);
     eid_import_donations($pdo);
     eid_link_pages($pdo);
+    eid_add_gift($pdo);
 }
 
 /** Adds a column to a table that already exists (databases created before the column was introduced). */
@@ -196,6 +197,44 @@ function eid_import_donations(PDO $pdo)
     } catch (Throwable $e) {
         $pdo->rollBack();
         q("DELETE FROM settings WHERE k = 'donations_imported'", [], $pdo);
+        throw $e;
+    }
+}
+
+/**
+ * One-time addition of the «أغلى هدية» gift section to the home page, right after its first campaigns section
+ * (or after the hero). Guarded by the 'gift_added' setting, so a section the owner hides or deletes stays that way.
+ */
+function eid_add_gift(PDO $pdo)
+{
+    if (q("SELECT k FROM settings WHERE k = 'gift_added'", [], $pdo)) return;
+    try {
+        q("INSERT INTO settings (k, v) VALUES ('gift_added', ?)", [json_encode(gmdate('c'))], $pdo);
+    } catch (PDOException $e) {
+        return; // another request is adding it right now
+    }
+    $s = json_decode(file_get_contents(__DIR__ . '/seed.json'), true)['gift'] ?? null;
+    if (!$s) return;
+    $pdo->beginTransaction();
+    try {
+        $after = null;
+        foreach (q('SELECT * FROM sections WHERE page_id IS NULL ORDER BY sort_order, id', [], $pdo) as $sec) {
+            $c = jparse($sec['content']);
+            if ($sec['type'] === 'campaigns' && empty($c['listing_only'])) { $after = $sec; break; }
+            if ($sec['type'] === 'hero' && !$after) $after = $sec;
+        }
+        $order = $after ? (int)$after['sort_order'] + 1 : 1;
+        q('UPDATE sections SET sort_order = sort_order + 1 WHERE page_id IS NULL AND sort_order >= ?', [$order], $pdo);
+        $r = q('INSERT INTO sections (type, name, sort_order, is_visible, content, page_id) VALUES (?, ?, ?, 1, ?, NULL)',
+            [$s['type'], $s['name'], $order, jenc($s['content'])], $pdo);
+        foreach (array_values($s['items']) as $k => $item) {
+            q('INSERT INTO section_items (section_id, sort_order, is_visible, content) VALUES (?, ?, 1, ?)',
+                [$r['insertId'], $k + 1, jenc($item)], $pdo);
+        }
+        $pdo->commit();
+    } catch (Throwable $e) {
+        $pdo->rollBack();
+        q("DELETE FROM settings WHERE k = 'gift_added'", [], $pdo);
         throw $e;
     }
 }

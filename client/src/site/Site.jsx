@@ -4,6 +4,7 @@ import { SECTION_COMPONENTS, PageBanner } from './sections.jsx'
 import DonationPage from './DonationPage.jsx'
 import DonationsPage from './DonationsPage.jsx'
 import CartPage, { CartButton, CartToast } from './CartPage.jsx'
+import GiftPage, { GiftCardView } from './GiftPage.jsx'
 import { ChevDown, Phone, Mail, Pin, SOCIAL_ICONS, SOCIAL_OPTIONS, M, G, N } from '../shared/icons.jsx'
 import './site.css'
 
@@ -19,8 +20,11 @@ const donateId = (/^\/donate\/(\d+)\/?$/.exec(window.location.pathname) || [])[1
 const donateList = /^\/donate\/?$/.test(window.location.pathname)
 // The donation cart lives at /cart (kept in the browser, so it only needs the site settings).
 const cartPage = /^\/cart\/?$/.test(window.location.pathname)
-const apiUrl = pageSlug ? `/api/page/${pageSlug}` : donateId ? `/api/donate/${donateId}` : donateList ? '/api/donations' : '/api/site'
-const isSubPage = Boolean(pageSlug || donateId || donateList || cartPage)
+// The gift page («أغلى هدية») lives at /gift; the card a recipient opens lives at /gift/card.
+const giftPage = /^\/gift\/?$/.test(window.location.pathname)
+const giftCard = /^\/gift\/card\/?$/.test(window.location.pathname)
+const apiUrl = pageSlug ? `/api/page/${pageSlug}` : donateId ? `/api/donate/${donateId}` : donateList ? '/api/donations' : giftPage || giftCard ? '/api/gift' : '/api/site'
+const isSubPage = Boolean(pageSlug || donateId || donateList || cartPage || giftPage || giftCard)
 
 // The header's donate button opens the donations page unless another link was set in the admin.
 // The old default logo (/logo.jpg) is replaced by the brand SVG; a logo uploaded in /admin still wins.
@@ -66,7 +70,8 @@ export default function Site() {
       const p = data.page
       const cn = data.campaign?.content?.name
       const dt = data.settings.donations_title
-      const page = cartPage ? (lang === 'en' ? 'Donation Cart' : 'سلة التبرعات') : p ? (lang === 'en' ? p.title_en : p.title_ar) || p.title_ar || p.title_en : data.donations ? (dt && ((lang === 'en' ? dt.en : dt.ar) || dt.ar)) || (lang === 'en' ? 'Donations' : 'التبرعات') : cn ? (lang === 'en' ? cn.en : cn.ar) || cn.ar || cn.en || '' : data.notFound ? (lang === 'en' ? 'Page not found' : 'الصفحة غير موجودة') : ''
+      const gt = data.gift?.content?.title
+      const page = cartPage ? (lang === 'en' ? 'Donation Cart' : 'سلة التبرعات') : (giftPage || giftCard) && data.gift ? (gt && ((lang === 'en' ? gt.en : gt.ar) || gt.ar)) || (lang === 'en' ? 'The Most Precious Gift' : 'أغلى هدية') : p ? (lang === 'en' ? p.title_en : p.title_ar) || p.title_ar || p.title_en : data.donations ? (dt && ((lang === 'en' ? dt.en : dt.ar) || dt.ar)) || (lang === 'en' ? 'Donations' : 'التبرعات') : cn ? (lang === 'en' ? cn.en : cn.ar) || cn.ar || cn.en || '' : data.notFound ? (lang === 'en' ? 'Page not found' : 'الصفحة غير موجودة') : ''
       document.title = page ? `${page} | ${site}` : site
     }
   }, [data, lang])
@@ -96,7 +101,9 @@ export default function Site() {
           {data.page && <PageBanner page={data.page} />}
           {data.notFound && <NotFound />}
           {data.campaign && <DonationPage data={data} />}
-          {data.donations && <DonationsPage data={data} />}
+          {data.donations && !data.gift && <DonationsPage data={data} />}
+          {giftPage && data.gift && <GiftPage data={data} />}
+          {giftCard && data.gift && <GiftCardView />}
           {cartPage && !data.notFound && <CartPage fallbackPay={(data.sections || []).find(s => s.type === 'hero' && s.content?.donate_action_url)?.content.donate_action_url || ''} />}
           {(cartPage ? [] : data.sections || []).map(s => {
             const C = SECTION_COMPONENTS[s.type]

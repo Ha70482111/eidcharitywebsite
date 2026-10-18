@@ -3,6 +3,7 @@ import { useLang, useT, Link, lines } from './lang.jsx'
 import { Icon, ICONS, Arrow, Pin, Lock, Check, M, MD, G, GT, N, NM } from '../shared/icons.jsx'
 import { addToCart } from './cart.js'
 import { CartIcon } from './CartPage.jsx'
+import GiftCard from './GiftCard.jsx'
 
 const CR = 18
 const CS = '0 2px 18px rgba(0,0,0,0.07)'
@@ -653,8 +654,43 @@ function CtaBanner({ content: c }) {
   )
 }
 
+// ─── GIFT («أغلى هدية») ──────────────────────────────────────────────────────
+// Home-page entry to the gift page (/gift): the occasions open the page with that occasion picked.
+function Gift({ content: c, items }) {
+  const { lang } = useLang()
+  const t = useT()
+  const href = c.button_url || '/gift'
+  const sample = items[0] || {}
+  return (
+    <Shell content={c} defaultBg="cream">
+      <div className="ec-gift-home">
+        <div>
+          <Label text={t(c.eyebrow)} />
+          {t(c.title) && <h2 style={{ ...H2, color: N, margin: '0 0 12px' }}>{t(c.title)}</h2>}
+          {t(c.subtitle) && <p style={{ fontSize: 16.5, lineHeight: 1.9, color: '#5A5450', margin: '0 0 24px', maxWidth: 560 }}>{t(c.subtitle)}</p>}
+          {items.length > 0 && (
+            <ul className="ec-gift-occasions">
+              {items.map(o => (
+                <li key={o._id}><a href={`${href}${href.includes('?') ? '&' : '?'}occasion=${o._id}`}><Icon name={o.icon || 'gift'} /><span>{t(o.name)}</span></a></li>
+              ))}
+            </ul>
+          )}
+          {t(c.button) && <a className="ec-btn-primary" href={href} style={{ padding: '14px 40px', fontSize: 16 }}>{t(c.button)}</a>}
+        </div>
+        <div className="ec-gift-visual" aria-hidden="true">
+          {c.image ? <img src={c.image} alt="" loading="lazy" className="ec-gift-photo" /> : <>
+            <GiftCard lang={lang} className="ec-gift-back" gift={{ design: 'ivory', occasion: t(sample.name), icon: sample.icon, to: '', from: '' }} />
+            <GiftCard lang={lang} className="ec-gift-front" gift={{ design: 'maroon', occasion: t(sample.name), icon: sample.icon,
+              to: lang === 'en' ? 'Someone you love' : 'من تحب', from: lang === 'en' ? 'You' : 'أنت', message: t(sample.message) }} />
+          </>}
+        </div>
+      </div>
+    </Shell>
+  )
+}
+
 export const SECTION_COMPONENTS = {
   hero: Hero, gates: Gates, campaigns: Campaigns, centers: Centers, impact: Impact, story: Story,
   projects: Projects, governance: Governance, join: Join, media: Media, partners: Partners,
-  cards: Cards, text_block: TextBlock, cta_banner: CtaBanner, documents: Documents,
+  cards: Cards, text_block: TextBlock, cta_banner: CtaBanner, documents: Documents, gift: Gift,
 }
