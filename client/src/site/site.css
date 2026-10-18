@@ -389,7 +389,7 @@ a.ec-card-hover:focus-visible, a.ec-img-zoom:focus-visible { outline: 3px solid 
 .ec-dl-seg button { display: inline-flex; align-items: center; gap: 6px; min-height: 40px; padding: 0 18px; border: none; border-radius: 50px; background: none; cursor: pointer; font-size: 14px; font-weight: 700; color: var(--text-secondary); }
 .ec-dl-seg button[aria-pressed='true'] { background: var(--maroon); color: #fff; }
 .ec-dl-seg button:focus-visible { outline: 2px solid var(--maroon); outline-offset: 2px; }
-.ec-dl-quick-row { display: grid; grid-template-columns: minmax(200px, 280px) minmax(0, 1fr) auto; gap: 18px; align-items: end; }
+.ec-dl-quick-row { display: grid; grid-template-columns: minmax(200px, 280px) minmax(0, 1fr) auto auto; gap: 18px; align-items: end; }
 .ec-dl-quick-project, .ec-dl-quick-amounts { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
 .ec-dl-quick-project > span, .ec-dl-quick-amounts > span { font-size: 13.5px; font-weight: 700; color: var(--text-secondary); }
 .ec-dl-quick-project select { min-height: 48px; width: 100%; }
@@ -440,7 +440,7 @@ a.ec-card-hover:focus-visible, a.ec-img-zoom:focus-visible { outline: 3px solid 
 
 @media (max-width: 1024px) {
   .ec-dl-quick-row { grid-template-columns: 1fr; }
-  .ec-dl-quick-go { width: 100%; }
+  .ec-dl-quick-go, .ec-dl-quick-cart { width: 100%; }
 }
 @media (max-width: 900px) and (min-width: 769px) {
   .ec-dl-wrap .ec-grid-3 { grid-template-columns: repeat(2, 1fr); }
@@ -480,7 +480,10 @@ a.ec-card-hover:focus-visible, a.ec-img-zoom:focus-visible { outline: 3px solid 
 .ec-cart-type button[aria-pressed='true'] { background: #fff; color: var(--maroon); box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
 .ec-cart-type button:focus-visible { outline: 2px solid var(--maroon); outline-offset: 2px; }
 .ec-cart-amount { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
-.ec-cart-amount .ec-dn-custom input { width: 120px; flex: none; font-weight: 800; font-size: 16px; }
+.ec-cart-stepper { display: flex; align-items: center; gap: 8px; }
+.ec-cart-stepper > span { font-size: 14px; color: var(--text-muted); }
+.ec-cart-stepper .ec-dn-qty input { width: 90px; }
+.ec-cart-img-general { display: flex; align-items: center; justify-content: center; background: #FDF0F4; }
 .ec-cart-sum { font-size: 14px; color: var(--navy); }
 .ec-cart-remove { width: 44px; height: 44px; border-radius: 50%; border: 1px solid var(--border); background: var(--cream); color: var(--text-secondary); display: flex; align-items: center; justify-content: center; cursor: pointer; }
 .ec-cart-remove:hover { background: var(--maroon); border-color: var(--maroon); color: #fff; }
@@ -495,7 +498,9 @@ a.ec-card-hover:focus-visible, a.ec-img-zoom:focus-visible { outline: 3px solid 
 .ec-btn-cart:hover { background: #FDF0F4; }
 .ec-btn-cart:focus-visible { outline: 2px solid var(--maroon); outline-offset: 2px; }
 .ec-dn-card .ec-btn-cart { width: 100%; margin-top: 10px; }
-.ec-dl-actions .ec-btn-cart { width: 48px; min-width: 48px; padding: 0; flex-shrink: 0; }
+.ec-dl-actions .ec-btn-cart, .ec-dn-ractions .ec-btn-cart { width: 48px; min-width: 48px; padding: 0; flex-shrink: 0; }
+.ec-dn-ractions { margin-top: auto; display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.ec-dl-quick-cart { white-space: nowrap; }
 
 .ec-cart-toast { position: fixed; z-index: 120; bottom: 24px; left: 50%; transform: translateX(-50%); display: none; align-items: center; gap: 8px; background: var(--navy); color: #fff; border-radius: 50px; padding: 10px 10px 10px 20px; box-shadow: 0 10px 30px rgba(13,27,53,0.3); font-size: 14.5px; font-weight: 700; white-space: nowrap; }
 .ec-cart-toast[data-open='true'] { display: flex; animation: megaSlideIn 0.18s ease; }
@@ -512,7 +517,5 @@ a.ec-card-hover:focus-visible, a.ec-img-zoom:focus-visible { outline: 3px solid 
   .ec-cart-item { grid-template-columns: 72px minmax(0, 1fr) 44px; gap: 10px 12px; }
   .ec-cart-img { width: 72px; height: 56px; }
   .ec-cart-amount { grid-column: 1 / -1; flex-direction: row; justify-content: space-between; align-items: center; }
-  .ec-cart-amount .ec-dn-custom { flex: 1; }
-  .ec-cart-amount .ec-dn-custom input { width: auto; flex: 1; }
   .ec-cart-remove { grid-row: 1; grid-column: 3; }
 }

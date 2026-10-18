@@ -4,7 +4,7 @@ import { useMemo, useState } from 'react'
 import { useLang, useT } from './lang.jsx'
 import { PageBanner, campaignHref } from './sections.jsx'
 import { addToCart } from './cart.js'
-import { CartToast, CartIcon } from './CartPage.jsx'
+import { CartIcon } from './CartPage.jsx'
 import { Pin, Lock, Check, Arrow, M, MD, N } from '../shared/icons.jsx'
 
 const TXT = {
@@ -58,8 +58,6 @@ export default function DonationsPage({ data }) {
     return [...seen]
   }, [projects, lang])
 
-  const [added, setAdded] = useState(0)
-  const onAdd = () => setAdded(n => n + 1)
   const [cat, setCat] = useState('')
   const [query, setQuery] = useState('')
   const q = query.trim().toLowerCase()
@@ -103,7 +101,7 @@ export default function DonationsPage({ data }) {
 
             {shown.length ? (
               <div className="ec-grid-3">
-                {shown.map(p => <ProjectCard key={p._id} p={p} L={L} onAdd={onAdd} />)}
+                {shown.map(p => <ProjectCard key={p._id} p={p} L={L} />)}
               </div>
             ) : (
               <div className="ec-dl-empty">
@@ -114,7 +112,6 @@ export default function DonationsPage({ data }) {
           </>}
         </div>
       </section>
-      <CartToast show={added} />
     </>
   )
 }
@@ -140,6 +137,12 @@ function QuickDonate({ projects, L }) {
     url.searchParams.set('campaign', String(p._id))
     url.searchParams.set('category', (p.name && (p.name.ar || p.name.en)) || '')
     window.location.href = url.toString()
+  }
+
+  const addCart = () => {
+    if (!total || total <= 0) { setNotice(L('chooseAmount')); return }
+    addToCart({ id: p._id, name: p.name, image: p.image || '', cur: p._cur, pay: p._pay, type, amount: total, step: amounts[0] })
+    setNotice('')
   }
 
   return (
@@ -174,13 +177,14 @@ function QuickDonate({ projects, L }) {
         <button type="submit" className="ec-btn-primary ec-dl-quick-go" style={{ background: `linear-gradient(135deg,${M},${MD})` }}>
           {L('donate')}{total > 0 && <> {fmt(total)} {p._cur}</>}
         </button>
+        <button type="button" className="ec-btn-cart ec-dl-quick-cart" onClick={addCart}><CartIcon s={20} /> {L('addCart')}</button>
       </div>
       {notice ? <p role="status" className="ec-dn-notice">{notice}</p> : <p className="ec-dn-secure"><Lock /> {L('secure')}</p>}
     </form>
   )
 }
 
-function ProjectCard({ p, L, onAdd }) {
+function ProjectCard({ p, L }) {
   const t = useT()
   const { lang } = useLang()
   const amounts = p._amounts
@@ -228,7 +232,7 @@ function ProjectCard({ p, L, onAdd }) {
           <a className="ec-btn-primary" href={donateHref}>{L('donate')}{own && amount ? <> {fmt(amount)} {p._cur}</> : null}</a>
           {own && amount ? (
             <button type="button" className="ec-btn-cart" aria-label={`${L('addCart')}: ${name}`} title={L('addCart')}
-              onClick={() => { addToCart({ id: p._id, name: p.name, image: p.image || '', cur: p._cur, pay: p._pay, type: 'once', amount }); onAdd() }}>
+              onClick={() => addToCart({ id: p._id, name: p.name, image: p.image || '', cur: p._cur, pay: p._pay, type: 'once', amount, step: amounts[0] })}>
               <CartIcon s={22} />
             </button>
           ) : null}

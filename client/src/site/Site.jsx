@@ -3,7 +3,7 @@ import { LangCtx, useLang, useT, Link } from './lang.jsx'
 import { SECTION_COMPONENTS, PageBanner } from './sections.jsx'
 import DonationPage from './DonationPage.jsx'
 import DonationsPage from './DonationsPage.jsx'
-import CartPage, { CartButton } from './CartPage.jsx'
+import CartPage, { CartButton, CartToast } from './CartPage.jsx'
 import { ChevDown, Phone, Mail, Pin, SOCIAL_ICONS, SOCIAL_OPTIONS, M, G, N } from '../shared/icons.jsx'
 import './site.css'
 
@@ -95,12 +95,13 @@ export default function Site() {
           {data.notFound && <NotFound />}
           {data.campaign && <DonationPage data={data} />}
           {data.donations && <DonationsPage data={data} />}
-          {cartPage && !data.notFound && <CartPage />}
+          {cartPage && !data.notFound && <CartPage fallbackPay={(data.sections || []).find(s => s.type === 'hero' && s.content?.donate_action_url)?.content.donate_action_url || ''} />}
           {(cartPage ? [] : data.sections || []).map(s => {
             const C = SECTION_COMPONENTS[s.type]
             return C ? <C key={s.id} section={s} content={s.content || {}} items={(s.items || []).map(i => ({ ...i.content, _id: i.id }))} /> : null
           })}
         </main>
+        <CartToast />
         <Footer />
       </div>
     </LangCtx.Provider>

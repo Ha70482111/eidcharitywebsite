@@ -3,7 +3,7 @@
 // "added to cart" toast used by the donation pages.
 import { useEffect, useState } from 'react'
 import { useLang, useT } from './lang.jsx'
-import { useCart, updateCartItem, removeFromCart, clearCart } from './cart.js'
+import { useCart, updateCartItem, removeFromCart, clearCart, ADDED_EVENT } from './cart.js'
 import { Lock, Check, M, MD, N } from '../shared/icons.jsx'
 
 const TXT = {
@@ -38,7 +38,8 @@ const useL = () => { const { lang } = useLang(); return k => TXT[k][lang === 'en
 const fmt = n => Number(n || 0).toLocaleString('en-US')
 const nameOf = (n, lang) => (n && (lang === 'en' ? n.en || n.ar : n.ar || n.en)) || ''
 
-export default function CartPage() {
+// `fallbackPay` is the home page's payment link, used by items whose section has none.
+export default function CartPage({ fallbackPay = '' }) {
   const L = useL()
   const t = useT()
   const { lang } = useLang()
@@ -48,9 +49,10 @@ export default function CartPage() {
   // Items that pay through the same link, type and currency are paid together.
   const groups = []
   items.forEach(i => {
-    const k = `${i.pay || ''}|${i.type}|${i.cur}`
+    const pay = i.pay || fallbackPay
+    const k = `${pay}|${i.type}|${i.cur}`
     const g = groups.find(x => x.k === k)
-    g ? g.items.push(i) : groups.push({ k, pay: i.pay || '', type: i.type, cur: i.cur, items: [i] })
+    g ? g.items.push(i) : groups.push({ k, pay, type: i.type, cur: i.cur, items: [i] })
   })
 
   const checkout = g => {
@@ -60,7 +62,7 @@ export default function CartPage() {
     const url = new URL(g.pay, window.location.origin)
     url.searchParams.set('amount', String(total))
     url.searchParams.set('type', g.type)
-    url.searchParams.set('campaign', g.items.map(i => i.id).join(','))
+    url.searchParams.set('campaign', g.items.map(i => i.id).filter(id => /^\d+$/.test(String(id))).join(','))
     url.searchParams.set('category', g.items.map(i => (i.name && (i.name.ar || i.name.en)) || '').join(' | '))
     url.searchParams.set('items', g.items.map(i => `${i.id}:${i.amount}`).join(','))
     if (g.items.length === 1 && g.items[0].sharePrice) url.searchParams.set('quantity', String(g.items[0].qty || 1))
@@ -133,13 +135,17 @@ export default function CartPage() {
 }
 
 function CartRow({ i, L, name, onChange }) {
-  const href = `/donate/${i.id}`
+  // Campaigns open their details page; the general quick donation has no page of its own.
+  const href = /^\d+$/.test(String(i.id)) ? `/donate/${i.id}` : ''
+  const step = Number(i.step) > 0 ? Number(i.step) : 50
+  const amount = Number(i.amount) || 0
   const set = patch => { updateCartItem(i.key, patch); onChange() }
   return (
     <li className="ec-cart-item">
-      <a href={href} className="ec-cart-img" tabIndex={-1} aria-hidden="true">{i.image && <img src={i.image} alt="" loading="lazy" />}</a>
+      {href ? <a href={href} className="ec-cart-img" tabIndex={-1} aria-hidden="true">{i.image && <img src={i.image} alt="" loading="lazy" />}</a>
+        : <span className="ec-cart-img ec-cart-img-general" aria-hidden="true"><HeartIcon /></span>}
       <div className="ec-cart-info">
-        <h2><a href={href} className="ec-title-link">{name}</a></h2>
+        <h2>{href ? <a href={href} className="ec-title-link">{name}</a> : name}</h2>
         <div className="ec-cart-type" role="group" aria-label={name}>
           {['once', 'monthly'].map(tp => (
             <button key={tp} type="button" aria-pressed={i.type === tp} onClick={() => set({ type: tp })}>{i.type === tp && <Check />}{L(tp)}</button>
@@ -155,12 +161,15 @@ function CartRow({ i, L, name, onChange }) {
             <button type="button" aria-label={L('more')} onClick={() => set({ qty: (i.qty || 1) + 1 })}>+</button>
           </div>
         ) : (
-          <label className="ec-dn-custom" style={{ margin: 0 }}>
-            <span className="ec-visually-hidden">{L('amount')}: {name}</span>
-            <input className="ec-field" type="number" min="1" inputMode="numeric" value={i.amount || ''}
-              onChange={e => set({ amount: Math.max(0, Number(e.target.value) || 0) })} />
+          <div className="ec-cart-stepper">
+            <div className="ec-dn-qty" role="group" aria-label={`${L('amount')}: ${name}`}>
+              <button type="button" aria-label={`${L('less')} ${fmt(step)}`} onClick={() => set({ amount: Math.max(step, amount - step) })} disabled={amount <= step}>−</button>
+              <input type="number" min="1" inputMode="numeric" value={i.amount || ''} aria-label={`${L('amount')} (${i.cur})`}
+                onChange={e => set({ amount: Math.max(0, Number(e.target.value) || 0) })} />
+              <button type="button" aria-label={`${L('more')} ${fmt(step)}`} onClick={() => set({ amount: amount + step })}>+</button>
+            </div>
             <span>{i.cur}</span>
-          </label>
+          </div>
         )}
         {i.sharePrice ? <strong className="ec-cart-sum">{fmt(i.amount)} {i.cur}</strong> : null}
       </div>
@@ -181,16 +190,16 @@ export function CartButton({ className = '' }) {
   )
 }
 
-// Short confirmation after «أضف إلى السلة», with a link to the cart. `show` changes on every add.
-export function CartToast({ show }) {
+// Short confirmation after any «أضف إلى السلة» on the site, with a link to the cart.
+export function CartToast() {
   const L = useL()
   const [open, setOpen] = useState(false)
   useEffect(() => {
-    if (!show) return
-    setOpen(true)
-    const id = setTimeout(() => setOpen(false), 5000)
-    return () => clearTimeout(id)
-  }, [show])
+    let id
+    const show = () => { setOpen(true); clearTimeout(id); id = setTimeout(() => setOpen(false), 5000) }
+    window.addEventListener(ADDED_EVENT, show)
+    return () => { window.removeEventListener(ADDED_EVENT, show); clearTimeout(id) }
+  }, [])
   return (
     <div role="status" aria-live="polite" className="ec-cart-toast" data-open={open}>
       {open && <><Check /> <span>{L('added')}</span> <a href="/cart">{L('view')}</a></>}
@@ -199,4 +208,5 @@ export function CartToast({ show }) {
 }
 
 export const CartIcon = ({ c = 'currentColor', s = 24 }) => <svg viewBox="0 0 24 24" fill="none" width={s} height={s} aria-hidden="true"><path d="M3 4h2l2.4 10.2a1.5 1.5 0 001.5 1.1h8.6a1.5 1.5 0 001.4-1.1L21 8H6.2" stroke={c} strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"/><circle cx="9.5" cy="19.5" r="1.4" fill={c}/><circle cx="17" cy="19.5" r="1.4" fill={c}/></svg>
+const HeartIcon = () => <svg viewBox="0 0 20 20" width="28" height="28" aria-hidden="true"><path d="M10 17s-6.5-4.1-6.5-8.6A3.6 3.6 0 0110 6.2a3.6 3.6 0 016.5 2.2C16.5 12.9 10 17 10 17z" fill={M} /></svg>
 const TrashIcon = () => <svg viewBox="0 0 20 20" fill="none" width="18" height="18" aria-hidden="true"><path d="M4 6h12M8 6V4.5h4V6M6 6l.7 10h6.6L14 6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>

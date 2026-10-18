@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useLang, useT, lines } from './lang.jsx'
 import { campaignHref } from './sections.jsx'
 import { addToCart } from './cart.js'
-import { CartToast, CartIcon } from './CartPage.jsx'
+import { CartIcon } from './CartPage.jsx'
 import { Pin, Lock, Check, Arrow, SOCIAL_ICONS, M, MD, N } from '../shared/icons.jsx'
 
 const TXT = {
@@ -139,7 +139,7 @@ export default function DonationPage({ data }) {
         </aside>
       </div>
 
-      {data.related?.length > 0 && <Related items={data.related} cur={cur} L={L} />}
+      {data.related?.length > 0 && <Related items={data.related} cur={cur} amounts={sc.amounts} payUrl={data.donate_action_url} L={L} />}
 
       <div className="ec-dn-mobilebar">
         {target > 0 && <div className="ec-dn-mobilebar-pct"><strong>{pct}%</strong> <span>{L('done')}</span></div>}
@@ -190,7 +190,6 @@ function DonateCard({ it, id, cur, amountsText, payUrl, pct, L }) {
   const [custom, setCustom] = useState(asked && !amounts.includes(asked) ? String(asked) : '')
   const [qty, setQty] = useState(sharePrice && asked ? Math.max(1, Math.round(asked / sharePrice)) : 1)
   const [notice, setNotice] = useState('')
-  const [added, setAdded] = useState(0)
   const target = Number(it.target) || 0
   const raised = Number(it.raised) || 0
   const total = sharePrice ? sharePrice * qty : custom ? Number(custom) : amount
@@ -209,9 +208,8 @@ function DonateCard({ it, id, cur, amountsText, payUrl, pct, L }) {
 
   const addCart = () => {
     if (!total || total <= 0) { setNotice(L('chooseAmount')); return }
-    addToCart({ id, name: it.name, image: it.image || '', cur, pay: payUrl || '', type, amount: total, ...(sharePrice ? { sharePrice, qty } : {}) })
+    addToCart({ id, name: it.name, image: it.image || '', cur, pay: payUrl || '', type, amount: total, step: amounts[0], ...(sharePrice ? { sharePrice, qty } : {}) })
     setNotice('')
-    setAdded(n => n + 1)
   }
 
   return (
@@ -288,7 +286,6 @@ function DonateCard({ it, id, cur, amountsText, payUrl, pct, L }) {
           {L('donate')}
         </button>
         <button type="button" onClick={addCart} className="ec-btn-cart"><CartIcon c="currentColor" s={20} /> {L('addCart')}</button>
-        <CartToast show={added} />
         {notice && <p role="status" className="ec-dn-notice">{notice}</p>}
         <p className="ec-dn-secure"><Lock /> {L('secure')}</p>
 
@@ -325,9 +322,10 @@ function Share({ name, L }) {
   )
 }
 
-function Related({ items, cur, L }) {
+function Related({ items, cur, amounts: amountsText, payUrl, L }) {
   const t = useT()
   const { lang } = useLang()
+  const first = String(amountsText || '50, 100, 250, 500').split(',').map(s => Number(s.trim())).find(n => n > 0) || 50
   return (
     <section className="ec-section" style={{ background: '#F4F2EE' }}>
       <div className="ec-inner">
@@ -347,7 +345,15 @@ function Related({ items, cur, L }) {
                     <div className="ec-progress-track" role="progressbar" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100} aria-label={t(c.name)}><div className="ec-progress-fill" style={{ width: `${pct}%` }} /></div>
                     <div className="ec-dn-rnums"><strong>{pct}% {L('done')}</strong><span>{fmt(c.raised)} / {fmt(c.target)} {cur}</span></div>
                   </>}
-                  <a href={campaignHref(c)} className="ec-dn-rlink">{L('view')} <Arrow c={M} s={14} dir={lang === 'ar' ? 'rtl' : 'ltr'} /></a>
+                  <div className="ec-dn-ractions">
+                    <a href={campaignHref(c)} className="ec-dn-rlink">{L('view')} <Arrow c={M} s={14} dir={lang === 'ar' ? 'rtl' : 'ltr'} /></a>
+                    {campaignHref(c) === `/donate/${r.id}` && (
+                      <button type="button" className="ec-btn-cart" aria-label={`${L('addCart')}: ${t(c.name)}`} title={L('addCart')}
+                        onClick={() => addToCart({ id: r.id, name: c.name, image: c.image || '', cur, pay: payUrl || '', type: 'once', amount: first, step: first })}>
+                        <CartIcon s={20} />
+                      </button>
+                    )}
+                  </div>
                 </div>
               </article>
             )

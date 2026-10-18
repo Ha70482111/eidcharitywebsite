@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react'
 import { useLang, useT, Link, lines } from './lang.jsx'
 import { Icon, ICONS, Arrow, Pin, Lock, Check, M, MD, G, GT, N, NM } from '../shared/icons.jsx'
+import { addToCart } from './cart.js'
+import { CartIcon } from './CartPage.jsx'
 
 const CR = 18
 const CS = '0 2px 18px rgba(0,0,0,0.07)'
@@ -99,6 +101,14 @@ function Hero({ content: c, items }) {
     window.location.href = url.toString()
   }
 
+  // The quick donation goes in the cart as a general donation, or under the chosen category.
+  const addCart = () => {
+    if (!finalAmount || finalAmount <= 0) { setNotice(lang === 'ar' ? 'اختر مبلغ التبرع أولًا' : 'Please choose an amount'); return }
+    const name = cat ? { ar: cat, en: cat } : { ar: 'تبرع عام', en: 'General donation' }
+    addToCart({ id: cat ? `general:${cat}` : 'general', name, image: '', cur: currency, pay: c.donate_action_url || '', type, amount: finalAmount, step: amounts[0] })
+    setNotice('')
+  }
+
   return (
     <section id={c.anchor || undefined} style={{ position: 'relative', minHeight: mobile ? '100svh' : '90vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: N }}>
       {slides.map((s, i) => (
@@ -190,6 +200,9 @@ function Hero({ content: c, items }) {
                   <button type="button" onClick={donate} className="ec-btn-primary" style={{ width: '100%', padding: 14, fontSize: 16, borderRadius: 12, background: `linear-gradient(135deg,${M},${MD})` }}>
                     {t(c.donate_button)} — {finalAmount ? `${Number(finalAmount).toLocaleString('en-US')} ${currency}` : currency}
                   </button>
+                  <button type="button" onClick={addCart} className="ec-btn-cart" style={{ width: '100%', marginTop: 10 }}>
+                    <CartIcon s={20} /> {lang === 'ar' ? 'أضف إلى السلة' : 'Add to cart'}
+                  </button>
                   {notice && <p role="status" style={{ textAlign: 'center', fontSize: 13.5, color: M, fontWeight: 700, margin: '10px 0 0' }}>{notice}</p>}
                   {t(c.secure_note) && (
                     <p style={{ textAlign: 'center', fontSize: 12.5, color: '#6A6560', margin: '10px 0 0', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5 }}>
@@ -231,8 +244,11 @@ export const campaignHref = it => (it.url && it.url !== '#' && it.url !== '#dona
 
 function Campaigns({ content: c, items }) {
   const t = useT()
+  const { lang } = useLang()
   if (c.listing_only) return null // shown on the donations page (/donate) only
   const cur = c.currency || 'QAR'
+  const amounts = String(c.amounts || '50, 100, 250, 500').split(',').map(s => Number(s.trim())).filter(n => n > 0)
+  const addLabel = lang === 'ar' ? 'أضف إلى السلة' : 'Add to cart'
   const fmt = n => Number(n || 0).toLocaleString('en-US')
   return (
     <Shell content={c} defaultBg="warm">
@@ -268,7 +284,15 @@ function Campaigns({ content: c, items }) {
                 </>}
                 <div style={{ flex: 1 }} />
                 {t(it.permit) && <div style={{ fontSize: 12.5, color: '#6A6560', padding: '11px 0', borderTop: '1px solid #F0EDE8', margin: '12px 0 14px' }}>{t(it.permit)}</div>}
-                {t(c.cta) && <a className="ec-btn-primary" href={campaignHref(it)} style={{ width: '100%', padding: 13, fontSize: 15.5 }}>{t(c.cta)}</a>}
+                <div className="ec-dl-actions">
+                  {t(c.cta) && <a className="ec-btn-primary" href={campaignHref(it)} style={{ padding: 13, fontSize: 15.5 }}>{t(c.cta)}</a>}
+                  {it._id && campaignHref(it) === `/donate/${it._id}` && amounts.length > 0 && (
+                    <button type="button" className="ec-btn-cart" aria-label={`${addLabel}: ${t(it.name)}`} title={addLabel}
+                      onClick={() => addToCart({ id: it._id, name: it.name, image: it.image || '', cur, pay: c.donate_action_url || '', type: 'once', amount: amounts[0], step: amounts[0] })}>
+                      <CartIcon s={22} />
+                    </button>
+                  )}
+                </div>
               </div>
             </article>
           )

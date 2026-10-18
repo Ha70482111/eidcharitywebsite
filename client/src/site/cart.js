@@ -4,6 +4,7 @@ import { useSyncExternalStore } from 'react'
 
 const KEY = 'ec-cart'
 const EVENT = 'ec-cart-change'
+export const ADDED_EVENT = 'ec-cart-added' // shows the "added to cart" toast
 let cache = null
 
 function read() {
@@ -32,8 +33,14 @@ export const useCart = () => useSyncExternalStore(subscribe, read, () => [])
 
 export const cartKey = (id, type) => `${id}:${type || 'once'}`
 
-// item: { id, name, image, cur, pay, type, amount, sharePrice?, qty? }
+// item: { id, name, image, cur, pay, type, amount, step?, sharePrice?, qty? }
+// `id` is a campaign id, or a text key such as "general" for the home page's quick donation.
 export function addToCart(item) {
+  addItem(item)
+  window.dispatchEvent(new Event(ADDED_EVENT))
+}
+
+function addItem(item) {
   const type = item.type || 'once'
   const key = cartKey(item.id, type)
   const items = read()
