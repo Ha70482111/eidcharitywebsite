@@ -3,6 +3,8 @@
 import { useMemo, useState } from 'react'
 import { useLang, useT } from './lang.jsx'
 import { PageBanner, campaignHref } from './sections.jsx'
+import { addToCart } from './cart.js'
+import { CartIcon } from './CartPage.jsx'
 import { Pin, Lock, Check, Arrow, M, MD, N } from '../shared/icons.jsx'
 
 const TXT = {
@@ -15,6 +17,7 @@ const TXT = {
   amount: ['المبلغ', 'Amount'],
   other: ['مبلغ آخر', 'Other amount'],
   donate: ['تبرع', 'Donate'],
+  addCart: ['أضف إلى السلة', 'Add to cart'],
   details: ['التفاصيل', 'Details'],
   chooseAmount: ['اختر مبلغ التبرع أولًا', 'Please choose an amount'],
   noGateway: ['بوابة الدفع غير مفعلة بعد', 'Online payment is not available yet'],
@@ -136,6 +139,12 @@ function QuickDonate({ projects, L }) {
     window.location.href = url.toString()
   }
 
+  const addCart = () => {
+    if (!total || total <= 0) { setNotice(L('chooseAmount')); return }
+    addToCart({ id: p._id, name: p.name, image: p.image || '', cur: p._cur, pay: p._pay, type, amount: total, step: amounts[0] })
+    setNotice('')
+  }
+
   return (
     <form className="ec-dl-quick" onSubmit={donate} aria-labelledby="dl-quick-title">
       <div className="ec-dl-quick-head">
@@ -165,9 +174,12 @@ function QuickDonate({ projects, L }) {
               onChange={e => { setCustom(e.target.value); setAmount(null); setNotice('') }} style={{ borderColor: custom ? M : undefined }} />
           </div>
         </div>
-        <button type="submit" className="ec-btn-primary ec-dl-quick-go" style={{ background: `linear-gradient(135deg,${M},${MD})` }}>
-          {L('donate')}{total > 0 && <> {fmt(total)} {p._cur}</>}
-        </button>
+        <div className="ec-donate-row">
+          <button type="submit" className="ec-btn-primary ec-dl-quick-go" style={{ background: `linear-gradient(135deg,${M},${MD})` }}>
+            {L('donate')}{total > 0 && <> {fmt(total)} {p._cur}</>}
+          </button>
+          <button type="button" className="ec-btn-cart" onClick={addCart} aria-label={L('addCart')} title={L('addCart')}><CartIcon s={24} /></button>
+        </div>
       </div>
       {notice ? <p role="status" className="ec-dn-notice">{notice}</p> : <p className="ec-dn-secure"><Lock /> {L('secure')}</p>}
     </form>
@@ -220,6 +232,12 @@ function ProjectCard({ p, L }) {
         )}
         <div className="ec-dl-actions">
           <a className="ec-btn-primary" href={donateHref}>{L('donate')}{own && amount ? <> {fmt(amount)} {p._cur}</> : null}</a>
+          {own && amount ? (
+            <button type="button" className="ec-btn-cart" aria-label={`${L('addCart')}: ${name}`} title={L('addCart')}
+              onClick={() => addToCart({ id: p._id, name: p.name, image: p.image || '', cur: p._cur, pay: p._pay, type: 'once', amount, step: amounts[0] })}>
+              <CartIcon s={22} />
+            </button>
+          ) : null}
           <a className="ec-dl-more" href={href} aria-label={`${L('details')}: ${name}`}>{L('details')} <Arrow c={M} s={14} dir={lang === 'ar' ? 'rtl' : 'ltr'} /></a>
         </div>
       </div>

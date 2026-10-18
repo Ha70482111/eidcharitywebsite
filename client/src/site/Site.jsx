@@ -3,6 +3,7 @@ import { LangCtx, useLang, useT, Link } from './lang.jsx'
 import { SECTION_COMPONENTS, PageBanner } from './sections.jsx'
 import DonationPage from './DonationPage.jsx'
 import DonationsPage from './DonationsPage.jsx'
+import CartPage, { CartButton, CartToast } from './CartPage.jsx'
 import { ChevDown, Phone, Mail, Pin, SOCIAL_ICONS, SOCIAL_OPTIONS, M, G, N } from '../shared/icons.jsx'
 import './site.css'
 
@@ -16,8 +17,10 @@ const pageSlug = (/^\/page\/([A-Za-z0-9-]+)\/?$/.exec(window.location.pathname) 
 const donateId = (/^\/donate\/(\d+)\/?$/.exec(window.location.pathname) || [])[1] || null
 // The donations listing (every campaign) lives at /donate.
 const donateList = /^\/donate\/?$/.test(window.location.pathname)
+// The donation cart lives at /cart (kept in the browser, so it only needs the site settings).
+const cartPage = /^\/cart\/?$/.test(window.location.pathname)
 const apiUrl = pageSlug ? `/api/page/${pageSlug}` : donateId ? `/api/donate/${donateId}` : donateList ? '/api/donations' : '/api/site'
-const isSubPage = Boolean(pageSlug || donateId || donateList)
+const isSubPage = Boolean(pageSlug || donateId || donateList || cartPage)
 
 // The header's donate button opens the donations page unless another link was set in the admin.
 // The old default logo (/logo.jpg) is replaced by the brand SVG; a logo uploaded in /admin still wins.
@@ -63,7 +66,7 @@ export default function Site() {
       const p = data.page
       const cn = data.campaign?.content?.name
       const dt = data.settings.donations_title
-      const page = p ? (lang === 'en' ? p.title_en : p.title_ar) || p.title_ar || p.title_en : data.donations ? (dt && ((lang === 'en' ? dt.en : dt.ar) || dt.ar)) || (lang === 'en' ? 'Donations' : 'التبرعات') : cn ? (lang === 'en' ? cn.en : cn.ar) || cn.ar || cn.en || '' : data.notFound ? (lang === 'en' ? 'Page not found' : 'الصفحة غير موجودة') : ''
+      const page = cartPage ? (lang === 'en' ? 'Donation Cart' : 'سلة التبرعات') : p ? (lang === 'en' ? p.title_en : p.title_ar) || p.title_ar || p.title_en : data.donations ? (dt && ((lang === 'en' ? dt.en : dt.ar) || dt.ar)) || (lang === 'en' ? 'Donations' : 'التبرعات') : cn ? (lang === 'en' ? cn.en : cn.ar) || cn.ar || cn.en || '' : data.notFound ? (lang === 'en' ? 'Page not found' : 'الصفحة غير موجودة') : ''
       document.title = page ? `${page} | ${site}` : site
     }
   }, [data, lang])
@@ -94,11 +97,13 @@ export default function Site() {
           {data.notFound && <NotFound />}
           {data.campaign && <DonationPage data={data} />}
           {data.donations && <DonationsPage data={data} />}
-          {(data.sections || []).map(s => {
+          {cartPage && !data.notFound && <CartPage fallbackPay={(data.sections || []).find(s => s.type === 'hero' && s.content?.donate_action_url)?.content.donate_action_url || ''} />}
+          {(cartPage ? [] : data.sections || []).map(s => {
             const C = SECTION_COMPONENTS[s.type]
             return C ? <C key={s.id} section={s} content={s.content || {}} items={(s.items || []).map(i => ({ ...i.content, _id: i.id }))} /> : null
           })}
         </main>
+        <CartToast />
         <Footer />
       </div>
     </LangCtx.Provider>
@@ -262,15 +267,18 @@ function Header({ menu }) {
           })}
         </nav>
 
-        <div className="ec-desktop-donate" style={{ flexShrink: 0 }}>
-          <a className="ec-btn-primary" href={donateHref(settings)} style={{ padding: '13px 36px', fontSize: 16 }}>{t(settings.donate_label) || 'تبرع الآن'}</a>
-        </div>
+        <div className="ec-header-end">
+          <CartButton />
+          <div className="ec-desktop-donate">
+            <a className="ec-btn-primary" href={donateHref(settings)} style={{ padding: '13px 36px', fontSize: 16 }}>{t(settings.donate_label) || 'تبرع الآن'}</a>
+          </div>
 
-        <button className="ec-mobile-toggle" aria-label={lang === 'ar' ? 'القائمة' : 'Menu'} aria-expanded={mobileOpen} aria-controls="ec-mobile-menu"
-          style={{ flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 5, width: 48, height: 48, background: 'none', border: 'none', cursor: 'pointer', borderRadius: 8 }}
-          onClick={() => setMobileOpen(!mobileOpen)}>
-          {[0, 1, 2].map(i => <span key={i} style={{ display: 'block', width: 24, height: 2, background: N, borderRadius: 1 }} />)}
-        </button>
+          <button className="ec-mobile-toggle" aria-label={lang === 'ar' ? 'القائمة' : 'Menu'} aria-expanded={mobileOpen} aria-controls="ec-mobile-menu"
+            style={{ flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 5, width: 48, height: 48, background: 'none', border: 'none', cursor: 'pointer', borderRadius: 8 }}
+            onClick={() => setMobileOpen(!mobileOpen)}>
+            {[0, 1, 2].map(i => <span key={i} style={{ display: 'block', width: 24, height: 2, background: N, borderRadius: 1 }} />)}
+          </button>
+        </div>
       </div>
 
       {active && <MegaPanel item={active} onEnter={cancelClose} onLeave={scheduleClose} />}

@@ -454,3 +454,70 @@ a.ec-card-hover:focus-visible, a.ec-img-zoom:focus-visible { outline: 3px solid 
   .ec-dl-cats button { flex: 0 0 auto; }
   .ec-dl-wrap { padding: 28px 0 56px; }
 }
+
+/* ── Donation cart (/cart) ─────────────────── */
+.ec-cart-btn { position: relative; display: inline-flex; align-items: center; justify-content: center; width: 48px; height: 48px; border-radius: 50%; flex-shrink: 0; transition: background 0.15s; }
+.ec-cart-btn:hover { background: #FDF5F7; }
+.ec-cart-btn:focus-visible { outline: 2px solid var(--maroon); outline-offset: 2px; }
+.ec-cart-badge { position: absolute; top: 3px; inset-inline-end: 1px; min-width: 20px; height: 20px; padding: 0 5px; border-radius: 10px; background: var(--maroon); color: #fff; font-size: 12px; font-weight: 800; line-height: 20px; text-align: center; }
+.ec-header-end { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+
+.ec-cart-wrap { padding: 32px 0 80px; }
+.ec-cart-title { font-size: clamp(26px, 2.6vw, 36px); font-weight: 900; color: var(--navy); margin: 0 0 22px; }
+.ec-cart-wrap .ec-dl-empty svg { display: block; margin: 0 auto 12px; }
+.ec-cart-grid { display: grid; grid-template-columns: minmax(0, 1fr) 380px; gap: 32px; align-items: start; }
+.ec-cart-bar { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 0 0 12px; font-size: 14.5px; color: var(--text-secondary); }
+.ec-cart-link { display: inline-flex; align-items: center; min-height: 44px; padding: 0 10px; border: none; background: none; border-radius: 10px; cursor: pointer; font-size: 14.5px; font-weight: 800; color: var(--maroon); }
+.ec-cart-link:hover { background: #FDF0F4; }
+.ec-cart-link:focus-visible { outline: 2px solid var(--maroon); outline-offset: 2px; }
+.ec-cart-list { list-style: none; padding: 0; margin: 0 0 12px; display: flex; flex-direction: column; gap: 12px; }
+.ec-cart-item { display: grid; grid-template-columns: 96px minmax(0, 1fr) auto 44px; gap: 16px; align-items: center; background: #fff; border: 1px solid var(--border); border-radius: 16px; padding: 12px; }
+.ec-cart-img { display: block; width: 96px; height: 72px; border-radius: 10px; overflow: hidden; background: #EAE7E2; }
+.ec-cart-img img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.ec-cart-info h2 { font-size: 16.5px; font-weight: 800; color: var(--navy); margin: 0 0 8px; line-height: 1.4; }
+.ec-cart-type { display: inline-flex; gap: 4px; background: var(--warm-gray); border-radius: 50px; padding: 3px; }
+.ec-cart-type button { min-height: 36px; padding: 4px 12px; border: none; border-radius: 50px; background: transparent; color: var(--text-secondary); font-size: 13px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; }
+.ec-cart-type button[aria-pressed='true'] { background: #fff; color: var(--maroon); box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
+.ec-cart-type button:focus-visible { outline: 2px solid var(--maroon); outline-offset: 2px; }
+.ec-cart-amount { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
+.ec-cart-stepper { display: flex; align-items: center; gap: 8px; }
+.ec-cart-stepper > span { font-size: 14px; color: var(--text-muted); }
+.ec-cart-stepper .ec-dn-qty input { width: 90px; }
+.ec-cart-img-general { display: flex; align-items: center; justify-content: center; background: #FDF0F4; }
+.ec-cart-sum { font-size: 14px; color: var(--navy); }
+.ec-cart-remove { width: 44px; height: 44px; border-radius: 50%; border: 1px solid var(--border); background: var(--cream); color: var(--text-secondary); display: flex; align-items: center; justify-content: center; cursor: pointer; }
+.ec-cart-remove:hover { background: var(--maroon); border-color: var(--maroon); color: #fff; }
+.ec-cart-remove:focus-visible { outline: 2px solid var(--maroon); outline-offset: 2px; }
+.ec-cart-summary { position: sticky; top: 120px; }
+.ec-cart-group + .ec-cart-group { border-top: 1px solid var(--border); margin-top: 18px; padding-top: 14px; }
+.ec-cart-line { display: flex; justify-content: space-between; gap: 12px; font-size: 14px; color: var(--text-secondary); padding: 4px 0; }
+.ec-cart-line span:last-child { white-space: nowrap; font-weight: 700; color: var(--navy); }
+
+/* Add-to-cart buttons on the donation pages */
+.ec-btn-cart { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 48px; padding: 0 18px; border: 2px solid var(--maroon); border-radius: 12px; background: #fff; color: var(--maroon); font-size: 16px; font-weight: 800; cursor: pointer; transition: background 0.15s, color 0.15s; }
+.ec-btn-cart:hover { background: #FDF0F4; }
+.ec-btn-cart:focus-visible { outline: 2px solid var(--maroon); outline-offset: 2px; }
+/* Donate button with the cart icon next to it */
+.ec-donate-row { display: flex; gap: 10px; align-items: stretch; }
+.ec-donate-row > .ec-btn-primary { flex: 1; min-width: 0; }
+.ec-donate-row > .ec-btn-cart { width: 56px; min-width: 56px; padding: 0; flex-shrink: 0; }
+.ec-dl-actions .ec-btn-cart, .ec-dn-ractions .ec-btn-cart { width: 48px; min-width: 48px; padding: 0; flex-shrink: 0; }
+.ec-dn-ractions { margin-top: auto; display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+
+.ec-cart-toast { position: fixed; z-index: 120; bottom: 24px; left: 50%; transform: translateX(-50%); display: none; align-items: center; gap: 8px; background: var(--navy); color: #fff; border-radius: 50px; padding: 10px 10px 10px 20px; box-shadow: 0 10px 30px rgba(13,27,53,0.3); font-size: 14.5px; font-weight: 700; white-space: nowrap; }
+.ec-cart-toast[data-open='true'] { display: flex; animation: megaSlideIn 0.18s ease; }
+[dir='rtl'] .ec-cart-toast { padding: 10px 20px 10px 10px; }
+.ec-cart-toast a { display: inline-flex; align-items: center; min-height: 36px; padding: 0 16px; border-radius: 50px; background: var(--gold); color: var(--navy); font-weight: 800; }
+.ec-cart-toast a:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+
+@media (max-width: 900px) {
+  .ec-cart-grid { grid-template-columns: 1fr; }
+  .ec-cart-summary { position: static; }
+  .ec-cart-toast { bottom: 88px; }
+}
+@media (max-width: 600px) {
+  .ec-cart-item { grid-template-columns: 72px minmax(0, 1fr) 44px; gap: 10px 12px; }
+  .ec-cart-img { width: 72px; height: 56px; }
+  .ec-cart-amount { grid-column: 1 / -1; flex-direction: row; justify-content: space-between; align-items: center; }
+  .ec-cart-remove { grid-row: 1; grid-column: 3; }
+}
