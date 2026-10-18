@@ -89,7 +89,7 @@ export function Field({ field, value, onChange }) {
       ) : field.type === 'color' ? (
         <div className="ad-color">
           <input type="color" value={/^#[0-9a-f]{6}$/i.test(value || '') ? value : '#000000'} onChange={e => onChange(e.target.value)} aria-label={field.label} />
-          <input id={id} className="ad-input" dir="ltr" value={value ?? ''} onChange={e => onChange(e.target.value)} placeholder="#7C1A44" />
+          <input id={id} className="ad-input" dir="ltr" value={value ?? ''} onChange={e => onChange(e.target.value)} placeholder="#8A0047" />
         </div>
       ) : (
         <Input id={id} type={field.type} value={value ?? ''} onChange={onChange} dir={field.dir} />

@@ -23,6 +23,8 @@ const apiUrl = pageSlug ? `/api/page/${pageSlug}` : donateId ? `/api/donate/${do
 const isSubPage = Boolean(pageSlug || donateId || donateList || cartPage)
 
 // The header's donate button opens the donations page unless another link was set in the admin.
+// The old default logo (/logo.jpg) is replaced by the brand SVG; a logo uploaded in /admin still wins.
+const logoSrc = (s, light) => (!s.logo || s.logo === '/logo.jpg' || s.logo === '/logo.svg' ? (light ? '/logo-light.svg' : '/logo.svg') : s.logo)
 const donateHref = s => (s.donate_url && s.donate_url !== '#donate' ? s.donate_url : '/donate')
 
 export default function Site() {
@@ -86,7 +88,7 @@ export default function Site() {
 
   return (
     <LangCtx.Provider value={{ lang, toggle, settings }}>
-      <div style={{ fontFamily: 'Cairo, sans-serif', direction: lang === 'ar' ? 'rtl' : 'ltr' }}>
+      <div style={{ fontFamily: 'var(--font)', direction: lang === 'ar' ? 'rtl' : 'ltr' }}>
         <a href="#main" className="ec-skip">{lang === 'ar' ? 'انتقل إلى المحتوى' : 'Skip to content'}</a>
         {settings.topbar_visible !== false && <TopBar />}
         <Header menu={data.menu || []} />
@@ -196,7 +198,7 @@ function MegaPanel({ item, onEnter, onLeave }) {
               {featured.img && (
                 <div style={{ height: 150, overflow: 'hidden', position: 'relative' }}>
                   <img src={featured.img} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                  <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(13,27,53,0.6), transparent)' }} />
+                  <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,48,73,0.6), transparent)' }} />
                   {t(featured.label) && <span style={{ position: 'absolute', top: 10, insetInlineEnd: 10, background: M, color: '#fff', fontSize: 12, fontWeight: 800, padding: '3px 10px', borderRadius: 20 }}>{t(featured.label)}</span>}
                 </div>
               )}
@@ -241,7 +243,7 @@ function Header({ menu }) {
     <header ref={headerRef} style={{ position: 'sticky', top: 0, zIndex: 50, background: '#fff', borderBottom: active ? 'none' : '1px solid #EAE7E2', boxShadow: '0 2px 18px rgba(0,0,0,0.06)' }}>
       <div style={{ maxWidth: 1440, margin: '0 auto', paddingInlineStart: 'clamp(16px, 3.3vw, 48px)', paddingInlineEnd: 'clamp(12px, 1.7vw, 24px)', height: 100, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16 }}>
         <a href="/" style={{ display: 'flex', alignItems: 'center', flexShrink: 0 }}>
-          <img src={settings.logo || '/logo.jpg'} alt={t(settings.site_name) || 'Logo'} style={{ height: 66, width: 'auto', objectFit: 'contain' }} />
+          <img src={logoSrc(settings)} alt={t(settings.site_name) || 'Logo'} style={{ height: 66, width: 'auto', objectFit: 'contain' }} />
         </a>
 
         <nav className="ec-desktop-nav" aria-label={lang === 'ar' ? 'القائمة الرئيسية' : 'Main menu'}>
@@ -354,8 +356,8 @@ function Footer() {
       <div className="ec-inner" style={{ paddingTop: 60 }}>
         <div className="ec-grid-footer" style={{ margin: '0 0 48px' }}>
           <div>
-            <img src={s.logo || '/logo.jpg'} alt={t(s.site_name) || 'Logo'}
-              style={{ height: 50, width: 'auto', objectFit: 'contain', margin: '0 0 18px', filter: 'brightness(0) invert(1)', opacity: 0.92 }} />
+            <img src={logoSrc(s, true)} alt={t(s.site_name) || 'Logo'}
+              style={{ height: 56, width: 'auto', objectFit: 'contain', margin: '0 0 18px', ...(logoSrc(s, true) === '/logo-light.svg' ? {} : { filter: 'brightness(0) invert(1)', opacity: 0.92 }) }} />
             {t(s.footer_desc) && <p style={{ fontSize: 14, lineHeight: 2, color: 'rgba(255,255,255,0.72)', margin: '0 0 22px' }}>{t(s.footer_desc)}</p>}
 
             {s.newsletter_visible !== false && (
