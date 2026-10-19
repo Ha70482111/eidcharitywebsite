@@ -2166,6 +2166,111 @@
    }
   ]
  },
+ "gift": {
+  "type": "gift",
+  "name": "أغلى هدية (الإهداء)",
+  "content": {
+   "anchor": "gift",
+   "bg": "cream",
+   "eyebrow": {
+    "ar": "تهادوا تحابوا",
+    "en": "Give gifts, grow in love"
+   },
+   "title": {
+    "ar": "أغلى هدية",
+    "en": "The Most Precious Gift"
+   },
+   "subtitle": {
+    "ar": "اجعل هديتك لمن تحب صدقةً يبقى أثرها: تبرّع باسمه في مشروع خيري، وأرسل له بطاقة إهداء أنيقة باسمك.",
+    "en": "Make your gift a charity that lasts: donate in the name of someone you love and send them an elegant gift card from you."
+   },
+   "button": {
+    "ar": "أهدِ الآن",
+    "en": "Send a gift"
+   },
+   "button_url": "/gift",
+   "image": "",
+   "page_subtitle": {
+    "ar": "اختر المناسبة والمشروع، واكتب إهداءك، وأرسل لمن تحب بطاقةً تبقى في ميزان حسناته وحسناتك.",
+    "en": "Choose the occasion and the project, write your dedication, and send a card that counts for both of you."
+   },
+   "hadith": {
+    "ar": "قال رسول الله ﷺ: «تهادوا تحابوا»",
+    "en": "The Prophet ﷺ said: “Give gifts to one another, and you will love one another.”"
+   },
+   "amounts": "50, 100, 250, 500",
+   "currency": "QAR",
+   "donate_action_url": ""
+  },
+  "items": [
+   {
+    "icon": "rings",
+    "name": {
+     "ar": "زواج",
+     "en": "Wedding"
+    },
+    "message": {
+     "ar": "بارك الله لكما وبارك عليكما وجمع بينكما في خير. أهديتكما هذه الصدقة فرحًا بكما.",
+     "en": "May God bless you both and unite you in goodness. I give this charity in your name to celebrate you."
+    }
+   },
+   {
+    "icon": "baby",
+    "name": {
+     "ar": "مولود جديد",
+     "en": "New baby"
+    },
+    "message": {
+     "ar": "مبارك المولود، جعله الله من الصالحين وقرّة عين لكم.",
+     "en": "Congratulations on your new baby. May they grow up righteous and be the joy of your eyes."
+    }
+   },
+   {
+    "icon": "graduation",
+    "name": {
+     "ar": "نجاح وتخرّج",
+     "en": "Graduation"
+    },
+    "message": {
+     "ar": "ألف مبروك النجاح، ومنه إلى أعلى المراتب.",
+     "en": "Congratulations on your success, and on to even greater heights."
+    }
+   },
+   {
+    "icon": "healing",
+    "name": {
+     "ar": "شفاء",
+     "en": "Get well"
+    },
+    "message": {
+     "ar": "أسأل الله أن يشفيك شفاءً لا يغادر سقمًا، وأن تكون هذه الصدقة سببًا في عافيتك.",
+     "en": "May God grant you a complete recovery, and may this charity be a cause of your good health."
+    }
+   },
+   {
+    "icon": "crescent",
+    "name": {
+     "ar": "عيد",
+     "en": "Eid"
+    },
+    "message": {
+     "ar": "كل عام وأنت بخير، تقبّل الله منا ومنكم صالح الأعمال.",
+     "en": "Eid Mubarak! May God accept our good deeds and yours."
+    }
+   },
+   {
+    "icon": "gift",
+    "name": {
+     "ar": "إهداء لمن تحب",
+     "en": "For someone I love"
+    },
+    "message": {
+     "ar": "أهديتك هذه الصدقة محبةً لك، جعلها الله في ميزان حسناتك.",
+     "en": "I give this charity in your name out of love. May it count among your good deeds."
+    }
+   }
+  ]
+ },
  "pages": [
   {
    "slug": "about",
