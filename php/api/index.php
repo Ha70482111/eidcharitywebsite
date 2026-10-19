@@ -231,13 +231,7 @@ route('GET', '/api/donate/:id', function ($ctx) {
     $section = section_row(must_find('sections', $item['section_id'], 'القسم'));
     $c = (array)$section['content'];
     $payUrl = str($c['donate_action_url'] ?? '');
-    if ($payUrl === '') {
-        // Fall back to the payment link set on the home page's quick-donation card.
-        foreach (q("SELECT * FROM sections WHERE type = 'hero' AND is_visible = 1 ORDER BY sort_order, id") as $h) {
-            $hc = jparse($h['content']);
-            if (!empty($hc['donate_action_url'])) { $payUrl = str($hc['donate_action_url']); break; }
-        }
-    }
+    if ($payUrl === '') $payUrl = hero_pay_url(); // the home page's quick-donation card
     $related = array_map('item_row', q('SELECT * FROM section_items WHERE section_id = ? AND id <> ? AND is_visible = 1 ORDER BY sort_order, id',
         [$item['section_id'], $item['id']]));
     $menu = array_map('menu_row', q('SELECT * FROM menu_items WHERE is_visible = 1'));
@@ -246,14 +240,20 @@ route('GET', '/api/donate/:id', function ($ctx) {
         'related' => array_slice($related, 0, 3), 'donate_action_url' => $payUrl];
 });
 
-// The donations page (/donate): every visible campaign card from the home page and visible sub-pages,
-// grouped by section so each card keeps its section's currency, labels and payment link.
-route('GET', '/api/donations', function () {
-    $heroPay = '';
+/** The payment link set on the home page's quick-donation card (the fallback for campaigns without their own). */
+function hero_pay_url()
+{
     foreach (q("SELECT * FROM sections WHERE type = 'hero' AND is_visible = 1 ORDER BY sort_order, id") as $h) {
         $hc = jparse($h['content']);
-        if (!empty($hc['donate_action_url'])) { $heroPay = str($hc['donate_action_url']); break; }
+        if (!empty($hc['donate_action_url'])) return str($hc['donate_action_url']);
     }
+    return '';
+}
+
+/** Every visible campaign card from the home page and visible sub-pages, grouped by section with its payment link. */
+function donation_groups()
+{
+    $heroPay = hero_pay_url();
     $rows = q("SELECT s.* FROM sections s LEFT JOIN pages p ON p.id = s.page_id
         WHERE s.type = 'campaigns' AND s.is_visible = 1 AND (s.page_id IS NULL OR p.is_visible = 1) ORDER BY s.page_id IS NOT NULL, s.sort_order, s.id");
     $groups = [];
@@ -264,8 +264,28 @@ route('GET', '/api/donations', function () {
         $pay = str($c['donate_action_url'] ?? '');
         $groups[] = ['id' => $s['id'], 'content' => $s['content'], 'items' => $items, 'donate_action_url' => $pay !== '' ? $pay : $heroPay];
     }
+    return $groups;
+}
+
+// The donations page (/donate): every visible campaign card, grouped by section so each card keeps
+// its section's currency, labels and payment link.
+route('GET', '/api/donations', function () {
     $menu = array_map('menu_row', q('SELECT * FROM menu_items WHERE is_visible = 1'));
-    return ['settings' => (object)get_setting('site', []), 'menu' => build_tree($menu), 'donations' => $groups];
+    return ['settings' => (object)get_setting('site', []), 'menu' => build_tree($menu), 'donations' => donation_groups()];
+});
+
+// The gift page (/gift): texts and occasions come from the first gift section (hiding it on the home page
+// keeps the page working), and the projects are the same campaigns as the donations page.
+route('GET', '/api/gift', function () {
+    $rows = q("SELECT * FROM sections WHERE type = 'gift' ORDER BY page_id IS NOT NULL, sort_order, id LIMIT 1");
+    if (!$rows) throw new HttpError(404, 'صفحة الإهداء غير موجودة');
+    $section = section_row($rows[0]);
+    $section['items'] = array_map('item_row', q('SELECT * FROM section_items WHERE section_id = ? AND is_visible = 1 ORDER BY sort_order, id', [$section['id']]));
+    $c = (array)$section['content'];
+    $pay = str($c['donate_action_url'] ?? '');
+    $menu = array_map('menu_row', q('SELECT * FROM menu_items WHERE is_visible = 1'));
+    return ['settings' => (object)get_setting('site', []), 'menu' => build_tree($menu), 'gift' => $section,
+        'donations' => donation_groups(), 'donate_action_url' => $pay !== '' ? $pay : hero_pay_url()];
 });
 
 route('GET', '/api/auth/status', function ($ctx) {
@@ -639,7 +659,7 @@ function dispatch()
         if (!eid_config()) {
             if ($path === '/api/auth/status') return send_json(200, ['needsInstall' => true, 'needsSetup' => false, 'user' => null]);
             if ($path !== '/api/install') throw new HttpError(503, 'الموقع لم يُجهَّز بعد');
-        } elseif ($path === '/api/site' || $path === '/api/auth/status' || strpos($path, '/api/page/') === 0) {
+        } elseif ($path === '/api/site' || $path === '/api/gift' || $path === '/api/auth/status' || strpos($path, '/api/page/') === 0) {
             eid_ensure_schema(); // creates tables on first run if config.php was written by hand
         }
 

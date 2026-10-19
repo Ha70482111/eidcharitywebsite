@@ -24,12 +24,20 @@ export const ICONS = {
   heart: ({ c = M }) => <svg viewBox="0 0 52 52" {...s()} width="44" height="44" aria-hidden="true"><path d="M26 44S10 33 10 21a11 11 0 0122 0 11 11 0 0122 0c0 12-16 23-16 23z" stroke={c} strokeWidth="1.6" strokeLinejoin="round"/><path d="M20 21h12M26 15v12" stroke={c} strokeWidth="1.6" strokeLinecap="round"/></svg>,
   hands: ({ c = N }) => <svg viewBox="0 0 52 52" {...s()} width="44" height="44" aria-hidden="true"><path d="M7 22l11 11 5-2 11 7 13-16" stroke={c} strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/><path d="M18 33l6 7" stroke={c} strokeWidth="1.6" strokeLinecap="round"/></svg>,
   network: ({ c = GT }) => <svg viewBox="0 0 52 52" {...s()} width="44" height="44" aria-hidden="true"><circle cx="16" cy="16" r="7" stroke={c} strokeWidth="1.6"/><circle cx="36" cy="16" r="7" stroke={c} strokeWidth="1.6"/><path d="M6 43c0-5.52 4.48-10 10-10h20c5.52 0 10 4.48 10 10" stroke={c} strokeWidth="1.6" strokeLinecap="round"/></svg>,
+  // Occasions (gift page)
+  rings: ({ c = M, g = G }) => <svg viewBox="0 0 48 48" {...s()} width="36" height="36" aria-hidden="true"><circle cx="18" cy="29" r="10" stroke={c} strokeWidth="1.6"/><circle cx="30" cy="29" r="10" stroke={g} strokeWidth="1.6"/><path d="M26 8l4 4 4-4-4-3z" stroke={g} strokeWidth="1.6" strokeLinejoin="round"/></svg>,
+  baby: ({ c = M, g = G }) => <svg viewBox="0 0 48 48" {...s()} width="36" height="36" aria-hidden="true"><circle cx="24" cy="25" r="14" stroke={c} strokeWidth="1.6"/><path d="M24 11c-3 0-4-3-1.5-4" stroke={c} strokeWidth="1.6" strokeLinecap="round"/><circle cx="19" cy="23" r="1.3" fill={c}/><circle cx="29" cy="23" r="1.3" fill={c}/><path d="M19.5 30a6 6 0 009 0" stroke={g} strokeWidth="1.6" strokeLinecap="round"/></svg>,
+  graduation: ({ c = M, g = G }) => <svg viewBox="0 0 48 48" {...s()} width="36" height="36" aria-hidden="true"><path d="M4 19l20-9 20 9-20 9z" stroke={c} strokeWidth="1.6" strokeLinejoin="round"/><path d="M12 23v9c0 3 5.4 6 12 6s12-3 12-6v-9" stroke={c} strokeWidth="1.6" strokeLinecap="round"/><path d="M40 21v11" stroke={g} strokeWidth="1.6" strokeLinecap="round"/><circle cx="40" cy="34" r="2" stroke={g} strokeWidth="1.6"/></svg>,
+  healing: ({ c = M, g = G }) => <svg viewBox="0 0 48 48" {...s()} width="36" height="36" aria-hidden="true"><path d="M24 40S9 30 9 19a9 9 0 0115-6.7A9 9 0 0139 19c0 11-15 21-15 21z" stroke={c} strokeWidth="1.6" strokeLinejoin="round"/><path d="M12 24h7l3-5 4 9 3-4h7" stroke={g} strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>,
+  crescent: ({ c = M, g = G }) => <svg viewBox="0 0 48 48" {...s()} width="36" height="36" aria-hidden="true"><path d="M30 8a17 17 0 1010 30A14 14 0 0130 8z" stroke={c} strokeWidth="1.6" strokeLinejoin="round"/><path d="M34 14l1.3 3 3.2.3-2.4 2.1.7 3.1-2.8-1.6-2.8 1.6.7-3.1-2.4-2.1 3.2-.3z" stroke={g} strokeWidth="1.4" strokeLinejoin="round"/></svg>,
+  gift: ({ c = M, g = G }) => <svg viewBox="0 0 48 48" {...s()} width="36" height="36" aria-hidden="true"><rect x="8" y="18" width="32" height="8" rx="2" stroke={c} strokeWidth="1.6"/><path d="M11 26v14h26V26" stroke={c} strokeWidth="1.6" strokeLinejoin="round"/><path d="M24 18v22" stroke={g} strokeWidth="1.6"/><path d="M24 18c-2-6-10-8-10-3 0 3 6 3 10 3zm0 0c2-6 10-8 10-3 0 3-6 3-10 3z" stroke={g} strokeWidth="1.6" strokeLinejoin="round"/></svg>,
 }
 
 export const ICON_OPTIONS = [
   ['zakat', 'الزكاة'], ['sadaqa', 'قلب (صدقة)'], ['orphan', 'شخص (كفالة)'], ['medical', 'طبي'], ['food', 'طعام'],
   ['water', 'ماء'], ['waqf', 'وقف'], ['project', 'مبنى (مشروع)'], ['scale', 'ميزان'], ['eye', 'عين'], ['doc', 'مستند'],
   ['chart', 'رسم بياني'], ['heart', 'قلب +'], ['hands', 'مصافحة'], ['network', 'أشخاص'],
+  ['rings', 'خاتمان (زواج)'], ['baby', 'طفل (مولود)'], ['graduation', 'قبعة تخرج'], ['healing', 'قلب ونبض (شفاء)'], ['crescent', 'هلال (عيد)'], ['gift', 'هدية'],
 ]
 
 export function Icon({ name, image, ...props }) {
