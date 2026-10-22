@@ -59,7 +59,8 @@ export default function DonationsPage({ data }) {
   }, [projects, lang])
 
   const [cat, setCat] = useState('')
-  const [query, setQuery] = useState('')
+  // Links like /donate?q=زكاة (areas of giving in the menu and footer) open the page already searched.
+  const [query, setQuery] = useState(() => (typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('q')) || '')
   const q = query.trim().toLowerCase()
   const shown = projects.filter(p => (!cat || t(p.category) === cat) &&
     (!q || [t(p.name), t(p.desc), t(p.category), t(p.location)].some(s => s.toLowerCase().includes(q))))

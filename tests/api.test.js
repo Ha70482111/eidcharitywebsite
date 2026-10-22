@@ -281,6 +281,13 @@ test('sub-pages imported from the old website', async () => {
   assert.equal(site.settings.topbar_links.find(l => l.label.ar === 'تواصل معنا').url, '/page/contact')
   assert.equal(site.sections.find(s => s.type === 'centers').items[1].content.url, '/page/qatar-guests-center')
   assert.equal(site.sections.find(s => s.type === 'governance').content.button_url, '/page/governance-policies')
+  assert.equal(url('قصص نجاح'), '/page/success-stories')
+  assert.equal(site.sections.find(s => s.type === 'story').content.button_url, '/page/success-stories')
+  assert.equal(url('الزكاة'), '/donate?q=زكاة', 'areas of giving open the donations page searched for them')
+  assert.equal(url('الوقف الخيري'), '#', 'no endowment campaign yet, so the link stays empty (hidden on the site)')
+  assert.equal(url('تطبيقاتنا').startsWith('https://apps.apple.com/'), true)
+  assert.equal(site.sections.find(s => s.type === 'gates').content.button_url, '/donate')
+  assert.ok(site.sections.filter(s => s.type === 'campaigns').every(s => s.items.every(i => !i.content.url)), 'campaign cards keep opening their own page')
 
   const pages = (await call('GET', '/api/admin/pages')).data
   assert.equal(pages.length, require('../tools/pages.js').length)
@@ -326,6 +333,38 @@ test('existing database is upgraded once, without touching its content', () => {
   assert.equal(res.contact, 'https://example.com/contact', 'links the owner set are kept')
   assert.equal(res.footer, '/page/governance-policies')
   assert.equal(Number(res.group), 1, 'menu group added once for pages not yet in the menu')
+})
+
+test('a database linked before the success-stories page gets it once', () => {
+  const file = path.join(tmp, 'linked.sqlite')
+  const script = `
+    require ${JSON.stringify(path.join(ROOT, 'php/api/db.php'))};
+    $pdo = db();
+    foreach (eid_ddl('sqlite') as $st) $pdo->exec($st);
+    eid_add_column($pdo, 'sections', 'page_id', 'INT NULL');
+    foreach (['pages_imported', 'pages_linked', 'donations_imported', 'gift_added'] as $k) q("INSERT INTO settings (k, v) VALUES (?, '1')", [$k]);
+    $pdo->exec("INSERT INTO settings (k, v) VALUES ('site', '{}')");
+    $pdo->exec("INSERT INTO pages (slug, title_ar, title_en, is_visible, content) VALUES ('about', 'عن', 'About', 1, '{}')");
+    $pdo->exec("INSERT INTO sections (type, name, content) VALUES ('story', 'story', '{\\"button\\":{\\"ar\\":\\"اقرأ القصة\\"},\\"button_url\\":\\"#\\"}')");
+    $pdo->exec("INSERT INTO menu_items (parent_id, label_ar, url) VALUES (NULL, 'من نحن', '')");
+    $pdo->exec("INSERT INTO menu_items (parent_id, label_ar, url) VALUES (1, 'قصص نجاح', '#')");
+    $pdo->exec("INSERT INTO menu_items (parent_id, label_ar, url) VALUES (1, 'الزكاة', '#')");
+    eid_ensure_schema();
+    q("UPDATE menu_items SET url = '#' WHERE label_ar = 'قصص نجاح'");
+    eid_ensure_schema();
+    echo json_encode([
+      'pages' => count(q("SELECT id FROM pages WHERE slug = 'success-stories'")),
+      'menu' => q("SELECT url FROM menu_items WHERE label_ar = 'قصص نجاح'")[0]['url'],
+      'zakat' => q("SELECT url FROM menu_items WHERE label_ar = 'الزكاة'")[0]['url'],
+      'story' => jparse(q("SELECT content FROM sections WHERE type = 'story'")[0]['content'])['button_url'],
+      'group' => count(q("SELECT id FROM menu_items WHERE label_ar = 'المؤسسة'")),
+    ]);`
+  const res = JSON.parse(require('node:child_process').execFileSync('php', ['-r', script], { env: { ...process.env, EID_DB_DRIVER: 'sqlite', EID_SQLITE_FILE: file } }))
+  assert.equal(res.pages, 1)
+  assert.equal(res.menu, '#', 'linked once: a link the owner clears later stays cleared')
+  assert.equal(res.zakat, '#', 'no zakat campaign in this database, so it is not linked')
+  assert.equal(res.story, '/page/success-stories')
+  assert.equal(res.group, 0, 'no extra menu group on the second pass')
 })
 
 test('pages: add, edit, sections, hide, reorder, delete', async () => {
