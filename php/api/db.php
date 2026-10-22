@@ -101,8 +101,10 @@ function eid_ensure_schema(PDO $pdo = null)
     $m = (int)q("SELECT COUNT(*) AS m FROM settings WHERE k = 'site'", [], $pdo)[0]['m'];
     if ($n === 0 && $m === 0) eid_seed($pdo);
     eid_import_pages($pdo);
+    eid_import_pages($pdo, 'pages_imported_2', ['success-stories']);
     eid_import_donations($pdo);
     eid_link_pages($pdo);
+    eid_link_pages($pdo, 'pages_linked_2', false);
     eid_add_gift($pdo);
 }
 
@@ -118,14 +120,15 @@ function eid_add_column(PDO $pdo, $table, $column, $def)
 
 /**
  * One-time import of the sub-pages (content taken from the old website) into an existing database.
- * The 'pages_imported' setting is written first and acts as a lock, so the pages are added only once
+ * The $guard setting is written first and acts as a lock, so the pages are added only once
  * and never come back after the owner edits or deletes them in /admin.
+ * Pages added to tools/pages.js later are imported with a new guard and their slugs in $only.
  */
-function eid_import_pages(PDO $pdo)
+function eid_import_pages(PDO $pdo, $guard = 'pages_imported', array $only = null)
 {
-    if (q("SELECT k FROM settings WHERE k = 'pages_imported'", [], $pdo)) return;
+    if (q('SELECT k FROM settings WHERE k = ?', [$guard], $pdo)) return;
     try {
-        q("INSERT INTO settings (k, v) VALUES ('pages_imported', ?)", [json_encode(gmdate('c'))], $pdo);
+        q('INSERT INTO settings (k, v) VALUES (?, ?)', [$guard, json_encode(gmdate('c'))], $pdo);
     } catch (PDOException $e) {
         return; // another request is importing right now
     }
@@ -133,6 +136,7 @@ function eid_import_pages(PDO $pdo)
     $pdo->beginTransaction();
     try {
         foreach (array_values($data['pages'] ?? []) as $i => $p) {
+            if ($only !== null && !in_array($p['slug'], $only, true)) continue;
             if (q('SELECT id FROM pages WHERE slug = ?', [$p['slug']], $pdo)) continue;
             $r = q('INSERT INTO pages (slug, title_ar, title_en, sort_order, is_visible, content) VALUES (?, ?, ?, ?, ?, ?)',
                 [$p['slug'], $p['title']['ar'], $p['title']['en'], $i + 1, ($p['visible'] ?? true) ? 1 : 0, jenc($p['content'] ?? [])], $pdo);
@@ -148,7 +152,7 @@ function eid_import_pages(PDO $pdo)
         $pdo->commit();
     } catch (Throwable $e) {
         $pdo->rollBack();
-        q("DELETE FROM settings WHERE k = 'pages_imported'", [], $pdo);
+        q('DELETE FROM settings WHERE k = ?', [$guard], $pdo);
         throw $e;
     }
 }
@@ -288,7 +292,11 @@ function eid_norm($s)
     return strtr($s, ['أ' => 'ا', 'إ' => 'ا', 'آ' => 'ا', 'ة' => 'ه', 'ى' => 'ي']);
 }
 
-/** Which link each existing label should get once the sub-pages exist: label (Arabic) → page slug or full URL. */
+/**
+ * Which link each existing label should get once the sub-pages exist: label (Arabic) → page slug, full URL or site path.
+ * "/donate?q=<word>" opens the donations page searched for that word; it is used only while a visible campaign
+ * has the word in its name or category (see eid_link_pages), otherwise the label stays hidden.
+ */
 function eid_page_link_map()
 {
     $map = [
@@ -309,11 +317,34 @@ function eid_page_link_map()
         'eid-cultural-center' => ['مركز عيد الثقافي', 'عيد الثقافي'],
         'eid-womens-center' => ['مركز عيد النسائي', 'عيد النسائي'],
         'news' => ['أخبار', 'أخبار المؤسسة', 'المركز الإعلامي'],
+        'success-stories' => ['قصص نجاح', 'قصص النجاح', 'اقرأ القصة'],
         'awards' => ['جوائز المؤسسة', 'الجوائز'],
         'annual-harvest' => ['الحصاد السنوي', 'تقارير وإصدارات'],
         'financial-reports' => ['التقارير المالية'],
         'contact' => ['اتصل بنا', 'أتصل بنا', 'تواصل معنا'],
         'http://hifzalnaema.com/' => ['مركز حفظ النعمة', 'حفظ النعمة'],
+        // The foundation's app, as linked from donate.eidcharity.net
+        'https://apps.apple.com/us/app/%D8%B9%D9%8A%D8%AF-%D8%A7%D9%84%D8%AE%D9%8A%D8%B1%D9%8A%D8%A9/id6759623769' => ['تطبيقاتنا', 'تطبيق عيد الخيرية'],
+        // Areas of giving → the donations page
+        '/donate' => ['تبرع', 'المشاريع', 'المشاريع الخيرية', 'استعرض جميع فرص التبرع', 'فرص التبرع'],
+        '/donate?q=زكاة' => ['الزكاة', 'زكاة', 'زكاة المال'],
+        '/donate?q=صدق' => ['الصدقات', 'صدقات', 'صدقة عامة'],
+        '/donate?q=كفال' => ['الكفالات', 'كفالات'],
+        '/donate?q=طعام' => ['إطعام الطعام', 'مشاريع طعام', 'حملة إطعام رمضان'],
+        '/donate?q=سلال' => ['السلال الغذائية', 'سلال غذائية'],
+        '/donate?q=سقيا' => ['سقيا الماء', 'مشاريع المياه', 'مشروع سقيا الماء'],
+        '/donate?q=أيتام' => ['كفالة أيتام', 'كفالة الأيتام', 'كفالة أيتام اليمن'],
+        '/donate?q=أسر' => ['كفالة أسر'],
+        '/donate?q=طالب' => ['كفالة طلاب', 'كفالة طالب علم'],
+        '/donate?q=مرضى' => ['علاج المرضى', 'علاج مرضى', 'مشاريع الصحة'],
+        '/donate?q=كربة' => ['تفريج كربة'],
+        '/donate?q=الأرامل' => ['دعم الأرامل والمطلقات'],
+        '/donate?q=كبار' => ['رعاية كبار القدر', 'رعاية كبار السن'],
+        '/donate?q=وقف' => ['الوقف', 'الوقف الخيري', 'مشاريع الوقف'],
+        '/donate?q=إغاثة' => ['إغاثة', 'الإغاثة الطارئة'],
+        '/donate?q=رمضان' => ['حملات رمضان'],
+        '/donate?q=تعليم' => ['مشاريع التعليم'],
+        '/donate?q=تنمية' => ['مشاريع التنمية'],
     ];
     $out = [];
     foreach ($map as $target => $labels) foreach ($labels as $l) $out[eid_norm($l)] = $target;
@@ -321,29 +352,38 @@ function eid_page_link_map()
 }
 
 /**
- * One-time pass (guarded by the 'pages_linked' setting) that points the existing menu, top bar, footer and
+ * One-time pass (guarded by the $guard setting) that points the existing menu, top bar, footer and
  * home-page cards/buttons at the sub-pages. Only empty or "#" links are filled, so links the owner set stay
- * as they are. Visible pages the menu still doesn't reach are added as a new group under "من نحن".
+ * as they are; links still empty after it are hidden by the site until the owner gives them a page.
+ * With $addMissing, visible pages the menu still doesn't reach are added as a new group under "من نحن".
  */
-function eid_link_pages(PDO $pdo)
+function eid_link_pages(PDO $pdo, $guard = 'pages_linked', $addMissing = true)
 {
-    if (q("SELECT k FROM settings WHERE k = 'pages_linked'", [], $pdo)) return;
+    if (q('SELECT k FROM settings WHERE k = ?', [$guard], $pdo)) return;
     if (!q('SELECT id FROM pages', [], $pdo)) return; // nothing to link yet
     try {
-        q("INSERT INTO settings (k, v) VALUES ('pages_linked', ?)", [json_encode(gmdate('c'))], $pdo);
+        q('INSERT INTO settings (k, v) VALUES (?, ?)', [$guard, json_encode(gmdate('c'))], $pdo);
     } catch (PDOException $e) {
         return;
     }
     $visible = [];
     foreach (q('SELECT slug, title_ar, title_en FROM pages WHERE is_visible = 1 ORDER BY sort_order, id', [], $pdo) as $p) $visible[$p['slug']] = $p;
+    // Names and categories of the campaigns shown on /donate, for the "/donate?q=" links.
+    $campaigns = '';
+    foreach (q("SELECT i.content FROM section_items i JOIN sections s ON s.id = i.section_id LEFT JOIN pages p ON p.id = s.page_id
+        WHERE s.type = 'campaigns' AND s.is_visible = 1 AND i.is_visible = 1 AND (s.page_id IS NULL OR p.is_visible = 1)", [], $pdo) as $r) {
+        $c = jparse($r['content']);
+        $campaigns .= ' ' . ($c['name']['ar'] ?? '') . ' ' . ($c['category']['ar'] ?? '');
+    }
     $map = eid_page_link_map();
     // New link for a label, or null. $url is the current link; "#contact" (the footer) also counts as empty for the contact page.
-    $linkFor = function ($label, $url) use ($map, $visible) {
+    $linkFor = function ($label, $url) use ($map, $visible, $campaigns) {
         $url = trim((string)$url);
         $target = $map[eid_norm($label)] ?? null;
         if ($target === null) return null;
         if (!($url === '' || $url === '#' || ($target === 'contact' && $url === '#contact'))) return null;
-        if (strpos($target, 'http') === 0) return $target;
+        if (strpos($target, '/donate?q=') === 0) return strpos($campaigns, substr($target, 10)) !== false ? $target : null;
+        if (strpos($target, 'http') === 0 || $target[0] === '/') return $target;
         return isset($visible[$target]) ? '/page/' . $target : null;
     };
     $pdo->beginTransaction();
@@ -372,14 +412,19 @@ function eid_link_pages(PDO $pdo)
         if (!empty($site['footer_columns'])) foreach ($site['footer_columns'] as &$col) if (!empty($col['links'])) $fix($col['links']);
         unset($col);
         if ($site) q("UPDATE settings SET v = ? WHERE k = 'site'", [jenc($site)], $pdo);
-        // Home-page cards and section buttons
-        $buttons = ['governance' => 'governance-policies', 'media' => 'news'];
+        // Home-page cards and section buttons (a section's button is matched by its section type, then by its label)
+        $buttons = ['governance' => 'governance-policies', 'media' => 'news', 'story' => 'success-stories'];
         foreach (q('SELECT * FROM sections WHERE page_id IS NULL', [], $pdo) as $sec) {
             $c = jparse($sec['content']);
-            if (isset($buttons[$sec['type']], $visible[$buttons[$sec['type']]]) && in_array(trim((string)($c['button_url'] ?? '')), ['', '#'], true)) {
-                $c['button_url'] = '/page/' . $buttons[$sec['type']];
-                q('UPDATE sections SET content = ? WHERE id = ?', [jenc($c), (int)$sec['id']], $pdo);
+            if (in_array(trim((string)($c['button_url'] ?? '')), ['', '#'], true) && !empty($c['button'])) {
+                $slug = $buttons[$sec['type']] ?? null;
+                $new = $slug !== null && isset($visible[$slug]) ? '/page/' . $slug : $linkFor($c['button']['ar'] ?? '', '');
+                if ($new !== null) {
+                    $c['button_url'] = $new;
+                    q('UPDATE sections SET content = ? WHERE id = ?', [jenc($c), (int)$sec['id']], $pdo);
+                }
             }
+            if ($sec['type'] === 'campaigns') continue; // a campaign card without a link opens its own donation page
             foreach (q('SELECT * FROM section_items WHERE section_id = ?', [(int)$sec['id']], $pdo) as $it) {
                 $ic = jparse($it['content']);
                 $label = $ic['name']['ar'] ?? ($ic['title']['ar'] ?? '');
@@ -392,8 +437,10 @@ function eid_link_pages(PDO $pdo)
         }
         // Visible pages the menu still doesn't link to → new group under "من نحن"
         $about = null;
-        foreach ($menu as $m) if ($m['parent_id'] === null && eid_norm($m['label_ar']) === eid_norm('من نحن')) { $about = $m; break; }
-        if (!$about) foreach ($menu as $m) if ($m['parent_id'] === null) { $about = $m; break; } // menu was renamed: use its first item
+        if ($addMissing) {
+            foreach ($menu as $m) if ($m['parent_id'] === null && eid_norm($m['label_ar']) === eid_norm('من نحن')) { $about = $m; break; }
+            if (!$about) foreach ($menu as $m) if ($m['parent_id'] === null) { $about = $m; break; } // menu was renamed: use its first item
+        }
         if ($about) {
             $linked = array_column(q('SELECT url FROM menu_items', [], $pdo), 'url');
             $missing = array_filter($visible, function ($p) use ($linked) { return !in_array('/page/' . $p['slug'], $linked, true); });
@@ -415,7 +462,7 @@ function eid_link_pages(PDO $pdo)
         $pdo->commit();
     } catch (Throwable $e) {
         $pdo->rollBack();
-        q("DELETE FROM settings WHERE k = 'pages_linked'", [], $pdo);
+        q('DELETE FROM settings WHERE k = ?', [$guard], $pdo);
         throw $e;
     }
 }

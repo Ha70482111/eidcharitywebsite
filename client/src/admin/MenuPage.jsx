@@ -104,6 +104,7 @@ function MenuNode({ row, level, index, count, onMove, onUpdate, onRemove, onCrea
           <span className="ad-row-meta">
             {LEVEL_NAMES[level]}{row.label_en ? <> · <span dir="ltr">{row.label_en}</span></> : ''}
             {row.url ? <> · <span dir="ltr">{row.url}</span></> : ''}
+            {!hasChildren && ['', '#'].includes((row.url || '').trim()) ? ' · لا يظهر في الموقع حتى تضيف له رابطًا' : ''}
             {level === 1 ? ` · عمود ${row.extra?.col || 1}` : ''}
           </span>
         </div>

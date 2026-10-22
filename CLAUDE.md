@@ -21,6 +21,7 @@ Dynamic charity website with an admin dashboard. Owner communicates in Egyptian 
 
 ## Rules
 - Content changes (texts, images, menu, sections) are done by the owner in `/admin` — no code needed.
+- Placeholder links (empty or `#`) are hidden on the site (`live()` in `client/src/site/lang.jsx`): menu/footer/top-bar links and buttons disappear, cards stay but are not clickable. They show up once the owner sets a link. Labels that have a page or a donations search are filled by `eid_link_pages` (map in `eid_page_link_map`); a new pass needs a new guard setting (e.g. `pages_linked_2`).
 - Never remove or rename existing JSON content keys without migrating data; the live database already has content.
 - Keep API responses and routes backward compatible with the deployed admin.
 - Accessibility: gold text on light backgrounds uses `GT` (#7E6124); gold on dark backgrounds uses `G` (#B69D67); keep 44px touch targets and visible focus.

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useLang, useT, Link, lines } from './lang.jsx'
+import { useLang, useT, Link, lines, live } from './lang.jsx'
 import { Icon, ICONS, Arrow, Pin, Lock, Check, M, MD, G, GT, N, NM } from '../shared/icons.jsx'
 import { addToCart } from './cart.js'
 import { CartIcon } from './CartPage.jsx'
@@ -55,8 +55,8 @@ function Head({ c, center = true, dark = false, action, margin = '0 0 52px' }) {
 
 function OutlineButton({ c, k = 'button' }) {
   const t = useT()
-  if (!t(c[k])) return null
-  return <a className="ec-btn-outline" href={c[`${k}_url`] || '#'}>{t(c[k])}</a>
+  if (!t(c[k]) || !live(c[`${k}_url`])) return null
+  return <a className="ec-btn-outline" href={c[`${k}_url`]}>{t(c[k])}</a>
 }
 
 // ─── HERO ────────────────────────────────────────────────────────────────────
@@ -149,8 +149,8 @@ function Hero({ content: c, items }) {
 
             {(t(c.btn_primary) || t(c.btn_secondary)) && (
               <div style={{ display: 'flex', gap: 14, margin: c.show_donation_card ? '0 0 28px' : 0, flexWrap: 'wrap' }}>
-                {t(c.btn_primary) && <a className="ec-btn-primary" href={c.btn_primary_url || '#'} style={{ padding: '14px 38px', fontSize: 16 }}>{t(c.btn_primary)}</a>}
-                {t(c.btn_secondary) && <a className="ec-btn-ghost" href={c.btn_secondary_url || '#'} style={{ fontSize: 15 }}>{t(c.btn_secondary)} <Arrow c="#fff" dir={dir} /></a>}
+                {t(c.btn_primary) && live(c.btn_primary_url) && <a className="ec-btn-primary" href={c.btn_primary_url} style={{ padding: '14px 38px', fontSize: 16 }}>{t(c.btn_primary)}</a>}
+                {t(c.btn_secondary) && live(c.btn_secondary_url) && <a className="ec-btn-ghost" href={c.btn_secondary_url} style={{ fontSize: 15 }}>{t(c.btn_secondary)} <Arrow c="#fff" dir={dir} /></a>}
               </div>
             )}
 
@@ -230,10 +230,10 @@ function Gates({ content: c, items }) {
       <Head c={c} />
       <div className="ec-grid-abwab" style={{ margin: '0 0 42px' }}>
         {items.map((it, i) => (
-          <a key={i} className="ec-gate-btn" href={it.url || '#'}>
+          <Link key={i} as="div" className="ec-gate-btn" href={it.url}>
             <Icon name={it.icon} image={it.icon_image} />
             <span style={{ fontSize: 14, fontWeight: 700, color: N, textAlign: 'center', lineHeight: 1.3 }}>{t(it.name)}</span>
-          </a>
+          </Link>
         ))}
       </div>
       <div style={{ textAlign: 'center' }}><OutlineButton c={c} /></div>
@@ -379,8 +379,8 @@ function Story({ content: c }) {
           <div aria-hidden="true" style={{ width: 48, height: 3, background: G, borderRadius: 2, margin: '0 0 24px' }} />
           {t(c.quote) && <blockquote style={{ fontSize: 17, color: '#4A4540', lineHeight: 2, margin: '0 0 14px', borderInlineStart: `3px solid ${M}33`, paddingInlineStart: 18 }}>{t(c.quote)}</blockquote>}
           {t(c.attribution) && <p style={{ fontSize: 14, color: '#6A6560', margin: '0 0 34px', fontStyle: 'italic' }}>{t(c.attribution)}</p>}
-          {t(c.button) && (
-            <a href={c.button_url || '#'} style={{ display: 'inline-flex', alignItems: 'center', gap: 12, color: M, fontWeight: 800, fontSize: 16 }}>
+          {t(c.button) && live(c.button_url) && (
+            <a href={c.button_url} style={{ display: 'inline-flex', alignItems: 'center', gap: 12, color: M, fontWeight: 800, fontSize: 16 }}>
               {t(c.button)}
               <span style={{ width: 44, height: 44, borderRadius: '50%', background: '#FDF0F4', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Arrow c={M} dir={dir} /></span>
             </a>
@@ -423,7 +423,7 @@ function Projects({ content: c, items }) {
                 {t(p.location) && <span style={{ background: '#F4F2EE', color: '#5A5450', fontSize: 13, fontWeight: 600, padding: '3px 11px', borderRadius: 20, display: 'flex', alignItems: 'center', gap: 4 }}><Pin c="#5A5450" s={12} /> {t(p.location)}</span>}
               </div>
               <p style={{ fontSize: 14.5, color: '#5A5450', lineHeight: 1.75, margin: '0 0 14px' }}>{t(p.desc)}</p>
-              {t(c.view_label) && <a href={p.url || '#'} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, color: M, fontWeight: 700, fontSize: 14.5, minHeight: 32 }}>{t(c.view_label)} <Arrow c={M} s={14} dir={dir} /></a>}
+              {t(c.view_label) && live(p.url) && <a href={p.url} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, color: M, fontWeight: 700, fontSize: 14.5, minHeight: 32 }}>{t(c.view_label)} <Arrow c={M} s={14} dir={dir} /></a>}
             </div>
           </article>
         ))}
@@ -443,15 +443,15 @@ function Governance({ content: c, items }) {
         <Head c={c} dark />
         <div className="ec-grid-4" style={{ margin: '0 0 44px', border: '1px solid rgba(255,255,255,0.1)', borderRadius: CR, overflow: 'hidden' }}>
           {items.map((it, i) => (
-            <a key={i} href={it.url || '#'} className="ec-gov-card" style={{ padding: '36px 28px', borderInlineEnd: i < items.length - 1 ? '1px solid rgba(255,255,255,0.1)' : 'none' }}>
+            <Link key={i} as="div" href={it.url} className="ec-gov-card" style={{ padding: '36px 28px', borderInlineEnd: i < items.length - 1 ? '1px solid rgba(255,255,255,0.1)' : 'none' }}>
               <div style={{ margin: '0 0 18px' }}><Icon name={it.icon || 'doc'} image={it.icon_image} /></div>
               <h3 style={{ fontFamily: 'var(--font)', fontSize: 19, fontWeight: 800, color: '#fff', margin: '0 0 10px' }}>{t(it.title)}</h3>
               <p style={{ fontSize: 14.5, color: 'rgba(255,255,255,0.72)', lineHeight: 1.8, margin: '0 0 22px' }}>{t(it.desc)}</p>
-              {t(c.view_label) && <div style={{ display: 'flex', alignItems: 'center', gap: 7, color: G, fontSize: 14.5, fontWeight: 700 }}>{t(c.view_label)} <Arrow c={G} s={14} dir={dir} /></div>}
-            </a>
+              {t(c.view_label) && live(it.url) && <div style={{ display: 'flex', alignItems: 'center', gap: 7, color: G, fontSize: 14.5, fontWeight: 700 }}>{t(c.view_label)} <Arrow c={G} s={14} dir={dir} /></div>}
+            </Link>
           ))}
         </div>
-        {t(c.button) && <div style={{ textAlign: 'center' }}><a className="ec-btn-gold" href={c.button_url || '#'}>{t(c.button)}</a></div>}
+        {t(c.button) && live(c.button_url) && <div style={{ textAlign: 'center' }}><a className="ec-btn-gold" href={c.button_url}>{t(c.button)}</a></div>}
       </div>
     </section>
   )
@@ -473,7 +473,7 @@ function Join({ content: c, items }) {
               <div style={{ margin: '0 0 20px' }}><IconC c={accent} /></div>
               <h3 style={{ fontFamily: 'var(--font)', fontSize: 26, fontWeight: 900, color: N, margin: '0 0 10px' }}>{t(it.title)}</h3>
               <p style={{ fontSize: 15, color: '#4A4540', lineHeight: 1.85, margin: '0 0 28px' }}>{t(it.desc)}</p>
-              {t(it.cta) && <a href={it.url || '#'} className="ec-hover-fade" style={{ display: 'inline-flex', alignItems: 'center', minHeight: 44, background: accent, color: '#fff', padding: '10px 28px', borderRadius: 50, fontWeight: 700, fontSize: 14.5 }}>{t(it.cta)}</a>}
+              {t(it.cta) && live(it.url) && <a href={it.url} className="ec-hover-fade" style={{ display: 'inline-flex', alignItems: 'center', minHeight: 44, background: accent, color: '#fff', padding: '10px 28px', borderRadius: 50, fontWeight: 700, fontSize: 14.5 }}>{t(it.cta)}</a>}
             </div>
           )
         })}
@@ -491,18 +491,18 @@ function Media({ content: c, items }) {
     <Shell content={c}>
       <Head c={c} center={false} margin="0 0 40px" action={<OutlineButton c={c} />} />
       <div className={rest.length ? 'ec-grid-2asym' : undefined}>
-        <a href={first.url || '#'} className="ec-card-hover ec-img-zoom" style={{ borderRadius: CR, overflow: 'hidden', border: CB, display: 'block', background: '#fff' }}>
+        <Link as="div" href={first.url} className="ec-card-hover ec-img-zoom" style={{ borderRadius: CR, overflow: 'hidden', border: CB, display: 'block', background: '#fff' }}>
           <div style={{ height: 300, overflow: 'hidden' }}>{first.image && <img src={first.image} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />}</div>
           <div style={{ padding: '22px 24px 26px' }}>
             <div style={{ fontSize: 13, color: GT, fontWeight: 700, margin: '0 0 10px' }}>{t(first.date)}</div>
             <h3 style={{ fontFamily: 'var(--font)', fontSize: 20, fontWeight: 800, color: N, margin: '0 0 10px', lineHeight: 1.4 }}>{t(first.title)}</h3>
             <p style={{ fontSize: 14.5, color: '#5A5450', lineHeight: 1.75, margin: 0 }}>{t(first.desc)}</p>
           </div>
-        </a>
+        </Link>
         {rest.length > 0 && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
             {rest.map((n, i) => (
-              <a key={i} href={n.url || '#'} className="ec-card-hover" style={{ display: 'flex', borderRadius: CR - 4, overflow: 'hidden', border: CB, background: '#fff' }}>
+              <Link key={i} as="div" href={n.url} className="ec-card-hover" style={{ display: 'flex', borderRadius: CR - 4, overflow: 'hidden', border: CB, background: '#fff' }}>
                 <div style={{ width: 120, flexShrink: 0, overflow: 'hidden' }} className="ec-img-zoom">
                   {n.image && <img src={n.image} alt="" style={{ width: '100%', height: '100%', minHeight: 124, objectFit: 'cover' }} />}
                 </div>
@@ -511,7 +511,7 @@ function Media({ content: c, items }) {
                   <h3 style={{ fontFamily: 'var(--font)', fontSize: 15, fontWeight: 800, color: N, margin: '0 0 6px', lineHeight: 1.4 }}>{t(n.title)}</h3>
                   <p style={{ fontSize: 13.5, color: '#5A5450', lineHeight: 1.65, margin: 0 }}>{t(n.desc)}</p>
                 </div>
-              </a>
+              </Link>
             ))}
           </div>
         )}
@@ -561,7 +561,7 @@ function Cards({ content: c, items }) {
             <div style={{ padding: '20px 22px 24px' }}>
               <h3 style={{ fontFamily: 'var(--font)', fontSize: 19, fontWeight: 800, color: N, margin: '0 0 8px' }}>{t(it.title)}</h3>
               <p style={{ fontSize: 14.5, color: '#5A5450', lineHeight: 1.75, margin: '0 0 12px', whiteSpace: 'pre-line' }}>{t(it.desc)}</p>
-              {t(it.link_label) && <a href={it.url || '#'} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, color: M, fontWeight: 700, fontSize: 14.5, minHeight: 32 }}>{t(it.link_label)} <Arrow c={M} s={14} dir={dir} /></a>}
+              {t(it.link_label) && live(it.url) && <a href={it.url} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, color: M, fontWeight: 700, fontSize: 14.5, minHeight: 32 }}>{t(it.link_label)} <Arrow c={M} s={14} dir={dir} /></a>}
             </div>
           </article>
         ))}
@@ -580,7 +580,7 @@ function TextBlock({ content: c }) {
       <Label text={t(c.eyebrow)} dark={dark} />
       {t(c.title) && <h2 style={{ ...H2, color: dark ? '#fff' : N, margin: '0 0 16px' }}>{t(c.title)}</h2>}
       {t(c.body) && <div style={{ fontSize: 17, lineHeight: 2, color: dark ? 'rgba(255,255,255,0.85)' : '#4A4540', whiteSpace: 'pre-line', margin: '0 0 26px' }}>{t(c.body)}</div>}
-      {t(c.button) && <a className={dark ? 'ec-btn-gold' : 'ec-btn-primary'} href={c.button_url || '#'}>{t(c.button)}</a>}
+      {t(c.button) && live(c.button_url) && <a className={dark ? 'ec-btn-gold' : 'ec-btn-primary'} href={c.button_url}>{t(c.button)}</a>}
     </div>
   )
   if (!c.image) return <Shell content={c}><div style={{ maxWidth: 820 }}>{text}</div></Shell>
@@ -648,7 +648,7 @@ function CtaBanner({ content: c }) {
       <div className="ec-inner" style={{ position: 'relative', textAlign: 'center' }}>
         {t(c.title) && <h2 style={{ ...H2, color: '#fff', margin: '0 0 12px' }}>{t(c.title)}</h2>}
         {t(c.subtitle) && <p style={{ fontSize: 17, color: 'rgba(255,255,255,0.88)', maxWidth: 620, margin: '0 auto 28px', lineHeight: 1.8 }}>{t(c.subtitle)}</p>}
-        {t(c.button) && <a href={c.button_url || '#'} className="ec-hover-fade" style={{ display: 'inline-flex', alignItems: 'center', minHeight: 48, background: '#fff', color: base, padding: '12px 40px', borderRadius: 50, fontWeight: 800, fontSize: 16 }}>{t(c.button)}</a>}
+        {t(c.button) && live(c.button_url) && <a href={c.button_url} className="ec-hover-fade" style={{ display: 'inline-flex', alignItems: 'center', minHeight: 48, background: '#fff', color: base, padding: '12px 40px', borderRadius: 50, fontWeight: 800, fontSize: 16 }}>{t(c.button)}</a>}
       </div>
     </section>
   )

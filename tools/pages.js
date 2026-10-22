@@ -261,6 +261,23 @@ const pages = [
     ].map(([t, d, img]) => ({ image: OLD + img, title: b(t, ''), desc: b(d, '') }))),
   ]),
 
+  // The old home page showed only the opening lines of each story (its "قصص النجاح" block), so each one is short.
+  page('success-stories', 'قصص نجاح', 'Success Stories', [
+    cards('قصص النجاح', { eyebrow: b('قصص هامة', 'Stories That Matter'), title: b('قصص النجاح', 'Success Stories'),
+      subtitle: b('قصص يرويها متطوعو المؤسسة وموظفوها عن أثر عطائكم.', 'Stories told by our volunteers and staff about the impact of your giving.') }, [
+      ['أم يزن.. الأم الصابرة', "Umm Yazan, the Patient Mother",
+        'في غرفة من الصفيح عاش ثلاثة أيتام، توفي أبوهم وكبيرهم لا يتجاوز ثلاثة أعوام، يقاسون برد الشتاء القارس وحر الصيف، وأمهم تحلم ببيت يحميهم، فقررت أن تخاطر لتحقق هذا الحلم.',
+        'Three orphans lived in a tin-roofed room; their father died when the eldest was barely three. They endured bitter winters and scorching summers, while their mother dreamed of a home to shelter them and decided to take a risk to make that dream come true.'],
+      ['قلب همام', "Hammam's Heart",
+        'مع صرخات ميلاده كانت الفرحة تملأ جدران البيت، وقبلها تملأ قلب أم وأب ظلا يرقبان هذا الوليد. ومع مرور الأيام كان المرض يمنع همام من المشي والجري واللعب مثل باقي الأطفال، ولم يجد والداه تفسيرًا لما يحدث.',
+        "With his first cries, joy filled the walls of the house and the hearts of a mother and father who had long awaited him. But as the days passed, illness kept Hammam from walking, running and playing like other children, and his parents could find no explanation."],
+      ['الأولى على الثانوية العامة', 'First in the General Secondary Exams',
+        'مات أبوها وهي في سن صغيرة ولم يكن لها معيل هي ووالدتها، وتمت كفالتها كأحد أيتام المؤسسة، ولم تقتصر الكفالة على المبلغ الشهري، بل امتدت إلى متابعة مستواها الدراسي باستمرار.',
+        'Her father died when she was young, leaving her and her mother with no provider. She was sponsored as one of the Foundation\'s orphans, and the sponsorship went beyond a monthly allowance to closely following her progress at school.'],
+    ].map(([ta, te, da, de]) => ({ title: b(ta, te), desc: b(da, de) }))),
+    DONATE,
+  ]),
+
   page('awards', 'جوائز المؤسسة', 'Awards', [
     cards('جوائز المؤسسة', { eyebrow: b('المركز الإعلامي', 'Media Center'), title: b('جوائز المؤسسة', 'Foundation Awards') }, [
       ['عيد الخيرية تتسلم جائزة العطاء في تنمية المجتمع', 'Eid Charity Receives the Giving Award for Community Development', 'خلال ملتقى عطاء ووفاء الذي نظمه السيد إبراهيم بن عبدالله آل إبراهيم عضو المجلس البلدي المركزي.', 'At the "Ata\'a wa Wafa\'a" forum organized by Mr. Ibrahim bin Abdullah Al Ibrahim, member of the Central Municipal Council.', '1394700296__%D2_%E2___%E8_%E0%20_%E0_%CC_____%D1%20___%E8_%BB%20_%CF___%AB_%E8___%E8_%D1%20%20006.jpg'],
