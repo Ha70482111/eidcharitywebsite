@@ -484,6 +484,9 @@ function Join({ content: c, items }) {
 }
 
 // ─── MEDIA / NEWS ────────────────────────────────────────────────────────────
+// A news item opens its own details page (/news/<id>) unless a link was set for it in the admin.
+export const newsHref = it => (live(it.url) ? it.url : it._id ? `/news/${it._id}` : '')
+
 function Media({ content: c, items }) {
   const t = useT()
   if (!items.length) return null
@@ -492,7 +495,7 @@ function Media({ content: c, items }) {
     <Shell content={c}>
       <Head c={c} center={false} margin="0 0 40px" action={<OutlineButton c={c} />} />
       <div className={rest.length ? 'ec-grid-2asym' : undefined}>
-        <Link as="div" href={first.url} className="ec-card-hover ec-img-zoom" style={{ borderRadius: CR, overflow: 'hidden', border: CB, display: 'block', background: '#fff' }}>
+        <Link as="div" href={newsHref(first)} className="ec-card-hover ec-img-zoom" style={{ borderRadius: CR, overflow: 'hidden', border: CB, display: 'block', background: '#fff' }}>
           <div style={{ height: 300, overflow: 'hidden', position: 'relative' }}><CardImage src={first.image} texts={[first.title, first.desc]} fallback="news" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /></div>
           <div style={{ padding: '22px 24px 26px' }}>
             <div style={{ fontSize: 13, color: GT, fontWeight: 700, margin: '0 0 10px' }}>{t(first.date)}</div>
@@ -503,7 +506,7 @@ function Media({ content: c, items }) {
         {rest.length > 0 && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
             {rest.map((n, i) => (
-              <Link key={i} as="div" href={n.url} className="ec-card-hover" style={{ display: 'flex', borderRadius: CR - 4, overflow: 'hidden', border: CB, background: '#fff' }}>
+              <Link key={i} as="div" href={newsHref(n)} className="ec-card-hover" style={{ display: 'flex', borderRadius: CR - 4, overflow: 'hidden', border: CB, background: '#fff' }}>
                 <div style={{ width: 120, flexShrink: 0, overflow: 'hidden', position: 'relative' }} className="ec-img-zoom">
                   <CardImage src={n.image} texts={[n.title, n.desc]} fallback="news" style={{ width: '100%', height: '100%', minHeight: 124, objectFit: 'cover' }} />
                 </div>

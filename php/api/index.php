@@ -240,6 +240,22 @@ route('GET', '/api/donate/:id', function ($ctx) {
         'related' => array_slice($related, 0, 3), 'donate_action_url' => $payUrl];
 });
 
+// A news details page for one item of a news section (home page or a visible sub-page), with the other news of that section.
+route('GET', '/api/news/:id', function ($ctx) {
+    $rows = q("SELECT i.* FROM section_items i JOIN sections s ON s.id = i.section_id LEFT JOIN pages p ON p.id = s.page_id
+        WHERE i.id = ? AND i.is_visible = 1 AND s.is_visible = 1 AND s.type = 'media' AND (s.page_id IS NULL OR p.is_visible = 1)", [intv($ctx['params']['id'])]);
+    if (!$rows) throw new HttpError(404, 'الخبر غير موجود');
+    $item = item_row($rows[0]);
+    $section = section_row(must_find('sections', $item['section_id'], 'القسم'));
+    $related = array_map('item_row', q('SELECT * FROM section_items WHERE section_id = ? AND id <> ? AND is_visible = 1 ORDER BY sort_order, id',
+        [$item['section_id'], $item['id']]));
+    $slug = $section['page_id'] ? (q('SELECT slug FROM pages WHERE id = ?', [$section['page_id']])[0]['slug'] ?? null) : null;
+    $menu = array_map('menu_row', q('SELECT * FROM menu_items WHERE is_visible = 1'));
+    return ['settings' => (object)get_setting('site', []), 'menu' => build_tree($menu),
+        'news' => $item, 'section' => ['id' => $section['id'], 'content' => $section['content'], 'page_slug' => $slug],
+        'related' => array_slice($related, 0, 3)];
+});
+
 /** The payment link set on the home page's quick-donation card (the fallback for campaigns without their own). */
 function hero_pay_url()
 {

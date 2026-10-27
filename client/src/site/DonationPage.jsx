@@ -298,7 +298,7 @@ function DonateCard({ it, id, cur, amountsText, payUrl, pct, L }) {
   )
 }
 
-function Share({ name, L }) {
+export function Share({ name, L }) {
   const [copied, setCopied] = useState(false)
   const url = typeof window !== 'undefined' ? window.location.href : ''
   const text = encodeURIComponent(`${name} ${url}`)

@@ -128,7 +128,8 @@ export const SECTION_TYPES = {
     label: 'الأخبار',
     description: 'خبر رئيسي كبير وأخبار جانبية',
     fields: [anchor, bgLight, bi('eyebrow', 'العنوان الصغير'), bi('title', 'العنوان'), ...button()],
-    item: { label: 'خبر', title: c => c.title, fields: [f('image', 'الصورة', 'image'), bi('date', 'التاريخ'), bi('title', 'العنوان'), bi('desc', 'الملخص', 'textarea'), f('url', 'رابط الخبر', 'url')] },
+    item: { label: 'خبر', title: c => c.title, fields: [f('image', 'الصورة', 'image'), bi('date', 'التاريخ'), bi('title', 'العنوان'), bi('desc', 'الملخص', 'textarea'), bi('body', 'نص الخبر كاملًا (يظهر في صفحة الخبر)', 'textarea'),
+      f('url', 'رابط خارجي للخبر (اختياري: اتركه فارغًا لفتح صفحة الخبر)', 'url')] },
     defaults: () => ({ content: { anchor: '', bg: 'white', eyebrow: b('', ''), title: b('آخر الأخبار', 'Latest News') }, items: [] }),
   },
 

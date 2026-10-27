@@ -197,6 +197,28 @@ test('donation details page for a campaign', async () => {
   await call('PUT', `/api/admin/sections/${sec.id}`, { content: sec.content })
 })
 
+test('news details page for a news item', async () => {
+  const site = (await call('GET', '/api/site', undefined, null)).data
+  const sec = site.sections.find(s => s.type === 'media')
+  const [first, second] = sec.items
+  let r = await call('GET', `/api/news/${first.id}`, undefined, null)
+  assert.equal(r.status, 200)
+  assert.equal(r.data.news.id, first.id)
+  assert.equal(r.data.news.content.title.ar, first.content.title.ar)
+  assert.equal(r.data.section.content.anchor, sec.content.anchor)
+  assert.equal(r.data.section.page_slug, null)
+  assert.deepEqual(r.data.related.map(i => i.id), sec.items.slice(1).map(i => i.id))
+  assert.ok(r.data.menu.length > 0 && r.data.settings.site_name)
+  // hidden news and items of other sections have no news page
+  await call('PUT', `/api/admin/items/${second.id}`, { is_visible: false })
+  assert.equal((await call('GET', `/api/news/${second.id}`, undefined, null)).status, 404)
+  assert.ok(!(await call('GET', `/api/news/${first.id}`, undefined, null)).data.related.some(i => i.id === second.id))
+  await call('PUT', `/api/admin/items/${second.id}`, { is_visible: true })
+  const hero = site.sections.find(s => s.type === 'hero')
+  assert.equal((await call('GET', `/api/news/${hero.items[0].id}`, undefined, null)).status, 404)
+  assert.equal((await call('GET', '/api/news/999999', undefined, null)).status, 404)
+})
+
 test('donations page lists every visible campaign', async () => {
   const site = (await call('GET', '/api/site', undefined, null)).data
   const secs = site.sections.filter(s => s.type === 'campaigns')
