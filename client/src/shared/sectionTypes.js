@@ -144,8 +144,10 @@ export const SECTION_TYPES = {
   cards: {
     label: 'بطاقات عامة (صورة + نص)',
     description: 'قسم مرن: شبكة بطاقات بصورة وعنوان ووصف',
-    fields: [anchor, bgLight, ...heading, f('columns', 'عدد الأعمدة', 'select', { options: [['2', '2'], ['3', '3'], ['4', '4']] }), ...button()],
-    item: { label: 'بطاقة', title: c => c.title, fields: [f('image', 'الصورة', 'image'), bi('title', 'العنوان'), bi('desc', 'الوصف', 'textarea'), bi('link_label', 'نص الرابط'), f('url', 'الرابط', 'url')] },
+    fields: [anchor, bgLight, ...heading, f('columns', 'عدد الأعمدة', 'select', { options: [['2', '2'], ['3', '3'], ['4', '4']] }),
+      f('open_details', 'كل بطاقة تفتح صفحة تفاصيل (مثل الأخبار)', 'bool'), ...button()],
+    item: { label: 'بطاقة', title: c => c.title, fields: [f('image', 'الصورة', 'image'), bi('date', 'التاريخ (اختياري)'), bi('title', 'العنوان'), bi('desc', 'الوصف', 'textarea'),
+      bi('body', 'النص الكامل (يظهر في صفحة التفاصيل)', 'textarea'), bi('link_label', 'نص الرابط'), f('url', 'الرابط', 'url')] },
     defaults: () => ({ content: { anchor: '', bg: 'white', eyebrow: b('', ''), title: b('عنوان القسم', 'Section title'), subtitle: b('', ''), columns: '3' }, items: [] }),
   },
 

@@ -249,6 +249,10 @@ a.ec-gate-btn:hover span { color: var(--maroon); }
 /* ── Donation details page (/donate/<id>) ─────── */
 .ec-title-link { color: inherit; }
 .ec-title-link:hover { color: var(--maroon); }
+/* A title link that makes its whole card clickable (the card needs position: relative) */
+.ec-card-cover::after { content: ''; position: absolute; inset: 0; }
+.ec-card-hover:has(.ec-card-cover):hover .ec-img-zoom img { transform: scale(1.06); }
+.ec-card-hover:has(.ec-card-cover:focus-visible) { outline: 3px solid var(--maroon); outline-offset: 3px; }
 .ec-title-link:focus-visible { outline: 2px solid var(--maroon); outline-offset: 2px; border-radius: 3px; }
 
 .ec-dn-crumbs { background: #fff; border-bottom: 1px solid var(--border); font-size: 14px; color: var(--text-muted); }

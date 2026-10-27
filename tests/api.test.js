@@ -217,6 +217,16 @@ test('news details page for a news item', async () => {
   const hero = site.sections.find(s => s.type === 'hero')
   assert.equal((await call('GET', `/api/news/${hero.items[0].id}`, undefined, null)).status, 404)
   assert.equal((await call('GET', '/api/news/999999', undefined, null)).status, 404)
+  // the news page's cards open their own details page; other card sections don't
+  const news = (await call('GET', '/api/page/news', undefined, null)).data
+  const cards = news.sections.find(s => s.type === 'cards')
+  assert.equal(cards.content.open_details, true)
+  r = await call('GET', `/api/news/${cards.items[0].id}`, undefined, null)
+  assert.equal(r.status, 200)
+  assert.equal(r.data.section.page_slug, 'news')
+  assert.equal(r.data.related.length, 3)
+  const awards = (await call('GET', '/api/page/awards', undefined, null)).data.sections.find(s => s.type === 'cards')
+  assert.equal((await call('GET', `/api/news/${awards.items[0].id}`, undefined, null)).status, 404)
 })
 
 test('donations page lists every visible campaign', async () => {
