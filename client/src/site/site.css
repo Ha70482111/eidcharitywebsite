@@ -643,3 +643,36 @@ a.ec-gate-btn:hover span { color: var(--maroon); }
   .ec-gf-projects { grid-template-columns: repeat(2, 1fr); }
   .ec-gf-send-btns { grid-template-columns: 1fr; }
 }
+
+/* ── Form sections (volunteer, partnership…) ─── */
+.ec-form-layout { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.9fr); gap: 28px; align-items: start; }
+.ec-form-side { background: linear-gradient(160deg, var(--maroon) 0%, #5E0031 100%); border-radius: 18px; padding: 36px 32px; }
+.ec-form-tick { flex-shrink: 0; width: 24px; height: 24px; border-radius: 50%; background: rgba(182,157,103,0.25); color: #E3D3AE; display: inline-flex; align-items: center; justify-content: center; margin-top: 3px; }
+.ec-form-card { background: #fff; border: 1px solid #EAE7E2; border-radius: 18px; padding: 36px; box-shadow: 0 2px 18px rgba(0,0,0,0.05); }
+.ec-form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px 18px; }
+.ec-form-field { margin: 0; padding: 0; border: none; min-width: 0; }
+.ec-form-field > label, .ec-form-field > legend { display: block; font-size: 14.5px; font-weight: 700; color: var(--navy); margin: 0 0 8px; padding: 0; }
+.ec-form-wide { grid-column: 1 / -1; }
+.ec-form-field textarea.ec-field { resize: vertical; min-height: 110px; line-height: 1.7; }
+.ec-form-chips { display: flex; flex-wrap: wrap; gap: 10px; }
+.ec-form-chip { position: relative; }
+.ec-form-chip input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.ec-form-chip span {
+  display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 8px 16px; border-radius: 50px; cursor: pointer;
+  border: 1.5px solid var(--field-border); background: #FAFAF8; color: var(--navy); font-size: 14px; font-weight: 600; transition: all 0.15s;
+}
+.ec-form-chip span svg { display: none; }
+.ec-form-chip input:checked + span { background: #FDF0F4; border-color: var(--maroon); color: var(--maroon); }
+.ec-form-chip input:checked + span svg { display: block; }
+.ec-form-chip input:focus-visible + span { outline: 2px solid var(--maroon); outline-offset: 2px; }
+.ec-form-chip span:hover { border-color: var(--maroon); }
+.ec-form-done { width: 64px; height: 64px; border-radius: 50%; background: #FDF0F4; color: var(--maroon); display: inline-flex; align-items: center; justify-content: center; }
+.ec-form-done svg { width: 30px; height: 30px; }
+@media (max-width: 900px) {
+  .ec-form-layout { grid-template-columns: 1fr; }
+  .ec-form-side { padding: 28px 24px; }
+}
+@media (max-width: 560px) {
+  .ec-form-card { padding: 24px 18px; }
+  .ec-form-grid { grid-template-columns: 1fr; }
+}
