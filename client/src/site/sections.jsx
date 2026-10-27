@@ -4,7 +4,7 @@ import { Icon, ICONS, Arrow, Pin, Lock, Check, M, MD, G, GT, N, NM } from '../sh
 import { addToCart } from './cart.js'
 import { CartIcon } from './CartPage.jsx'
 import GiftCard from './GiftCard.jsx'
-import { CardImage } from './placeholder.jsx'
+import { CardImage, partnerLogo } from './placeholder.jsx'
 
 const CR = 18
 const CS = '0 2px 18px rgba(0,0,0,0.07)'
@@ -531,17 +531,18 @@ function Partners({ content: c, items }) {
         {t(c.title) && <h2 style={{ fontFamily: 'var(--font)', fontSize: 30, fontWeight: 900, color: N, margin: 0 }}>{t(c.title)}</h2>}
       </div>
       <ul style={{ display: 'flex', flexWrap: 'wrap', gap: 16, justifyContent: 'center', alignItems: 'center', listStyle: 'none', padding: 0, margin: 0 }}>
-        {items.map((p, i) => (
-          <li key={i}>
+        {items.map((p, i) => {
+          const logo = p.logo || partnerLogo(p.name)
+          return <li key={i}>
             <Link href={p.url} as="div" className="ec-partner-logo" aria-label={t(p.name)}>
-              {p.logo ? <img src={p.logo} alt={t(p.name)} />
+              {logo ? <img src={logo} alt={t(p.name)} loading="lazy" />
                 : <>
                   <div aria-hidden="true" style={{ width: 56, height: 28, background: '#D6D1CA', borderRadius: 6 }} />
                   <span style={{ fontSize: 12, fontWeight: 700, color: '#5A5450', textAlign: 'center', padding: '0 8px' }}>{t(p.name)}</span>
                 </>}
             </Link>
           </li>
-        ))}
+        })}
       </ul>
     </Shell>
   )
