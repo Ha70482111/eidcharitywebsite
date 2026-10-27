@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useLang, useT, Link, lines, live } from './lang.jsx'
 import { Icon, ICONS, Arrow, Pin, Lock, Check, M, MD, G, GT, N, NM } from '../shared/icons.jsx'
 import { addToCart } from './cart.js'
@@ -690,8 +690,124 @@ function Gift({ content: c, items }) {
   )
 }
 
+// ─── FORM (volunteer, partnership…) ──────────────────────────────────────────
+// Each item is one field. Entries are sent to /api/forms/<section id> and listed in /admin → الطلبات الواردة.
+const FORM_AUTOCOMPLETE = { email: 'email', tel: 'tel' }
+
+function Form({ section, content: c, items }) {
+  const { lang } = useLang()
+  const t = useT()
+  const [values, setValues] = useState({})
+  const [trap, setTrap] = useState('')
+  const [state, setState] = useState('idle') // idle | sending | sent
+  const [error, setError] = useState('')
+  const card = useRef(null)
+  const L = (ar, en) => (lang === 'ar' ? ar : en)
+  const set = (id, v) => { setValues(x => ({ ...x, [id]: v })); setError('') }
+  const points = lines(t(c.side_points))
+  const hasSide = t(c.side_title) || points.length > 0 || c.image
+
+  const submit = async e => {
+    e.preventDefault()
+    const missing = items.find(it => it.required && it.kind === 'checkboxes' && !(values[it._id] || []).length)
+    if (missing) return setError(L(`اختر من «${t(missing.label)}»`, `Please choose from “${t(missing.label)}”`))
+    setState('sending')
+    try {
+      const res = await fetch(`/api/forms/${section.id}`, { method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ fields: values, website: trap, lang }) })
+      const data = await res.json().catch(() => null)
+      if (!res.ok) throw new Error(lang === 'ar' && data?.error ? data.error : L('تعذر إرسال الطلب، حاول مرة أخرى.', 'Could not send your request. Please try again.'))
+      setState('sent')
+      setValues({})
+      card.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    } catch (err) {
+      setError(err.message === 'Failed to fetch' ? L('تعذر الاتصال، تأكد من الإنترنت وحاول مرة أخرى.', 'Connection failed. Check your internet and try again.') : err.message)
+      setState('idle')
+    }
+  }
+
+  const input = it => {
+    const id = `ec-f${section.id}-${it._id}`
+    const v = values[it._id] ?? (it.kind === 'checkboxes' ? [] : '')
+    const label = <>{t(it.label)}{it.required && <span aria-hidden="true" style={{ color: M }}> *</span>}</>
+    const cls = `ec-form-field${it.wide || it.kind === 'textarea' || it.kind === 'checkboxes' ? ' ec-form-wide' : ''}`
+    const opts = lines(t(it.options))
+    if (it.kind === 'checkboxes') {
+      return (
+        <fieldset key={it._id} className={cls}>
+          <legend>{label}</legend>
+          <div className="ec-form-chips">
+            {opts.map(o => (
+              <label key={o} className="ec-form-chip">
+                <input type="checkbox" checked={v.includes(o)} onChange={e => set(it._id, e.target.checked ? [...v, o] : v.filter(x => x !== o))} />
+                <span><Check />{o}</span>
+              </label>
+            ))}
+          </div>
+        </fieldset>
+      )
+    }
+    const common = { id, className: 'ec-field', required: !!it.required, value: v, placeholder: t(it.placeholder) || undefined, onChange: e => set(it._id, e.target.value) }
+    let control
+    if (it.kind === 'textarea') control = <textarea {...common} rows={4} maxLength={3000} />
+    else if (it.kind === 'select') control = (
+      <select {...common}>
+        <option value="">{L('اختر…', 'Choose…')}</option>
+        {opts.map(o => <option key={o} value={o}>{o}</option>)}
+      </select>
+    )
+    else control = <input {...common} type={it.kind || 'text'} maxLength={200} autoComplete={FORM_AUTOCOMPLETE[it.kind]}
+      dir={['email', 'tel', 'number', 'date'].includes(it.kind) ? 'ltr' : undefined} inputMode={it.kind === 'tel' ? 'tel' : undefined} />
+    return <div key={it._id} className={cls}><label htmlFor={id}>{label}</label>{control}</div>
+  }
+
+  return (
+    <Shell content={c} defaultBg="cream">
+      <Head c={c} margin="0 0 44px" />
+      <div className={hasSide ? 'ec-form-layout' : undefined} style={hasSide ? undefined : { maxWidth: 820, margin: '0 auto' }}>
+        {hasSide && (
+          <aside className="ec-form-side">
+            {c.image && <img src={c.image} alt="" style={{ width: '100%', height: 200, objectFit: 'cover', borderRadius: 14, margin: '0 0 24px', display: 'block' }} />}
+            {t(c.side_title) && <h3 style={{ fontFamily: 'var(--font)', fontSize: 23, fontWeight: 900, color: '#fff', margin: '0 0 20px' }}>{t(c.side_title)}</h3>}
+            <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'grid', gap: 14 }}>
+              {points.map(p => (
+                <li key={p} style={{ display: 'flex', gap: 12, alignItems: 'flex-start', fontSize: 15.5, lineHeight: 1.7, color: 'rgba(255,255,255,0.92)' }}>
+                  <span aria-hidden="true" className="ec-form-tick"><Check /></span>{p}
+                </li>
+              ))}
+            </ul>
+          </aside>
+        )}
+        <div className="ec-form-card" ref={card}>
+          {state === 'sent' ? (
+            <div role="status" style={{ textAlign: 'center', padding: '40px 8px' }}>
+              <span aria-hidden="true" className="ec-form-done"><Check /></span>
+              <p style={{ fontSize: 18, fontWeight: 700, color: N, lineHeight: 1.8, margin: '18px auto 24px', maxWidth: 460, whiteSpace: 'pre-line' }}>
+                {t(c.success) || L('شكرًا لك! وصلنا طلبك.', 'Thank you! We received your request.')}
+              </p>
+              <button type="button" className="ec-btn-outline" onClick={() => setState('idle')}>{L('إرسال طلب آخر', 'Send another request')}</button>
+            </div>
+          ) : (
+            <form onSubmit={submit}>
+              <div className="ec-form-grid">{items.map(input)}</div>
+              <div aria-hidden="true" style={{ position: 'absolute', insetInlineStart: -10000, width: 1, height: 1, overflow: 'hidden' }}>
+                <label>Website<input tabIndex={-1} autoComplete="off" value={trap} onChange={e => setTrap(e.target.value)} /></label>
+              </div>
+              {error && <p role="alert" style={{ color: M, fontWeight: 700, fontSize: 14.5, margin: '18px 0 0' }}>{error}</p>}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap', margin: '24px 0 0' }}>
+                <button className="ec-btn-primary" disabled={state === 'sending'}>{state === 'sending' ? L('جارِ الإرسال…', 'Sending…') : t(c.submit) || L('إرسال', 'Send')}</button>
+                {t(c.privacy) && <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 13, color: '#6B6560' }}><Lock />{t(c.privacy)}</span>}
+              </div>
+            </form>
+          )}
+        </div>
+      </div>
+    </Shell>
+  )
+}
+
 export const SECTION_COMPONENTS = {
   hero: Hero, gates: Gates, campaigns: Campaigns, centers: Centers, impact: Impact, story: Story,
   projects: Projects, governance: Governance, join: Join, media: Media, partners: Partners,
-  cards: Cards, text_block: TextBlock, cta_banner: CtaBanner, documents: Documents, gift: Gift,
+  cards: Cards, text_block: TextBlock, cta_banner: CtaBanner, documents: Documents, gift: Gift, form: Form,
 }

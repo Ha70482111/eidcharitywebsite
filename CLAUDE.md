@@ -12,6 +12,7 @@ Dynamic charity website with an admin dashboard. Owner communicates in Egyptian 
   - `tools/seed.js` → `php/api/seed.json` (only used for an empty database).
   - Sub-pages: `pages` table + `sections.page_id` (NULL = home page); public at `/page/<slug>`. `tools/pages.js` (old-site content) is imported once into any database by `eid_import_pages` (guarded by the `pages_imported` setting).
 - Gift page «أغلى هدية» at `/gift` (`client/src/site/GiftPage.jsx`, card in `GiftCard.jsx`): texts and occasions come from the home page's `gift` section (added once by `eid_add_gift`), projects are the `/donate` campaigns. The recipient opens `/gift/card?g=<base64url JSON>`; nothing is stored server-side.
+- Forms («تطوع معنا» `/page/volunteer`, «كن شريكًا» `/page/partnerships`): section type `form`, its items are the fields. Visitors post to `/api/forms/<section id>`; entries go to the `form_entries` table and show in `/admin#/entries` (الطلبات الواردة), with an optional e-mail via `notify_email`.
 - Hosting: HostMonster shared cPanel (no Node.js). Site lives at `https://eid.hifzalnaema.com` (document root `/home3/hifzalna/eid.hifzalnaema.com/`).
 
 ## Workflow

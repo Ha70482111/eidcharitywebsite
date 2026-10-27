@@ -367,6 +367,86 @@ test('a database linked before the success-stories page gets it once', () => {
   assert.equal(res.group, 0, 'no extra menu group on the second pass')
 })
 
+test('volunteer and partnership pages with forms', async () => {
+  const site = (await call('GET', '/api/site', undefined, null)).data
+  const join = site.sections.find(s => s.type === 'join')
+  assert.deepEqual(join.items.map(i => i.content.url), ['#donate', '/page/volunteer', '/page/partnerships'], '«كن جزءًا من الأثر» cards open the new pages')
+  assert.equal(site.settings.topbar_links.find(l => l.label.ar === 'تطوع معنا').url, '/page/volunteer')
+
+  const page = (await call('GET', '/api/page/volunteer', undefined, null)).data
+  const form = page.sections.find(s => s.type === 'form')
+  assert.ok(form && form.items.length >= 5)
+  const id = label => form.items.find(i => i.content.label.ar === label).id
+  const good = { [id('الاسم الكامل')]: 'أحمد علي', [id('رقم الجوال')]: '+974 5555 1234', [id('البريد الإلكتروني')]: 'a@example.com', [id('الجنس')]: 'ذكر',
+    [id('المجالات التي تفضلها')]: ['الحملات الموسمية', 'غير موجود'] }
+  let r = await call('POST', `/api/forms/${form.id}`, { fields: { ...good, [id('الاسم الكامل')]: '' } }, null)
+  assert.equal(r.status, 400)
+  assert.match(r.data.error, /الاسم الكامل/)
+  r = await call('POST', `/api/forms/${form.id}`, { fields: { ...good, [id('البريد الإلكتروني')]: 'not-an-email' } }, null)
+  assert.equal(r.status, 400)
+  r = await call('POST', `/api/forms/${form.id}`, { fields: { ...good, [id('الجنس')]: 'آخر' } }, null)
+  assert.equal(r.status, 400, 'select answers must be one of the options')
+  r = await call('POST', `/api/forms/${form.id}`, { fields: good, website: 'spam' }, null)
+  assert.equal(r.status, 200, 'bots that fill the hidden field get a quiet ok')
+  r = await call('POST', `/api/forms/${form.id}`, { fields: good }, null)
+  assert.equal(r.status, 200)
+  const home = site.sections.find(s => s.type === 'hero')
+  assert.equal((await call('POST', `/api/forms/${home.id}`, { fields: good }, null)).status, 404, 'only form sections take entries')
+
+  assert.equal((await call('GET', '/api/admin/entries', undefined, null)).status, 401)
+  let list = (await call('GET', '/api/admin/entries')).data
+  assert.equal(list.entries.length, 1)
+  assert.equal(list.unread, 1)
+  const e = list.entries[0]
+  assert.equal(e.form_name, 'سجّل متطوعًا')
+  assert.equal(e.page, 'تطوع معنا')
+  assert.equal(e.fields.find(f => f.label === 'المجالات التي تفضلها').value, 'الحملات الموسمية', 'unknown choices are dropped')
+  assert.equal((await call('PUT', `/api/admin/entries/${e.id}`, { is_read: true })).data.is_read, true)
+  assert.equal((await call('GET', '/api/admin/entries')).data.unread, 0)
+
+  await call('PUT', `/api/admin/sections/${form.id}`, { is_visible: false })
+  assert.equal((await call('POST', `/api/forms/${form.id}`, { fields: good }, null)).status, 404, 'a hidden form takes no entries')
+  await call('PUT', `/api/admin/sections/${form.id}`, { is_visible: true })
+  assert.equal((await call('DELETE', `/api/admin/entries/${e.id}`)).status, 200)
+  assert.equal((await call('GET', '/api/admin/entries')).data.entries.length, 0)
+
+  const partner = (await call('GET', '/api/page/partnerships', undefined, null)).data
+  assert.ok(partner.sections.some(s => s.type === 'form'))
+})
+
+test('a database upgraded before the volunteer pages gets them and their links once', () => {
+  const file = path.join(tmp, 'involved.sqlite')
+  const script = `
+    require ${JSON.stringify(path.join(ROOT, 'php/api/db.php'))};
+    $pdo = db();
+    foreach (eid_ddl('sqlite') as $st) $pdo->exec($st);
+    eid_add_column($pdo, 'sections', 'page_id', 'INT NULL');
+    foreach (['pages_imported', 'pages_imported_2', 'pages_linked', 'pages_linked_2', 'donations_imported', 'gift_added'] as $k) q("INSERT INTO settings (k, v) VALUES (?, '1')", [$k]);
+    $pdo->exec("INSERT INTO settings (k, v) VALUES ('site', '{\\"footer_columns\\":[{\\"title\\":{\\"ar\\":\\"شارك\\"},\\"links\\":[{\\"label\\":{\\"ar\\":\\"كن شريكًا\\"},\\"url\\":\\"#\\"}]}]}')");
+    $pdo->exec("INSERT INTO pages (slug, title_ar, title_en, is_visible, content) VALUES ('about', 'عن', 'About', 1, '{}')");
+    $pdo->exec("INSERT INTO sections (type, name, content) VALUES ('join', 'join', '{}')");
+    $pdo->exec("INSERT INTO section_items (section_id, content) VALUES (1, '{\\"title\\":{\\"ar\\":\\"تطوع\\"},\\"url\\":\\"#\\"}')");
+    $pdo->exec("INSERT INTO section_items (section_id, content) VALUES (1, '{\\"title\\":{\\"ar\\":\\"تبرع\\"},\\"url\\":\\"/my-link\\"}')");
+    eid_ensure_schema();
+    q("DELETE FROM pages WHERE slug = 'partnerships'");
+    eid_ensure_schema();
+    echo json_encode([
+      'volunteer' => count(q("SELECT id FROM pages WHERE slug = 'volunteer'")),
+      'partnerships' => count(q("SELECT id FROM pages WHERE slug = 'partnerships'")),
+      'forms' => count(q("SELECT s.id FROM sections s JOIN pages p ON p.id = s.page_id WHERE s.type = 'form'")),
+      'cards' => array_map(function ($r) { return jparse($r['content'])['url']; }, q('SELECT content FROM section_items WHERE section_id = 1 ORDER BY id')),
+      'footer' => jparse(q("SELECT v FROM settings WHERE k = 'site'")[0]['v'])['footer_columns'][0]['links'][0]['url'],
+      'other' => count(q("SELECT id FROM pages WHERE slug = 'goals'")),
+    ]);`
+  const res = JSON.parse(require('node:child_process').execFileSync('php', ['-r', script], { env: { ...process.env, EID_DB_DRIVER: 'sqlite', EID_SQLITE_FILE: file } }))
+  assert.equal(res.volunteer, 1)
+  assert.equal(res.partnerships, 0, 'a page the owner deletes does not come back')
+  assert.equal(res.forms, 1)
+  assert.deepEqual(res.cards, ['/page/volunteer', '/my-link'], 'only placeholder links are filled')
+  assert.equal(res.footer, '/page/partnerships')
+  assert.equal(res.other, 0, 'only the two new pages are imported')
+})
+
 test('pages: add, edit, sections, hide, reorder, delete', async () => {
   let r = await call('POST', '/api/admin/pages', { title_ar: 'صفحة', title_en: 'Page', slug: ' My New Page! ', content: { subtitle: { ar: 'وصف', en: 'Desc' } } })
   assert.equal(r.status, 200)

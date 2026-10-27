@@ -12,6 +12,8 @@ const ALL_BG = [...LIGHT_BG, ['navy', 'كحلي'], ['maroon', 'عنابي']]
 const anchor = f('anchor', 'المعرّف (للربط من المنيو)', 'text', { help: 'مثال: impact ← واربطه في المنيو بـ #impact', dir: 'ltr' })
 const bgLight = f('bg', 'لون الخلفية', 'select', { options: LIGHT_BG })
 const heading = [bi('eyebrow', 'العنوان الصغير'), bi('title', 'العنوان'), bi('subtitle', 'الوصف', 'textarea')]
+const FORM_KINDS = [['text', 'نص قصير'], ['email', 'بريد إلكتروني'], ['tel', 'رقم جوال'], ['number', 'رقم'], ['date', 'تاريخ'],
+  ['select', 'قائمة منسدلة (اختيار واحد)'], ['checkboxes', 'اختيار متعدد'], ['textarea', 'نص طويل']]
 const button = (key = 'button', label = 'نص الزر') => [bi(key, label), f(`${key}_url`, 'رابط الزر', 'url')]
 
 export const SECTION_TYPES = {
@@ -171,6 +173,30 @@ export const SECTION_TYPES = {
       bi('title', 'العنوان'), bi('subtitle', 'الوصف', 'textarea'), ...button()],
     item: null,
     defaults: () => ({ content: { anchor: '', bg: 'maroon', title: b('ساهم معنا اليوم', 'Give today'), subtitle: b('', ''), button: b('تبرع الآن', 'Donate Now'), button_url: '#donate' }, items: [] }),
+  },
+
+  form: {
+    label: 'نموذج تسجيل (تطوع، شراكة، …)',
+    description: 'نموذج يملؤه الزائر، وطلباته توصلك في «الطلبات الواردة»',
+    fields: [anchor, bgLight, ...heading,
+      bi('side_title', 'عنوان العمود الجانبي'), bi('side_points', 'مميزات تظهر بجانب النموذج (كل ميزة في سطر)', 'textarea'),
+      f('image', 'صورة العمود الجانبي (اختياري)', 'image'),
+      bi('submit', 'نص زر الإرسال'), bi('success', 'رسالة الشكر بعد الإرسال', 'textarea'), bi('privacy', 'ملاحظة الخصوصية تحت الزر'),
+      f('notify_email', 'بريد يوصله إشعار بكل طلب جديد (اختياري)', 'text', { dir: 'ltr', help: 'الطلبات كلها بتتحفظ في «الطلبات الواردة» حتى لو سبته فاضي.' })],
+    item: { label: 'خانة', title: c => c.label, fields: [bi('label', 'اسم الخانة'),
+      f('kind', 'نوع الخانة', 'select', { options: FORM_KINDS }),
+      bi('options', 'الاختيارات (كل اختيار في سطر)', 'textarea', { help: 'للقائمة المنسدلة والاختيار المتعدد بس.' }),
+      bi('placeholder', 'نص إرشادي داخل الخانة (اختياري)'),
+      f('required', 'خانة إجبارية', 'bool'), f('wide', 'بعرض النموذج كله', 'bool')] },
+    defaults: () => ({ content: { anchor: '', bg: 'cream', eyebrow: b('', ''), title: b('سجّل معنا', 'Register with us'), subtitle: b('', ''),
+      side_title: b('', ''), side_points: b('', ''), image: '', submit: b('إرسال الطلب', 'Send'),
+      success: b('شكرًا لك! وصلنا طلبك وهنتواصل معاك قريبًا.', 'Thank you! We received your request and will contact you soon.'),
+      privacy: b('بياناتك تُستخدم للتواصل معك فقط.', 'Your details are used only to contact you.'), notify_email: '' },
+      items: [
+        { label: b('الاسم الكامل', 'Full name'), kind: 'text', options: b('', ''), placeholder: b('', ''), required: true, wide: false },
+        { label: b('رقم الجوال', 'Mobile number'), kind: 'tel', options: b('', ''), placeholder: b('', ''), required: true, wide: false },
+        { label: b('البريد الإلكتروني', 'Email'), kind: 'email', options: b('', ''), placeholder: b('', ''), required: false, wide: true },
+      ] }),
   },
 
   gift: {

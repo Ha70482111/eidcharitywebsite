@@ -22,6 +22,17 @@ const center = (slug, ar, en, descAr, descEn, img) => page(slug, ar, en, [
   DONATE,
 ])
 
+// «تطوع معنا» and «كن شريكًا»: areas as icon cards, numbered steps, and a form whose entries reach /admin → الطلبات الواردة.
+const M = '#8A0047', NM = '#0F4562', GT = '#7E6124'
+const areas = (name, c, items) => ({ type: 'join', name, content: { anchor: '', bg: 'white', eyebrow: b('', ''), ...c },
+  items: items.map(([icon, accent, title, desc]) => ({ icon, accent, title, desc, cta: b('', ''), url: '' })) })
+const steps = (name, c, items) => ({ type: 'impact', name, content: { anchor: '', eyebrow: b('', ''), subtitle: b('', ''), note: b('', ''), ...c },
+  items: items.map(([label, note], i) => ({ num: String(i + 1), unit: b('', ''), label, note })) })
+const field = (label, kind, extra = {}) => ({ label, kind, options: b('', ''), placeholder: b('', ''), required: false, wide: false, ...extra })
+const form = (name, c, items) => ({ type: 'form', name, content: { anchor: 'form', bg: 'cream', eyebrow: b('', ''), subtitle: b('', ''), image: '',
+  submit: b('إرسال الطلب', 'Send request'), privacy: b('نستخدم بياناتك للتواصل معك بخصوص طلبك فقط.', 'We use your details only to contact you about your request.'), notify_email: '', ...c }, items })
+const opts = (ar, en) => b(ar.join('\n'), en.join('\n'))
+
 const pages = [
   page('about', 'عن المؤسسة', 'About the Foundation', [
     text('نبذة عن المؤسسة', {
@@ -327,6 +338,97 @@ const pages = [
       { title: b('الفاكس', 'Fax'), desc: b('+974 4040 5503', '+974 4040 5503') },
     ]),
   ]),
+  page('volunteer', 'تطوع معنا', 'Volunteer With Us', [
+    text('التطوع في عيد الخيرية', {
+      eyebrow: b('تطوع معنا', 'Volunteer With Us'), title: b('ساعة من وقتك… أثر في حياة إنسان', 'An hour of your time, an impact on someone\'s life'),
+      body: b('في عيد الخيرية نؤمن أن العطاء لا يقتصر على المال؛ فوقتك وخبرتك صدقة جارية تصل إلى الأسر والمحتاجين في قطر وخارجها. انضم إلى فرق المتطوعين في مراكزنا وحملاتنا الموسمية، واختر المجال الأقرب إلى قلبك ومهاراتك، ونحن نرتب لك الفرصة المناسبة لوقتك.',
+        'At Eid Charity we believe giving is not only about money: your time and skills are an ongoing charity that reaches families and people in need in Qatar and abroad. Join the volunteer teams of our centers and seasonal campaigns, choose the area closest to your heart and skills, and we will arrange the opportunity that fits your time.'),
+      button: b('سجّل الآن', 'Register now'), button_url: '#form',
+    }),
+    areas('مجالات التطوع', { bg: 'warm', eyebrow: b('اختر مجالك', 'Choose your area'), title: b('مجالات التطوع', 'Volunteering Areas') }, [
+      ['food', M, b('حفظ النعمة والإطعام', 'Food & Hefz Al Naama'), b('فرز الطعام الفائض وتجهيز السلال الغذائية وتوزيعها مع فرق مركز حفظ النعمة.', 'Sort surplus food and prepare and deliver food baskets with the Hefz Al Naama teams.')],
+      ['crescent', NM, b('الحملات الموسمية', 'Seasonal Campaigns'), b('شارك في إفطار الصائم وكسوة العيد والأضاحي، من التجهيز حتى وصولها لمستحقيها.', 'Take part in Iftar, Eid clothing and Udhiyah campaigns, from preparation to delivery.')],
+      ['hands', GT, b('خدمة ضيوف قطر', 'Serving Qatar\'s Guests'), b('استقبال الضيوف والجاليات ومساندة برامج مركز ضيوف قطر التعريفية.', 'Welcome guests and communities and support the Qatar Guests Center programs.')],
+      ['graduation', M, b('التعليم والثقافة', 'Education & Culture'), b('ساند برامج مركز عيد الثقافي ومبادرات القراءة والدعم الدراسي للطلاب.', 'Support the Eid Cultural Center programs, reading initiatives and tutoring for students.')],
+      ['sadaqa', NM, b('الأسرة والمرأة', 'Family & Women'), b('شاركي في برامج مركز عيد النسائي لدعم الأسرة وتمكين المرأة.', 'Join the Eid Women\'s Center programs that support families and empower women.')],
+      ['chart', GT, b('تطوع بخبرتك', 'Skills-based Volunteering'), b('تصميم، تصوير، إعلام رقمي، تقنية، ترجمة أو استشارات: خبرتك المهنية تصنع فرقًا.', 'Design, photography, digital media, tech, translation or consulting: your expertise makes a difference.')],
+    ]),
+    steps('خطوات التطوع', { eyebrow: b('خطوات بسيطة', 'Simple steps'), title: b('كيف تبدأ رحلتك التطوعية؟', 'How to start volunteering') }, [
+      [b('سجّل اهتمامك', 'Register'), b('املأ النموذج في دقيقتين', 'Fill in the form in two minutes')],
+      [b('نتواصل معك', 'We contact you'), b('لنتعرف عليك وعلى وقتك المتاح', 'To get to know you and your availability')],
+      [b('لقاء تعريفي', 'Orientation'), b('نعرّفك على الفريق والمهمة', 'Meet the team and your task')],
+      [b('ابدأ أثرك', 'Start your impact'), b('وشارك في الفرص المناسبة لك', 'Join the opportunities that suit you')],
+    ]),
+    form('نموذج التطوع', {
+      eyebrow: b('انضم إلى فريقنا', 'Join our team'), title: b('سجّل متطوعًا', 'Register as a Volunteer'),
+      subtitle: b('اكتب بياناتك واختر ما يناسبك، وفريق التطوع سيتواصل معك.', 'Share your details and preferences, and our volunteer team will contact you.'),
+      side_title: b('لماذا تتطوع مع عيد؟', 'Why volunteer with Eid?'),
+      side_points: b('شهادة تطوع موثقة بساعاتك\nتدريب يطوّر مهاراتك\nأثر تراه بعينك في الميدان\nفريق يجمعه حب الخير',
+        'A certificate recording your hours\nTraining that builds your skills\nImpact you see on the ground\nA team united by doing good'),
+      submit: b('أرسل طلب التطوع', 'Send volunteer request'),
+      success: b('شكرًا لك! وصلنا طلبك، وسيتواصل معك فريق التطوع قريبًا بإذن الله.', 'Thank you! We received your request and our volunteer team will contact you soon.'),
+    }, [
+      field(b('الاسم الكامل', 'Full name'), 'text', { required: true }),
+      field(b('رقم الجوال', 'Mobile number'), 'tel', { required: true }),
+      field(b('البريد الإلكتروني', 'Email'), 'email', { required: true }),
+      field(b('الجنسية', 'Nationality'), 'text'),
+      field(b('الجنس', 'Gender'), 'select', { required: true, options: opts(['ذكر', 'أنثى'], ['Male', 'Female']) }),
+      field(b('تاريخ الميلاد', 'Date of birth'), 'date'),
+      field(b('المؤهل أو التخصص', 'Qualification or field'), 'text', { wide: true }),
+      field(b('المجالات التي تفضلها', 'Preferred areas'), 'checkboxes', { wide: true,
+        options: opts(['حفظ النعمة والإطعام', 'الحملات الموسمية', 'خدمة ضيوف قطر', 'التعليم والثقافة', 'الأسرة والمرأة', 'تطوع بخبرتك'],
+          ['Food & Hefz Al Naama', 'Seasonal Campaigns', 'Serving Qatar\'s Guests', 'Education & Culture', 'Family & Women', 'Skills-based Volunteering']) }),
+      field(b('الأوقات المناسبة لك', 'When are you available?'), 'checkboxes', { wide: true,
+        options: opts(['صباحًا', 'مساءً', 'نهاية الأسبوع', 'رمضان والأعياد'], ['Mornings', 'Evenings', 'Weekends', 'Ramadan & Eid']) }),
+      field(b('خبرات تطوعية سابقة أو ملاحظات', 'Previous volunteering or notes'), 'textarea', { wide: true }),
+    ]),
+    cta(b('تمثّل شركة أو جهة؟', 'Representing a company or organization?'), b('تطوع مؤسسي، رعاية حملات، أو شراكة مجتمعية: نصمم البرنامج معكم.', 'Corporate volunteering, campaign sponsorship or a community partnership: we design it with you.'), b('كن شريكًا', 'Become a Partner'), '/page/partnerships', 'navy'),
+  ], { content: { subtitle: b('امنح من وقتك وخبرتك، وكن جزءًا من فريق عيد الخيرية.', 'Give your time and skills and become part of the Eid Charity team.'), image: '' } }),
+
+  page('partnerships', 'كن شريكًا', 'Become a Partner', [
+    text('الشراكات في عيد الخيرية', {
+      eyebrow: b('كن شريكًا', 'Become a Partner'), title: b('شراكة تصنع أثرًا يدوم', 'Partnerships that create lasting impact'),
+      body: b('منذ تأسيسها عام 1995م تؤمن عيد الخيرية أن الخير يكبر بالتكامل. نفتح أبوابنا للشركات والجهات الحكومية والمؤسسات وأصحاب المبادرات، لنبني معًا برامج واضحة الأهداف، تُنفَّذ بشفافية، وتصلكم نتائجها في تقارير أثر دورية.',
+        'Since 1995, Eid Charity has believed that good grows through cooperation. We welcome companies, government entities, organizations and initiative owners to build programs together with clear goals, transparent delivery and regular impact reports.'),
+      button: b('اطلب شراكة', 'Request a partnership'), button_url: '#form',
+    }),
+    areas('مجالات الشراكة', { bg: 'warm', eyebrow: b('كيف نعمل معًا', 'How we work together'), title: b('مجالات الشراكة', 'Partnership Areas') }, [
+      ['project', M, b('المسؤولية المجتمعية', 'Corporate Social Responsibility'), b('برامج سنوية تتبناها جهتكم في التعليم أو الصحة أو الإطعام، مرتبطة بأهدافكم المجتمعية.', 'Annual programs your organization adopts in education, health or food, aligned with your CSR goals.')],
+      ['heart', NM, b('رعاية الحملات والمشاريع', 'Campaign & Project Sponsorship'), b('ارعَ حملة موسمية أو مشروعًا محددًا وتابع إنجازه خطوة بخطوة.', 'Sponsor a seasonal campaign or a specific project and follow it step by step.')],
+      ['waqf', GT, b('الوقف المؤسسي', 'Corporate Endowment'), b('وقف باسم جهتكم يدر خيرًا مستدامًا على مصارف تختارونها.', 'An endowment in your organization\'s name that funds the causes you choose for years to come.')],
+      ['network', M, b('عطاء الموظفين', 'Employee Giving'), b('برامج استقطاع شهري ومبادرات تبرع تجمع موظفيكم على الخير.', 'Monthly payroll giving and donation drives that bring your staff together for good.')],
+      ['hands', NM, b('التطوع المؤسسي', 'Corporate Volunteering'), b('أيام تطوع لفرق عملكم في الميدان مع حملاتنا ومراكزنا.', 'Volunteer days for your teams in the field with our campaigns and centers.')],
+      ['eye', GT, b('الشراكة الإعلامية والتقنية', 'Media & Tech Partnership'), b('ساهم بمنصاتك أو خدماتك لإيصال رسالة الخير إلى عدد أكبر.', 'Contribute your platforms or services to carry the message of good further.')],
+    ]),
+    steps('خطوات الشراكة', { eyebrow: b('من الفكرة إلى الأثر', 'From idea to impact'), title: b('كيف نبدأ الشراكة؟', 'How a partnership starts') }, [
+      [b('تواصل معنا', 'Contact us'), b('بالنموذج أدناه', 'Using the form below')],
+      [b('نصمم البرنامج', 'Design together'), b('حسب أهدافكم والاحتياج', 'Around your goals and real needs')],
+      [b('التنفيذ والمتابعة', 'Delivery'), b('بإشراف فريق متخصص', 'Managed by a dedicated team')],
+      [b('تقارير الأثر', 'Impact reports'), b('بالأرقام والصور', 'With figures and photos')],
+    ]),
+    form('نموذج طلب الشراكة', {
+      eyebrow: b('لنبدأ معًا', 'Let\'s start'), title: b('اطلب شراكة', 'Request a Partnership'),
+      subtitle: b('شاركنا فكرتك، وفريق الشراكات سيتواصل معكم لترتيب لقاء.', 'Tell us your idea and our partnerships team will contact you to arrange a meeting.'),
+      side_title: b('لماذا تشارك عيد الخيرية؟', 'Why partner with Eid Charity?'),
+      side_points: b('خبرة في العمل الخيري منذ 1995م\nحوكمة وشفافية في إدارة كل ريال\nتقارير أثر دورية لشركائنا\nإبراز الشراكة في قنوات المؤسسة',
+        'Charitable work since 1995\nGovernance and transparency for every riyal\nRegular impact reports for partners\nRecognition across our channels'),
+      submit: b('أرسل طلب الشراكة', 'Send partnership request'),
+      success: b('شكرًا لكم! وصلنا طلبكم، وسيتواصل معكم فريق الشراكات قريبًا بإذن الله.', 'Thank you! We received your request and our partnerships team will contact you soon.'),
+    }, [
+      field(b('اسم الجهة', 'Organization name'), 'text', { required: true }),
+      field(b('نوع الجهة', 'Organization type'), 'select', { required: true,
+        options: opts(['شركة خاصة', 'جهة حكومية', 'مؤسسة غير ربحية', 'جهة إعلامية', 'فرد / صاحب مبادرة'], ['Private company', 'Government entity', 'Non-profit', 'Media', 'Individual / initiative']) }),
+      field(b('اسم المسؤول', 'Contact person'), 'text', { required: true }),
+      field(b('المسمى الوظيفي', 'Job title'), 'text'),
+      field(b('البريد الإلكتروني', 'Email'), 'email', { required: true }),
+      field(b('رقم الجوال', 'Mobile number'), 'tel', { required: true }),
+      field(b('مجالات الشراكة التي تهمكم', 'Partnership areas of interest'), 'checkboxes', { wide: true,
+        options: opts(['المسؤولية المجتمعية', 'رعاية الحملات والمشاريع', 'الوقف المؤسسي', 'عطاء الموظفين', 'التطوع المؤسسي', 'الشراكة الإعلامية والتقنية'],
+          ['Corporate Social Responsibility', 'Campaign & Project Sponsorship', 'Corporate Endowment', 'Employee Giving', 'Corporate Volunteering', 'Media & Tech Partnership']) }),
+      field(b('فكرة الشراكة باختصار', 'Your idea in brief'), 'textarea', { wide: true }),
+    ]),
+    cta(b('تفضّل أن تتطوع بنفسك؟', 'Prefer to volunteer yourself?'), b('انضم إلى فرق المتطوعين في مراكزنا وحملاتنا.', 'Join the volunteer teams of our centers and campaigns.'), b('تطوع معنا', 'Volunteer With Us'), '/page/volunteer', 'maroon'),
+  ], { content: { subtitle: b('نبني مع الشركات والجهات برامج خير واضحة الأهداف وموثّقة الأثر.', 'We build clear, well-reported charitable programs with companies and organizations.'), image: '' } }),
 ]
 
 module.exports = pages

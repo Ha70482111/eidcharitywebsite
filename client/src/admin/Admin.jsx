@@ -7,6 +7,7 @@ import MenuPage from './MenuPage.jsx'
 import PagesPage from './PagesPage.jsx'
 import SettingsPage from './SettingsPage.jsx'
 import AccountPage from './AccountPage.jsx'
+import EntriesPage from './EntriesPage.jsx'
 import './admin.css'
 
 function useHashRoute() {
@@ -135,6 +136,7 @@ function AuthForm({ setup, onAuth }) {
 const NAV = [
   ['/sections', 'أقسام الصفحة الرئيسية'],
   ['/pages', 'الصفحات الفرعية'],
+  ['/entries', 'الطلبات الواردة'],
   ['/menu', 'المنيو الرئيسية'],
   ['/settings', 'الإعدادات العامة'],
   ['/account', 'الحسابات'],
@@ -143,6 +145,8 @@ const NAV = [
 function Shell({ user, onLogout }) {
   const route = useHashRoute()
   const [navOpen, setNavOpen] = useState(false)
+  const [unread, setUnread] = useState(0)
+  useEffect(() => { get('/api/admin/entries').then(d => setUnread(d.unread)).catch(() => {}) }, [])
   const sectionMatch = /^\/sections\/(\d+)$/.exec(route)
   const pageMatch = /^\/pages\/(\d+)$/.exec(route)
 
@@ -150,6 +154,7 @@ function Shell({ user, onLogout }) {
   if (sectionMatch) page = <SectionEditor id={Number(sectionMatch[1])} />
   else if (pageMatch) page = <SectionsPage pageId={Number(pageMatch[1])} />
   else if (route === '/pages') page = <PagesPage />
+  else if (route === '/entries') page = <EntriesPage onUnread={setUnread} />
   else if (route === '/menu') page = <MenuPage />
   else if (route === '/settings') page = <SettingsPage />
   else if (route === '/account') page = <AccountPage user={user} />
@@ -166,7 +171,9 @@ function Shell({ user, onLogout }) {
           {NAV.map(([path, label]) => (
             <a key={path} href={`#${path}`} onClick={() => setNavOpen(false)}
               className={`ad-nav-link ${route === path || route.startsWith(path + '/') ? 'active' : ''}`}
-              aria-current={route === path || route.startsWith(path + '/') ? 'page' : undefined}>{label}</a>
+              aria-current={route === path || route.startsWith(path + '/') ? 'page' : undefined}>
+              {label}{path === '/entries' && unread > 0 && <span className="ad-badge">{unread}</span>}
+            </a>
           ))}
           <a className="ad-nav-link" href="/" target="_blank" rel="noopener">عرض الموقع ↗</a>
         </nav>
