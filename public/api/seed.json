@@ -4560,6 +4560,946 @@
      ]
     }
    ]
+  },
+  {
+   "slug": "volunteer",
+   "title": {
+    "ar": "تطوع معنا",
+    "en": "Volunteer With Us"
+   },
+   "content": {
+    "subtitle": {
+     "ar": "امنح من وقتك وخبرتك، وكن جزءًا من فريق عيد الخيرية.",
+     "en": "Give your time and skills and become part of the Eid Charity team."
+    },
+    "image": ""
+   },
+   "visible": true,
+   "sections": [
+    {
+     "type": "text_block",
+     "name": "التطوع في عيد الخيرية",
+     "content": {
+      "anchor": "",
+      "bg": "white",
+      "eyebrow": {
+       "ar": "تطوع معنا",
+       "en": "Volunteer With Us"
+      },
+      "image": "",
+      "image_side": "end",
+      "title": {
+       "ar": "ساعة من وقتك… أثر في حياة إنسان",
+       "en": "An hour of your time, an impact on someone's life"
+      },
+      "body": {
+       "ar": "في عيد الخيرية نؤمن أن العطاء لا يقتصر على المال؛ فوقتك وخبرتك صدقة جارية تصل إلى الأسر والمحتاجين في قطر وخارجها. انضم إلى فرق المتطوعين في مراكزنا وحملاتنا الموسمية، واختر المجال الأقرب إلى قلبك ومهاراتك، ونحن نرتب لك الفرصة المناسبة لوقتك.",
+       "en": "At Eid Charity we believe giving is not only about money: your time and skills are an ongoing charity that reaches families and people in need in Qatar and abroad. Join the volunteer teams of our centers and seasonal campaigns, choose the area closest to your heart and skills, and we will arrange the opportunity that fits your time."
+      },
+      "button": {
+       "ar": "سجّل الآن",
+       "en": "Register now"
+      },
+      "button_url": "#form"
+     },
+     "items": []
+    },
+    {
+     "type": "join",
+     "name": "مجالات التطوع",
+     "content": {
+      "anchor": "",
+      "bg": "warm",
+      "eyebrow": {
+       "ar": "اختر مجالك",
+       "en": "Choose your area"
+      },
+      "title": {
+       "ar": "مجالات التطوع",
+       "en": "Volunteering Areas"
+      }
+     },
+     "items": [
+      {
+       "icon": "food",
+       "accent": "#8A0047",
+       "title": {
+        "ar": "حفظ النعمة والإطعام",
+        "en": "Food & Hefz Al Naama"
+       },
+       "desc": {
+        "ar": "فرز الطعام الفائض وتجهيز السلال الغذائية وتوزيعها مع فرق مركز حفظ النعمة.",
+        "en": "Sort surplus food and prepare and deliver food baskets with the Hefz Al Naama teams."
+       },
+       "cta": {
+        "ar": "",
+        "en": ""
+       },
+       "url": ""
+      },
+      {
+       "icon": "crescent",
+       "accent": "#0F4562",
+       "title": {
+        "ar": "الحملات الموسمية",
+        "en": "Seasonal Campaigns"
+       },
+       "desc": {
+        "ar": "شارك في إفطار الصائم وكسوة العيد والأضاحي، من التجهيز حتى وصولها لمستحقيها.",
+        "en": "Take part in Iftar, Eid clothing and Udhiyah campaigns, from preparation to delivery."
+       },
+       "cta": {
+        "ar": "",
+        "en": ""
+       },
+       "url": ""
+      },
+      {
+       "icon": "hands",
+       "accent": "#7E6124",
+       "title": {
+        "ar": "خدمة ضيوف قطر",
+        "en": "Serving Qatar's Guests"
+       },
+       "desc": {
+        "ar": "استقبال الضيوف والجاليات ومساندة برامج مركز ضيوف قطر التعريفية.",
+        "en": "Welcome guests and communities and support the Qatar Guests Center programs."
+       },
+       "cta": {
+        "ar": "",
+        "en": ""
+       },
+       "url": ""
+      },
+      {
+       "icon": "graduation",
+       "accent": "#8A0047",
+       "title": {
+        "ar": "التعليم والثقافة",
+        "en": "Education & Culture"
+       },
+       "desc": {
+        "ar": "ساند برامج مركز عيد الثقافي ومبادرات القراءة والدعم الدراسي للطلاب.",
+        "en": "Support the Eid Cultural Center programs, reading initiatives and tutoring for students."
+       },
+       "cta": {
+        "ar": "",
+        "en": ""
+       },
+       "url": ""
+      },
+      {
+       "icon": "sadaqa",
+       "accent": "#0F4562",
+       "title": {
+        "ar": "الأسرة والمرأة",
+        "en": "Family & Women"
+       },
+       "desc": {
+        "ar": "شاركي في برامج مركز عيد النسائي لدعم الأسرة وتمكين المرأة.",
+        "en": "Join the Eid Women's Center programs that support families and empower women."
+       },
+       "cta": {
+        "ar": "",
+        "en": ""
+       },
+       "url": ""
+      },
+      {
+       "icon": "chart",
+       "accent": "#7E6124",
+       "title": {
+        "ar": "تطوع بخبرتك",
+        "en": "Skills-based Volunteering"
+       },
+       "desc": {
+        "ar": "تصميم، تصوير، إعلام رقمي، تقنية، ترجمة أو استشارات: خبرتك المهنية تصنع فرقًا.",
+        "en": "Design, photography, digital media, tech, translation or consulting: your expertise makes a difference."
+       },
+       "cta": {
+        "ar": "",
+        "en": ""
+       },
+       "url": ""
+      }
+     ]
+    },
+    {
+     "type": "impact",
+     "name": "خطوات التطوع",
+     "content": {
+      "anchor": "",
+      "eyebrow": {
+       "ar": "خطوات بسيطة",
+       "en": "Simple steps"
+      },
+      "subtitle": {
+       "ar": "",
+       "en": ""
+      },
+      "note": {
+       "ar": "",
+       "en": ""
+      },
+      "title": {
+       "ar": "كيف تبدأ رحلتك التطوعية؟",
+       "en": "How to start volunteering"
+      }
+     },
+     "items": [
+      {
+       "num": "1",
+       "unit": {
+        "ar": "",
+        "en": ""
+       },
+       "label": {
+        "ar": "سجّل اهتمامك",
+        "en": "Register"
+       },
+       "note": {
+        "ar": "املأ النموذج في دقيقتين",
+        "en": "Fill in the form in two minutes"
+       }
+      },
+      {
+       "num": "2",
+       "unit": {
+        "ar": "",
+        "en": ""
+       },
+       "label": {
+        "ar": "نتواصل معك",
+        "en": "We contact you"
+       },
+       "note": {
+        "ar": "لنتعرف عليك وعلى وقتك المتاح",
+        "en": "To get to know you and your availability"
+       }
+      },
+      {
+       "num": "3",
+       "unit": {
+        "ar": "",
+        "en": ""
+       },
+       "label": {
+        "ar": "لقاء تعريفي",
+        "en": "Orientation"
+       },
+       "note": {
+        "ar": "نعرّفك على الفريق والمهمة",
+        "en": "Meet the team and your task"
+       }
+      },
+      {
+       "num": "4",
+       "unit": {
+        "ar": "",
+        "en": ""
+       },
+       "label": {
+        "ar": "ابدأ أثرك",
+        "en": "Start your impact"
+       },
+       "note": {
+        "ar": "وشارك في الفرص المناسبة لك",
+        "en": "Join the opportunities that suit you"
+       }
+      }
+     ]
+    },
+    {
+     "type": "form",
+     "name": "نموذج التطوع",
+     "content": {
+      "anchor": "form",
+      "bg": "cream",
+      "eyebrow": {
+       "ar": "انضم إلى فريقنا",
+       "en": "Join our team"
+      },
+      "subtitle": {
+       "ar": "اكتب بياناتك واختر ما يناسبك، وفريق التطوع سيتواصل معك.",
+       "en": "Share your details and preferences, and our volunteer team will contact you."
+      },
+      "image": "",
+      "submit": {
+       "ar": "أرسل طلب التطوع",
+       "en": "Send volunteer request"
+      },
+      "privacy": {
+       "ar": "نستخدم بياناتك للتواصل معك بخصوص طلبك فقط.",
+       "en": "We use your details only to contact you about your request."
+      },
+      "notify_email": "",
+      "title": {
+       "ar": "سجّل متطوعًا",
+       "en": "Register as a Volunteer"
+      },
+      "side_title": {
+       "ar": "لماذا تتطوع مع عيد؟",
+       "en": "Why volunteer with Eid?"
+      },
+      "side_points": {
+       "ar": "شهادة تطوع موثقة بساعاتك\nتدريب يطوّر مهاراتك\nأثر تراه بعينك في الميدان\nفريق يجمعه حب الخير",
+       "en": "A certificate recording your hours\nTraining that builds your skills\nImpact you see on the ground\nA team united by doing good"
+      },
+      "success": {
+       "ar": "شكرًا لك! وصلنا طلبك، وسيتواصل معك فريق التطوع قريبًا بإذن الله.",
+       "en": "Thank you! We received your request and our volunteer team will contact you soon."
+      }
+     },
+     "items": [
+      {
+       "label": {
+        "ar": "الاسم الكامل",
+        "en": "Full name"
+       },
+       "kind": "text",
+       "options": {
+        "ar": "",
+        "en": ""
+       },
+       "placeholder": {
+        "ar": "",
+        "en": ""
+       },
+       "required": true,
+       "wide": false
+      },
+      {
+       "label": {
+        "ar": "رقم الجوال",
+        "en": "Mobile number"
+       },
+       "kind": "tel",
+       "options": {
+        "ar": "",
+        "en": ""
+       },
+       "placeholder": {
+        "ar": "",
+        "en": ""
+       },
+       "required": true,
+       "wide": false
+      },
+      {
+       "label": {
+        "ar": "البريد الإلكتروني",
+        "en": "Email"
+       },
+       "kind": "email",
+       "options": {
+        "ar": "",
+        "en": ""
+       },
+       "placeholder": {
+        "ar": "",
+        "en": ""
+       },
+       "required": true,
+       "wide": false
+      },
+      {
+       "label": {
+        "ar": "الجنسية",
+        "en": "Nationality"
+       },
+       "kind": "text",
+       "options": {
+        "ar": "",
+        "en": ""
+       },
+       "placeholder": {
+        "ar": "",
+        "en": ""
+       },
+       "required": false,
+       "wide": false
+      },
+      {
+       "label": {
+        "ar": "الجنس",
+        "en": "Gender"
+       },
+       "kind": "select",
+       "options": {
+        "ar": "ذكر\nأنثى",
+        "en": "Male\nFemale"
+       },
+       "placeholder": {
+        "ar": "",
+        "en": ""
+       },
+       "required": true,
+       "wide": false
+      },
+      {
+       "label": {
+        "ar": "تاريخ الميلاد",
+        "en": "Date of birth"
+       },
+       "kind": "date",
+       "options": {
+        "ar": "",
+        "en": ""
+       },
+       "placeholder": {
+        "ar": "",
+        "en": ""
+       },
+       "required": false,
+       "wide": false
+      },
+      {
+       "label": {
+        "ar": "المؤهل أو التخصص",
+        "en": "Qualification or field"
+       },
+       "kind": "text",
+       "options": {
+        "ar": "",
+        "en": ""
+       },
+       "placeholder": {
+        "ar": "",
+        "en": ""
+       },
+       "required": false,
+       "wide": true
+      },
+      {
+       "label": {
+        "ar": "المجالات التي تفضلها",
+        "en": "Preferred areas"
+       },
+       "kind": "checkboxes",
+       "options": {
+        "ar": "حفظ النعمة والإطعام\nالحملات الموسمية\nخدمة ضيوف قطر\nالتعليم والثقافة\nالأسرة والمرأة\nتطوع بخبرتك",
+        "en": "Food & Hefz Al Naama\nSeasonal Campaigns\nServing Qatar's Guests\nEducation & Culture\nFamily & Women\nSkills-based Volunteering"
+       },
+       "placeholder": {
+        "ar": "",
+        "en": ""
+       },
+       "required": false,
+       "wide": true
+      },
+      {
+       "label": {
+        "ar": "الأوقات المناسبة لك",
+        "en": "When are you available?"
+       },
+       "kind": "checkboxes",
+       "options": {
+        "ar": "صباحًا\nمساءً\nنهاية الأسبوع\nرمضان والأعياد",
+        "en": "Mornings\nEvenings\nWeekends\nRamadan & Eid"
+       },
+       "placeholder": {
+        "ar": "",
+        "en": ""
+       },
+       "required": false,
+       "wide": true
+      },
+      {
+       "label": {
+        "ar": "خبرات تطوعية سابقة أو ملاحظات",
+        "en": "Previous volunteering or notes"
+       },
+       "kind": "textarea",
+       "options": {
+        "ar": "",
+        "en": ""
+       },
+       "placeholder": {
+        "ar": "",
+        "en": ""
+       },
+       "required": false,
+       "wide": true
+      }
+     ]
+    },
+    {
+     "type": "cta_banner",
+     "name": "شريط دعوة",
+     "content": {
+      "anchor": "",
+      "bg": "navy",
+      "image": "",
+      "title": {
+       "ar": "تمثّل شركة أو جهة؟",
+       "en": "Representing a company or organization?"
+      },
+      "subtitle": {
+       "ar": "تطوع مؤسسي، رعاية حملات، أو شراكة مجتمعية: نصمم البرنامج معكم.",
+       "en": "Corporate volunteering, campaign sponsorship or a community partnership: we design it with you."
+      },
+      "button": {
+       "ar": "كن شريكًا",
+       "en": "Become a Partner"
+      },
+      "button_url": "/page/partnerships"
+     },
+     "items": []
+    }
+   ]
+  },
+  {
+   "slug": "partnerships",
+   "title": {
+    "ar": "كن شريكًا",
+    "en": "Become a Partner"
+   },
+   "content": {
+    "subtitle": {
+     "ar": "نبني مع الشركات والجهات برامج خير واضحة الأهداف وموثّقة الأثر.",
+     "en": "We build clear, well-reported charitable programs with companies and organizations."
+    },
+    "image": ""
+   },
+   "visible": true,
+   "sections": [
+    {
+     "type": "text_block",
+     "name": "الشراكات في عيد الخيرية",
+     "content": {
+      "anchor": "",
+      "bg": "white",
+      "eyebrow": {
+       "ar": "كن شريكًا",
+       "en": "Become a Partner"
+      },
+      "image": "",
+      "image_side": "end",
+      "title": {
+       "ar": "شراكة تصنع أثرًا يدوم",
+       "en": "Partnerships that create lasting impact"
+      },
+      "body": {
+       "ar": "منذ تأسيسها عام 1995م تؤمن عيد الخيرية أن الخير يكبر بالتكامل. نفتح أبوابنا للشركات والجهات الحكومية والمؤسسات وأصحاب المبادرات، لنبني معًا برامج واضحة الأهداف، تُنفَّذ بشفافية، وتصلكم نتائجها في تقارير أثر دورية.",
+       "en": "Since 1995, Eid Charity has believed that good grows through cooperation. We welcome companies, government entities, organizations and initiative owners to build programs together with clear goals, transparent delivery and regular impact reports."
+      },
+      "button": {
+       "ar": "اطلب شراكة",
+       "en": "Request a partnership"
+      },
+      "button_url": "#form"
+     },
+     "items": []
+    },
+    {
+     "type": "join",
+     "name": "مجالات الشراكة",
+     "content": {
+      "anchor": "",
+      "bg": "warm",
+      "eyebrow": {
+       "ar": "كيف نعمل معًا",
+       "en": "How we work together"
+      },
+      "title": {
+       "ar": "مجالات الشراكة",
+       "en": "Partnership Areas"
+      }
+     },
+     "items": [
+      {
+       "icon": "project",
+       "accent": "#8A0047",
+       "title": {
+        "ar": "المسؤولية المجتمعية",
+        "en": "Corporate Social Responsibility"
+       },
+       "desc": {
+        "ar": "برامج سنوية تتبناها جهتكم في التعليم أو الصحة أو الإطعام، مرتبطة بأهدافكم المجتمعية.",
+        "en": "Annual programs your organization adopts in education, health or food, aligned with your CSR goals."
+       },
+       "cta": {
+        "ar": "",
+        "en": ""
+       },
+       "url": ""
+      },
+      {
+       "icon": "heart",
+       "accent": "#0F4562",
+       "title": {
+        "ar": "رعاية الحملات والمشاريع",
+        "en": "Campaign & Project Sponsorship"
+       },
+       "desc": {
+        "ar": "ارعَ حملة موسمية أو مشروعًا محددًا وتابع إنجازه خطوة بخطوة.",
+        "en": "Sponsor a seasonal campaign or a specific project and follow it step by step."
+       },
+       "cta": {
+        "ar": "",
+        "en": ""
+       },
+       "url": ""
+      },
+      {
+       "icon": "waqf",
+       "accent": "#7E6124",
+       "title": {
+        "ar": "الوقف المؤسسي",
+        "en": "Corporate Endowment"
+       },
+       "desc": {
+        "ar": "وقف باسم جهتكم يدر خيرًا مستدامًا على مصارف تختارونها.",
+        "en": "An endowment in your organization's name that funds the causes you choose for years to come."
+       },
+       "cta": {
+        "ar": "",
+        "en": ""
+       },
+       "url": ""
+      },
+      {
+       "icon": "network",
+       "accent": "#8A0047",
+       "title": {
+        "ar": "عطاء الموظفين",
+        "en": "Employee Giving"
+       },
+       "desc": {
+        "ar": "برامج استقطاع شهري ومبادرات تبرع تجمع موظفيكم على الخير.",
+        "en": "Monthly payroll giving and donation drives that bring your staff together for good."
+       },
+       "cta": {
+        "ar": "",
+        "en": ""
+       },
+       "url": ""
+      },
+      {
+       "icon": "hands",
+       "accent": "#0F4562",
+       "title": {
+        "ar": "التطوع المؤسسي",
+        "en": "Corporate Volunteering"
+       },
+       "desc": {
+        "ar": "أيام تطوع لفرق عملكم في الميدان مع حملاتنا ومراكزنا.",
+        "en": "Volunteer days for your teams in the field with our campaigns and centers."
+       },
+       "cta": {
+        "ar": "",
+        "en": ""
+       },
+       "url": ""
+      },
+      {
+       "icon": "eye",
+       "accent": "#7E6124",
+       "title": {
+        "ar": "الشراكة الإعلامية والتقنية",
+        "en": "Media & Tech Partnership"
+       },
+       "desc": {
+        "ar": "ساهم بمنصاتك أو خدماتك لإيصال رسالة الخير إلى عدد أكبر.",
+        "en": "Contribute your platforms or services to carry the message of good further."
+       },
+       "cta": {
+        "ar": "",
+        "en": ""
+       },
+       "url": ""
+      }
+     ]
+    },
+    {
+     "type": "impact",
+     "name": "خطوات الشراكة",
+     "content": {
+      "anchor": "",
+      "eyebrow": {
+       "ar": "من الفكرة إلى الأثر",
+       "en": "From idea to impact"
+      },
+      "subtitle": {
+       "ar": "",
+       "en": ""
+      },
+      "note": {
+       "ar": "",
+       "en": ""
+      },
+      "title": {
+       "ar": "كيف نبدأ الشراكة؟",
+       "en": "How a partnership starts"
+      }
+     },
+     "items": [
+      {
+       "num": "1",
+       "unit": {
+        "ar": "",
+        "en": ""
+       },
+       "label": {
+        "ar": "تواصل معنا",
+        "en": "Contact us"
+       },
+       "note": {
+        "ar": "بالنموذج أدناه",
+        "en": "Using the form below"
+       }
+      },
+      {
+       "num": "2",
+       "unit": {
+        "ar": "",
+        "en": ""
+       },
+       "label": {
+        "ar": "نصمم البرنامج",
+        "en": "Design together"
+       },
+       "note": {
+        "ar": "حسب أهدافكم والاحتياج",
+        "en": "Around your goals and real needs"
+       }
+      },
+      {
+       "num": "3",
+       "unit": {
+        "ar": "",
+        "en": ""
+       },
+       "label": {
+        "ar": "التنفيذ والمتابعة",
+        "en": "Delivery"
+       },
+       "note": {
+        "ar": "بإشراف فريق متخصص",
+        "en": "Managed by a dedicated team"
+       }
+      },
+      {
+       "num": "4",
+       "unit": {
+        "ar": "",
+        "en": ""
+       },
+       "label": {
+        "ar": "تقارير الأثر",
+        "en": "Impact reports"
+       },
+       "note": {
+        "ar": "بالأرقام والصور",
+        "en": "With figures and photos"
+       }
+      }
+     ]
+    },
+    {
+     "type": "form",
+     "name": "نموذج طلب الشراكة",
+     "content": {
+      "anchor": "form",
+      "bg": "cream",
+      "eyebrow": {
+       "ar": "لنبدأ معًا",
+       "en": "Let's start"
+      },
+      "subtitle": {
+       "ar": "شاركنا فكرتك، وفريق الشراكات سيتواصل معكم لترتيب لقاء.",
+       "en": "Tell us your idea and our partnerships team will contact you to arrange a meeting."
+      },
+      "image": "",
+      "submit": {
+       "ar": "أرسل طلب الشراكة",
+       "en": "Send partnership request"
+      },
+      "privacy": {
+       "ar": "نستخدم بياناتك للتواصل معك بخصوص طلبك فقط.",
+       "en": "We use your details only to contact you about your request."
+      },
+      "notify_email": "",
+      "title": {
+       "ar": "اطلب شراكة",
+       "en": "Request a Partnership"
+      },
+      "side_title": {
+       "ar": "لماذا تشارك عيد الخيرية؟",
+       "en": "Why partner with Eid Charity?"
+      },
+      "side_points": {
+       "ar": "خبرة في العمل الخيري منذ 1995م\nحوكمة وشفافية في إدارة كل ريال\nتقارير أثر دورية لشركائنا\nإبراز الشراكة في قنوات المؤسسة",
+       "en": "Charitable work since 1995\nGovernance and transparency for every riyal\nRegular impact reports for partners\nRecognition across our channels"
+      },
+      "success": {
+       "ar": "شكرًا لكم! وصلنا طلبكم، وسيتواصل معكم فريق الشراكات قريبًا بإذن الله.",
+       "en": "Thank you! We received your request and our partnerships team will contact you soon."
+      }
+     },
+     "items": [
+      {
+       "label": {
+        "ar": "اسم الجهة",
+        "en": "Organization name"
+       },
+       "kind": "text",
+       "options": {
+        "ar": "",
+        "en": ""
+       },
+       "placeholder": {
+        "ar": "",
+        "en": ""
+       },
+       "required": true,
+       "wide": false
+      },
+      {
+       "label": {
+        "ar": "نوع الجهة",
+        "en": "Organization type"
+       },
+       "kind": "select",
+       "options": {
+        "ar": "شركة خاصة\nجهة حكومية\nمؤسسة غير ربحية\nجهة إعلامية\nفرد / صاحب مبادرة",
+        "en": "Private company\nGovernment entity\nNon-profit\nMedia\nIndividual / initiative"
+       },
+       "placeholder": {
+        "ar": "",
+        "en": ""
+       },
+       "required": true,
+       "wide": false
+      },
+      {
+       "label": {
+        "ar": "اسم المسؤول",
+        "en": "Contact person"
+       },
+       "kind": "text",
+       "options": {
+        "ar": "",
+        "en": ""
+       },
+       "placeholder": {
+        "ar": "",
+        "en": ""
+       },
+       "required": true,
+       "wide": false
+      },
+      {
+       "label": {
+        "ar": "المسمى الوظيفي",
+        "en": "Job title"
+       },
+       "kind": "text",
+       "options": {
+        "ar": "",
+        "en": ""
+       },
+       "placeholder": {
+        "ar": "",
+        "en": ""
+       },
+       "required": false,
+       "wide": false
+      },
+      {
+       "label": {
+        "ar": "البريد الإلكتروني",
+        "en": "Email"
+       },
+       "kind": "email",
+       "options": {
+        "ar": "",
+        "en": ""
+       },
+       "placeholder": {
+        "ar": "",
+        "en": ""
+       },
+       "required": true,
+       "wide": false
+      },
+      {
+       "label": {
+        "ar": "رقم الجوال",
+        "en": "Mobile number"
+       },
+       "kind": "tel",
+       "options": {
+        "ar": "",
+        "en": ""
+       },
+       "placeholder": {
+        "ar": "",
+        "en": ""
+       },
+       "required": true,
+       "wide": false
+      },
+      {
+       "label": {
+        "ar": "مجالات الشراكة التي تهمكم",
+        "en": "Partnership areas of interest"
+       },
+       "kind": "checkboxes",
+       "options": {
+        "ar": "المسؤولية المجتمعية\nرعاية الحملات والمشاريع\nالوقف المؤسسي\nعطاء الموظفين\nالتطوع المؤسسي\nالشراكة الإعلامية والتقنية",
+        "en": "Corporate Social Responsibility\nCampaign & Project Sponsorship\nCorporate Endowment\nEmployee Giving\nCorporate Volunteering\nMedia & Tech Partnership"
+       },
+       "placeholder": {
+        "ar": "",
+        "en": ""
+       },
+       "required": false,
+       "wide": true
+      },
+      {
+       "label": {
+        "ar": "فكرة الشراكة باختصار",
+        "en": "Your idea in brief"
+       },
+       "kind": "textarea",
+       "options": {
+        "ar": "",
+        "en": ""
+       },
+       "placeholder": {
+        "ar": "",
+        "en": ""
+       },
+       "required": false,
+       "wide": true
+      }
+     ]
+    },
+    {
+     "type": "cta_banner",
+     "name": "شريط دعوة",
+     "content": {
+      "anchor": "",
+      "bg": "maroon",
+      "image": "",
+      "title": {
+       "ar": "تفضّل أن تتطوع بنفسك؟",
+       "en": "Prefer to volunteer yourself?"
+      },
+      "subtitle": {
+       "ar": "انضم إلى فرق المتطوعين في مراكزنا وحملاتنا.",
+       "en": "Join the volunteer teams of our centers and campaigns."
+      },
+      "button": {
+       "ar": "تطوع معنا",
+       "en": "Volunteer With Us"
+      },
+      "button_url": "/page/volunteer"
+     },
+     "items": []
+    }
+   ]
   }
  ]
 }

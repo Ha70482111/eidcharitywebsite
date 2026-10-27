@@ -85,6 +85,7 @@ function eid_ddl($dialect)
         'pages' => "id $pk, slug VARCHAR(120) NOT NULL UNIQUE, title_ar VARCHAR(255) NOT NULL DEFAULT '', title_en VARCHAR(255) NOT NULL DEFAULT '', sort_order INT NOT NULL DEFAULT 0, is_visible TINYINT NOT NULL DEFAULT 1, content LONGTEXT NULL",
         'section_items' => "id $pk, section_id INT NOT NULL, sort_order INT NOT NULL DEFAULT 0, is_visible TINYINT NOT NULL DEFAULT 1, content LONGTEXT NULL",
         'login_attempts' => "id $pk, ip VARCHAR(64) NOT NULL, attempted_at INT NOT NULL",
+        'form_entries' => "id $pk, section_id INT NOT NULL, form_name VARCHAR(255) NOT NULL DEFAULT '', created_at VARCHAR(30) NOT NULL DEFAULT '', is_read TINYINT NOT NULL DEFAULT 0, ip VARCHAR(64) NOT NULL DEFAULT '', content LONGTEXT NULL",
     ];
     $out = [];
     foreach ($tables as $name => $cols) $out[] = "CREATE TABLE IF NOT EXISTS $name ($cols)$tail";
@@ -106,6 +107,8 @@ function eid_ensure_schema(PDO $pdo = null)
     eid_link_pages($pdo);
     eid_link_pages($pdo, 'pages_linked_2', false);
     eid_add_gift($pdo);
+    eid_import_pages($pdo, 'pages_imported_3', ['volunteer', 'partnerships']);
+    eid_link_pages($pdo, 'pages_linked_3', false);
 }
 
 /** Adds a column to a table that already exists (databases created before the column was introduced). */
@@ -322,6 +325,8 @@ function eid_page_link_map()
         'annual-harvest' => ['الحصاد السنوي', 'تقارير وإصدارات'],
         'financial-reports' => ['التقارير المالية'],
         'contact' => ['اتصل بنا', 'أتصل بنا', 'تواصل معنا'],
+        'volunteer' => ['تطوع', 'تطوع معنا', 'التطوع'],
+        'partnerships' => ['كن شريكًا', 'كن شريكا', 'الشراكات', 'اكتشف الشراكات', 'شراكات'],
         'http://hifzalnaema.com/' => ['مركز حفظ النعمة', 'حفظ النعمة'],
         // The foundation's app, as linked from donate.eidcharity.net
         'https://apps.apple.com/us/app/%D8%B9%D9%8A%D8%AF-%D8%A7%D9%84%D8%AE%D9%8A%D8%B1%D9%8A%D8%A9/id6759623769' => ['تطبيقاتنا', 'تطبيق عيد الخيرية'],

@@ -288,6 +288,89 @@ route('GET', '/api/gift', function () {
         'donations' => donation_groups(), 'donate_action_url' => $pay !== '' ? $pay : hero_pay_url()];
 });
 
+// ── Forms (volunteer, partnership…): a "form" section's items are its fields ──
+const EID_FORM_KINDS = ['text', 'email', 'tel', 'number', 'date', 'select', 'checkboxes', 'textarea'];
+
+/** The option lines of a select/checkboxes field, in both languages. */
+function form_options($c)
+{
+    $out = [];
+    foreach (['ar', 'en'] as $l) foreach (preg_split('/\r?\n/', (string)($c['options'][$l] ?? '')) as $o) if (trim($o) !== '') $out[] = trim($o);
+    return $out;
+}
+
+/** Checks a visitor's answers against the section's visible fields; returns [[label, value], …]. */
+function form_answers($sectionId, $values)
+{
+    $out = [];
+    $filled = false;
+    foreach (q('SELECT * FROM section_items WHERE section_id = ? AND is_visible = 1 ORDER BY sort_order, id', [$sectionId]) as $it) {
+        $c = jparse($it['content']);
+        $label = trim(str($c['label']['ar'] ?? '', 200)) ?: trim(str($c['label']['en'] ?? '', 200));
+        $kind = in_array($c['kind'] ?? '', EID_FORM_KINDS, true) ? $c['kind'] : 'text';
+        $raw = $values[(int)$it['id']] ?? '';
+        if ($kind === 'checkboxes') {
+            $opts = form_options($c);
+            $picked = array_values(array_filter(array_map(function ($v) { return trim(str($v, 200)); }, is_array($raw) ? $raw : [$raw]),
+                function ($v) use ($opts) { return $v !== '' && in_array($v, $opts, true); }));
+            $value = implode('، ', array_slice(array_unique($picked), 0, 30));
+        } else {
+            $value = trim(str(is_array($raw) ? '' : $raw, $kind === 'textarea' ? 3000 : 200));
+        }
+        if ($value === '') {
+            if (!empty($c['required'])) throw new HttpError(400, "اكتب «{$label}»");
+            $out[] = [$label, ''];
+            continue;
+        }
+        $bad = ($kind === 'email' && !filter_var($value, FILTER_VALIDATE_EMAIL))
+            || ($kind === 'tel' && !preg_match('/^\+?[\d\s()\-]{6,20}$/', $value))
+            || ($kind === 'number' && !is_numeric($value))
+            || ($kind === 'date' && !preg_match('/^\d{4}-\d{2}-\d{2}$/', $value))
+            || ($kind === 'select' && !in_array($value, form_options($c), true));
+        if ($bad) throw new HttpError(400, "راجع «{$label}»");
+        $filled = true;
+        $out[] = [$label, $value];
+    }
+    if (!$filled) throw new HttpError(400, 'النموذج فارغ');
+    return $out;
+}
+
+/** Optional e-mail to the address set on the form section (best effort: the entry is already saved). */
+function form_notify($to, $formName, array $answers)
+{
+    if (!filter_var($to, FILTER_VALIDATE_EMAIL) || !function_exists('mail')) return;
+    $host = preg_replace('/[^A-Za-z0-9.\-]/', '', $_SERVER['HTTP_HOST'] ?? 'localhost') ?: 'localhost';
+    $body = "طلب جديد من نموذج «{$formName}»:\n\n";
+    foreach ($answers as [$label, $value]) if ($value !== '') $body .= "{$label}: {$value}\n";
+    $body .= "\nكل الطلبات في لوحة التحكم ← الطلبات الواردة: https://{$host}/admin#/entries\n";
+    $subject = 'طلب جديد: ' . $formName;
+    $subject = function_exists('mb_encode_mimeheader') ? mb_encode_mimeheader($subject, 'UTF-8') : '=?UTF-8?B?' . base64_encode($subject) . '?=';
+    @mail($to, $subject, $body, "From: noreply@{$host}\r\nContent-Type: text/plain; charset=UTF-8\r\nContent-Transfer-Encoding: 8bit");
+}
+
+// A visitor sends a form; entries show in /admin → الطلبات الواردة.
+route('POST', '/api/forms/:id', function ($ctx) {
+    $rows = q("SELECT s.* FROM sections s LEFT JOIN pages p ON p.id = s.page_id
+        WHERE s.id = ? AND s.type = 'form' AND s.is_visible = 1 AND (s.page_id IS NULL OR p.is_visible = 1)", [intv($ctx['params']['id'])]);
+    if (!$rows) throw new HttpError(404, 'النموذج غير موجود');
+    $section = section_row($rows[0]);
+    $b = $ctx['body'];
+    if (trim(str($b['website'] ?? '')) !== '') return ['ok' => true]; // hidden field that only bots fill in
+    $ip = substr(hash('sha256', $ctx['ip'] . app_secret()), 0, 32);
+    if ((int)q('SELECT COUNT(*) AS n FROM form_entries WHERE ip = ? AND created_at > ?', [$ip, gmdate('c', time() - 3600)])[0]['n'] >= 10) {
+        throw new HttpError(429, 'أرسلت طلبات كثيرة، حاول بعد ساعة');
+    }
+    $answers = form_answers($section['id'], is_array($b['fields'] ?? null) ? $b['fields'] : []);
+    $c = (array)$section['content'];
+    $name = trim(str($c['title']['ar'] ?? '', 200)) ?: $section['name'];
+    $source = '';
+    if ($section['page_id']) $source = q('SELECT title_ar FROM pages WHERE id = ?', [$section['page_id']])[0]['title_ar'] ?? '';
+    q('INSERT INTO form_entries (section_id, form_name, created_at, is_read, ip, content) VALUES (?, ?, ?, 0, ?, ?)',
+        [$section['id'], $name, gmdate('c'), $ip, jenc(['fields' => $answers, 'page' => $source, 'lang' => ($b['lang'] ?? '') === 'en' ? 'en' : 'ar'])]);
+    form_notify(trim(str($c['notify_email'] ?? '', 200)), $name, $answers);
+    return ['ok' => true];
+});
+
 route('GET', '/api/auth/status', function ($ctx) {
     return ['needsInstall' => false, 'needsSetup' => admin_count() === 0, 'user' => $ctx['user']];
 });
@@ -559,6 +642,31 @@ route('DELETE', '/api/admin/items/:id', function ($ctx) {
     return ['ok' => true];
 });
 
+// Admin: form entries (newest first)
+function entry_row($r)
+{
+    $c = jparse($r['content']);
+    return ['id' => (int)$r['id'], 'section_id' => (int)$r['section_id'], 'form_name' => $r['form_name'], 'created_at' => $r['created_at'],
+        'is_read' => (bool)(int)$r['is_read'], 'page' => $c['page'] ?? '', 'lang' => $c['lang'] ?? 'ar',
+        'fields' => array_map(function ($f) { return ['label' => (string)($f[0] ?? ''), 'value' => (string)($f[1] ?? '')]; }, $c['fields'] ?? [])];
+}
+route('GET', '/api/admin/entries', function () {
+    return ['entries' => array_map('entry_row', q('SELECT * FROM form_entries ORDER BY id DESC LIMIT 2000')),
+        'unread' => (int)q('SELECT COUNT(*) AS n FROM form_entries WHERE is_read = 0')[0]['n']];
+});
+route('PUT', '/api/admin/entries/:id', function ($ctx) {
+    $id = intv($ctx['params']['id']);
+    must_find('form_entries', $id, 'الطلب');
+    q('UPDATE form_entries SET is_read = ? WHERE id = ?', [boolv($ctx['body']['is_read'] ?? true) ? 1 : 0, $id]);
+    return entry_row(must_find('form_entries', $id, 'الطلب'));
+});
+route('DELETE', '/api/admin/entries/:id', function ($ctx) {
+    $id = intv($ctx['params']['id']);
+    must_find('form_entries', $id, 'الطلب');
+    q('DELETE FROM form_entries WHERE id = ?', [$id]);
+    return ['ok' => true];
+});
+
 // Admin: settings
 route('GET', '/api/admin/settings', function () { return (object)get_setting('site', []); });
 route('PUT', '/api/admin/settings', function ($ctx) {
@@ -659,7 +767,7 @@ function dispatch()
         if (!eid_config()) {
             if ($path === '/api/auth/status') return send_json(200, ['needsInstall' => true, 'needsSetup' => false, 'user' => null]);
             if ($path !== '/api/install') throw new HttpError(503, 'الموقع لم يُجهَّز بعد');
-        } elseif ($path === '/api/site' || $path === '/api/gift' || $path === '/api/auth/status' || strpos($path, '/api/page/') === 0) {
+        } elseif ($path === '/api/site' || $path === '/api/gift' || $path === '/api/auth/status' || $path === '/api/admin/entries' || strpos($path, '/api/page/') === 0) {
             eid_ensure_schema(); // creates tables on first run if config.php was written by hand
         }
 
