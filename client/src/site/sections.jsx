@@ -4,6 +4,7 @@ import { Icon, ICONS, Arrow, Pin, Lock, Check, M, MD, G, GT, N, NM } from '../sh
 import { addToCart } from './cart.js'
 import { CartIcon } from './CartPage.jsx'
 import GiftCard from './GiftCard.jsx'
+import { CardImage } from './placeholder.jsx'
 
 const CR = 18
 const CS = '0 2px 18px rgba(0,0,0,0.07)'
@@ -262,7 +263,7 @@ function Campaigns({ content: c, items }) {
           return (
             <article key={i} className="ec-card-hover" style={{ background: '#fff', borderRadius: CR, overflow: 'hidden', boxShadow: CS, display: 'flex', flexDirection: 'column' }}>
               <a href={campaignHref(it)} tabIndex={-1} aria-hidden="true" style={{ position: 'relative', height: 218, overflow: 'hidden', display: 'block' }} className="ec-img-zoom">
-                {it.image && <img src={it.image} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />}
+                <CardImage src={it.image} texts={[it.name, it.category, it.desc]} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                 {t(it.location) && (
                   <div style={{ position: 'absolute', top: 12, insetInlineEnd: 12, background: 'rgba(255,255,255,0.95)', borderRadius: 20, padding: '4px 12px', fontSize: 13, fontWeight: 700, color: N, display: 'flex', alignItems: 'center', gap: 5 }}>
                     <Pin c={M} s={12} /> {t(it.location)}
@@ -316,7 +317,7 @@ function Centers({ content: c, items }) {
           const shade = /^#[0-9a-f]{6}$/i.test(it.shade || '') ? it.shade : '#08162A'
           return (
             <Link key={i} href={it.url} as="div" className="ec-img-zoom" style={{ borderRadius: CR, overflow: 'hidden', position: 'relative', height: 460, display: 'block' }}>
-              {it.image && <img src={it.image} alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />}
+              <CardImage src={it.image} texts={[it.name, it.desc]} top style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
               <div style={{ position: 'absolute', inset: 0, background: `linear-gradient(to top,${shade}F8 0%,${shade}B0 50%,${shade}18 100%)` }} />
               <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '24px 22px' }}>
                 <h3 style={{ color: '#fff', fontFamily: 'var(--font)', fontSize: 20, fontWeight: 900, margin: '0 0 8px' }}>{t(it.name)}</h3>
@@ -363,7 +364,7 @@ function Story({ content: c }) {
     <Shell content={c} defaultBg="cream">
       <div className="ec-grid-story">
         <div className="ec-img-zoom" style={{ borderRadius: CR + 4, overflow: 'hidden', height: 480, position: 'relative', background: '#EAE7E2' }}>
-          {c.image && <img src={c.image} alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center top' }} />}
+          <CardImage src={c.image} texts={[c.title, c.quote]} fallback="home" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center top' }} />
           {(t(c.badge) || t(c.location)) && (
             <div style={{ position: 'absolute', bottom: 20, insetInlineEnd: 20, background: 'rgba(255,255,255,0.97)', borderRadius: 12, padding: '12px 18px', boxShadow: '0 6px 22px rgba(0,0,0,0.1)' }}>
               <div style={{ fontSize: 12.5, color: GT, fontWeight: 700, letterSpacing: '0.05em' }}>{t(c.badge)}</div>
@@ -414,8 +415,8 @@ function Projects({ content: c, items }) {
       <div className="ec-grid-3" role={tabs.length > 1 ? 'tabpanel' : undefined}>
         {cur.map((p, i) => (
           <article key={i} className="ec-card-hover" style={{ borderRadius: CR, overflow: 'hidden', border: CB, background: '#fff' }}>
-            <div style={{ height: 196, overflow: 'hidden' }} className="ec-img-zoom">
-              {p.image && <img src={p.image} alt={t(p.type)} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />}
+            <div style={{ height: 196, overflow: 'hidden', position: 'relative' }} className="ec-img-zoom">
+              <CardImage src={p.image} alt={t(p.type)} texts={[p.type, p.desc]} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
             </div>
             <div style={{ padding: '18px 20px 22px' }}>
               <div style={{ display: 'flex', gap: 8, margin: '0 0 10px', flexWrap: 'wrap' }}>
@@ -492,7 +493,7 @@ function Media({ content: c, items }) {
       <Head c={c} center={false} margin="0 0 40px" action={<OutlineButton c={c} />} />
       <div className={rest.length ? 'ec-grid-2asym' : undefined}>
         <Link as="div" href={first.url} className="ec-card-hover ec-img-zoom" style={{ borderRadius: CR, overflow: 'hidden', border: CB, display: 'block', background: '#fff' }}>
-          <div style={{ height: 300, overflow: 'hidden' }}>{first.image && <img src={first.image} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />}</div>
+          <div style={{ height: 300, overflow: 'hidden', position: 'relative' }}><CardImage src={first.image} texts={[first.title, first.desc]} fallback="news" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /></div>
           <div style={{ padding: '22px 24px 26px' }}>
             <div style={{ fontSize: 13, color: GT, fontWeight: 700, margin: '0 0 10px' }}>{t(first.date)}</div>
             <h3 style={{ fontFamily: 'var(--font)', fontSize: 20, fontWeight: 800, color: N, margin: '0 0 10px', lineHeight: 1.4 }}>{t(first.title)}</h3>
@@ -503,8 +504,8 @@ function Media({ content: c, items }) {
           <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
             {rest.map((n, i) => (
               <Link key={i} as="div" href={n.url} className="ec-card-hover" style={{ display: 'flex', borderRadius: CR - 4, overflow: 'hidden', border: CB, background: '#fff' }}>
-                <div style={{ width: 120, flexShrink: 0, overflow: 'hidden' }} className="ec-img-zoom">
-                  {n.image && <img src={n.image} alt="" style={{ width: '100%', height: '100%', minHeight: 124, objectFit: 'cover' }} />}
+                <div style={{ width: 120, flexShrink: 0, overflow: 'hidden', position: 'relative' }} className="ec-img-zoom">
+                  <CardImage src={n.image} texts={[n.title, n.desc]} fallback="news" style={{ width: '100%', height: '100%', minHeight: 124, objectFit: 'cover' }} />
                 </div>
                 <div style={{ padding: '14px 16px' }}>
                   <div style={{ fontSize: 12.5, color: GT, fontWeight: 700, margin: '0 0 6px' }}>{t(n.date)}</div>
@@ -557,7 +558,7 @@ function Cards({ content: c, items }) {
       <div className={cls} style={{ margin: t(c.button) ? '0 0 42px' : 0 }}>
         {items.map((it, i) => (
           <article key={i} className="ec-card-hover" style={{ borderRadius: CR, overflow: 'hidden', border: CB, background: '#fff' }}>
-            {it.image && <div style={{ height: 200, overflow: 'hidden' }} className="ec-img-zoom"><img src={it.image} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /></div>}
+            <div style={{ height: 200, overflow: 'hidden', position: 'relative' }} className="ec-img-zoom"><CardImage src={it.image} texts={[it.title, c.title, it.desc]} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /></div>
             <div style={{ padding: '20px 22px 24px' }}>
               <h3 style={{ fontFamily: 'var(--font)', fontSize: 19, fontWeight: 800, color: N, margin: '0 0 8px' }}>{t(it.title)}</h3>
               <p style={{ fontSize: 14.5, color: '#5A5450', lineHeight: 1.75, margin: '0 0 12px', whiteSpace: 'pre-line' }}>{t(it.desc)}</p>

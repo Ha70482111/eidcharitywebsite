@@ -5,6 +5,7 @@ import { useLang, useT } from './lang.jsx'
 import { PageBanner, campaignHref } from './sections.jsx'
 import { addToCart } from './cart.js'
 import { CartIcon } from './CartPage.jsx'
+import { CardImage } from './placeholder.jsx'
 import { Pin, Lock, Check, Arrow, M, MD, N } from '../shared/icons.jsx'
 
 const TXT = {
@@ -203,7 +204,7 @@ function ProjectCard({ p, L }) {
   return (
     <article className="ec-card-hover ec-dl-card">
       <a href={href} tabIndex={-1} aria-hidden="true" className="ec-img-zoom ec-dl-img">
-        {p.image && <img src={p.image} alt="" loading="lazy" />}
+        <CardImage src={p.image} texts={[p.name, p.category, p.desc]} loading="lazy" />
         {t(p.category) && <span className="ec-dn-badge">{t(p.category)}</span>}
         {t(p.location) && <span className="ec-dl-loc"><Pin c={M} s={12} /> {t(p.location)}</span>}
       </a>

@@ -5,6 +5,7 @@ import { useLang, useT, lines } from './lang.jsx'
 import { campaignHref } from './sections.jsx'
 import { addToCart } from './cart.js'
 import { CartIcon } from './CartPage.jsx'
+import { CardImage } from './placeholder.jsx'
 import { Pin, Lock, Check, Arrow, SOCIAL_ICONS, M, MD, N } from '../shared/icons.jsx'
 
 const TXT = {
@@ -339,7 +340,7 @@ function Related({ items, cur, amounts: amountsText, payUrl, L }) {
             return (
               <article key={r.id} className="ec-card-hover ec-dn-rcard">
                 <a href={campaignHref(c)} tabIndex={-1} aria-hidden="true" className="ec-img-zoom ec-dn-rimg">
-                  {c.image && <img src={c.image} alt="" loading="lazy" />}
+                  <CardImage src={c.image} texts={[c.name, c.category, c.desc]} loading="lazy" />
                 </a>
                 <div className="ec-dn-rbody">
                   <h3><a href={campaignHref(c)} className="ec-title-link">{t(c.name)}</a></h3>

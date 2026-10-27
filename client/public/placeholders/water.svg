@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800" preserveAspectRatio="xMidYMid slice">
+<defs>
+<linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#003049"/><stop offset="1" stop-color="#001B2B"/></linearGradient>
+<radialGradient id="glow" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#fff" stop-opacity="0.18"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient>
+<linearGradient id="gold" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#E3CF9E"/><stop offset="1" stop-color="#B69D67"/></linearGradient>
+<pattern id="pt" width="120" height="120" patternUnits="userSpaceOnUse">
+<path d="M0.0,-34.0L9.4,-22.6L24.0,-24.0L22.6,-9.4L34.0,0.0L22.6,9.4L24.0,24.0L9.4,22.6L0.0,34.0L-9.4,22.6L-24.0,24.0L-22.6,9.4L-34.0,0.0L-22.6,-9.4L-24.0,-24.0L-9.4,-22.6Z" transform="translate(60 60)" fill="none" stroke="#B69D67" stroke-width="1.6" opacity="0.22"/>
+<path d="M0.0,-14.0L3.9,-9.3L9.9,-9.9L9.3,-3.9L14.0,0.0L9.3,3.9L9.9,9.9L3.9,9.3L0.0,14.0L-3.9,9.3L-9.9,9.9L-9.3,3.9L-14.0,0.0L-9.3,-3.9L-9.9,-9.9L-3.9,-9.3Z" transform="translate(0 0)" fill="none" stroke="#B69D67" stroke-width="1.2" opacity="0.16"/>
+<path d="M0.0,-14.0L3.9,-9.3L9.9,-9.9L9.3,-3.9L14.0,0.0L9.3,3.9L9.9,9.9L3.9,9.3L0.0,14.0L-3.9,9.3L-9.9,9.9L-9.3,3.9L-14.0,0.0L-9.3,-3.9L-9.9,-9.9L-3.9,-9.3Z" transform="translate(120 0)" fill="none" stroke="#B69D67" stroke-width="1.2" opacity="0.16"/>
+<path d="M0.0,-14.0L3.9,-9.3L9.9,-9.9L9.3,-3.9L14.0,0.0L9.3,3.9L9.9,9.9L3.9,9.3L0.0,14.0L-3.9,9.3L-9.9,9.9L-9.3,3.9L-14.0,0.0L-9.3,-3.9L-9.9,-9.9L-3.9,-9.3Z" transform="translate(0 120)" fill="none" stroke="#B69D67" stroke-width="1.2" opacity="0.16"/>
+<path d="M0.0,-14.0L3.9,-9.3L9.9,-9.9L9.3,-3.9L14.0,0.0L9.3,3.9L9.9,9.9L3.9,9.3L0.0,14.0L-3.9,9.3L-9.9,9.9L-9.3,3.9L-14.0,0.0L-9.3,-3.9L-9.9,-9.9L-3.9,-9.3Z" transform="translate(120 120)" fill="none" stroke="#B69D67" stroke-width="1.2" opacity="0.16"/>
+</pattern>
+</defs>
+<rect width="1200" height="800" fill="url(#bg)"/>
+<rect width="1200" height="800" fill="url(#pt)"/>
+<circle cx="600" cy="400" r="260" fill="url(#glow)"/>
+<circle cx="600" cy="400" r="175" fill="none" stroke="#B69D67" stroke-width="2" opacity="0.45"/>
+<circle cx="600" cy="400" r="188" fill="none" stroke="#B69D67" stroke-width="1" opacity="0.25" stroke-dasharray="4 10"/>
+<g transform="translate(600 405) scale(0.62)">
+<path d="M0 -200 C60 -110 140 -30 140 50 A140 140 0 0 1 -140 50 C-140 -30 -60 -110 0 -200 Z" fill="url(#gold)"/>
+<path d="M-70 40 A75 75 0 0 0 0 120" fill="none" stroke="#fff" stroke-width="14" stroke-linecap="round" opacity="0.85"/>
+<path d="M-240 180 Q-200 160 -160 180 T-80 180 T0 180 T80 180 T160 180 T240 180" fill="none" stroke="#fff" stroke-width="7" opacity="0.6"/>
+<path d="M-200 210 Q-160 190 -120 210 T-40 210 T40 210 T120 210 T200 210" fill="none" stroke="#fff" stroke-width="6" opacity="0.35"/></g>
+</svg>
