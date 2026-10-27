@@ -110,6 +110,46 @@ function eid_ensure_schema(PDO $pdo = null)
     eid_import_pages($pdo, 'pages_imported_3', ['volunteer', 'partnerships']);
     eid_link_pages($pdo, 'pages_linked_3', false);
     eid_news_details($pdo);
+    eid_swap_about_columns($pdo);
+}
+
+/**
+ * One-time pass: in the "من نحن" mega menu, the 4th column (the last one if there are fewer) swaps places with the 1st.
+ * The groups' sort order follows the new columns, so the mobile menu shows them in the same order.
+ */
+function eid_swap_about_columns(PDO $pdo)
+{
+    if (q("SELECT k FROM settings WHERE k = 'about_cols_swapped'", [], $pdo)) return;
+    try {
+        q("INSERT INTO settings (k, v) VALUES ('about_cols_swapped', ?)", [json_encode(gmdate('c'))], $pdo);
+    } catch (PDOException $e) {
+        return; // another request is doing it right now
+    }
+    $about = null;
+    foreach (q('SELECT * FROM menu_items WHERE parent_id IS NULL ORDER BY sort_order, id', [], $pdo) as $m)
+        if (eid_norm($m['label_ar']) === eid_norm('من نحن')) { $about = $m; break; }
+    if (!$about) return;
+    $groups = q('SELECT * FROM menu_items WHERE parent_id = ? ORDER BY sort_order, id', [(int)$about['id']], $pdo);
+    $colOf = function ($g) { return max(1, (int)(jparse($g['extra'])['col'] ?? 1)); };
+    $cols = array_values(array_unique(array_map($colOf, $groups)));
+    sort($cols);
+    if (count($cols) < 2) return;
+    $a = $cols[0];
+    $b = $cols[min(3, count($cols) - 1)];
+    foreach ($groups as $k => $g) {
+        $c = $colOf($g);
+        $new = $c === $a ? $b : ($c === $b ? $a : $c);
+        $groups[$k]['col'] = $new;
+        if ($new !== $c) {
+            $extra = jparse($g['extra']);
+            $extra['col'] = $new;
+            q('UPDATE menu_items SET extra = ? WHERE id = ?', [jenc($extra), (int)$g['id']], $pdo);
+        }
+    }
+    $pos = array_flip(array_keys($groups));
+    uksort($groups, function ($x, $y) use ($groups, $pos) { return $groups[$x]['col'] - $groups[$y]['col'] ?: $pos[$x] - $pos[$y]; });
+    $i = 0;
+    foreach ($groups as $g) q('UPDATE menu_items SET sort_order = ? WHERE id = ?', [++$i, (int)$g['id']], $pdo);
 }
 
 /** One-time pass: the card sections of the news page (/page/news) open a details page for each news item. */
