@@ -25,6 +25,23 @@ export function placeholderFor(texts, fallback = 'general') {
   return `/placeholders/${fallback}.svg`
 }
 
+// Official logos of the home page's partners (client/public/partners/), all on the same 480×240 canvas
+// so they look the same size. Used when a partner has no logo set in /admin; matched by name.
+const PARTNER_LOGOS = [
+  ['qatar-foundation', /qatar foundation|مؤسسة قطر/i],
+  ['qatar-red-crescent', /red crescent|الهلال الأحمر/i],
+  ['unhcr', /unhcr|المفوضية|اللاجئين/i],
+  ['unicef', /unicef|يونيسف/i],
+  ['qatar-charity', /qatar charity|قطر الخيرية/i],
+  ['qdb', /qatar dev|\bqdb\b|بنك قطر للتنمية/i],
+  ['al-jazeera', /jazeera|الجزيرة/i],
+]
+
+export function partnerLogo(name) {
+  const hit = PARTNER_LOGOS.find(([, re]) => re.test(flat(name)))
+  return hit ? `/partners/${hit[0]}.png` : ''
+}
+
 // The item's own image, or a default illustration plus the AI note.
 // Render it inside a positioned box (the image area of a card).
 export function CardImage({ src, texts = [], fallback = 'general', alt = '', top = false, loading, style, className }) {
