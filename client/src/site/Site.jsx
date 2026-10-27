@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { LangCtx, useLang, useT, Link } from './lang.jsx'
+import { LangCtx, useLang, useT, Link, live } from './lang.jsx'
 import { SECTION_COMPONENTS, PageBanner } from './sections.jsx'
 import DonationPage from './DonationPage.jsx'
 import DonationsPage from './DonationsPage.jsx'
@@ -96,7 +96,7 @@ export default function Site() {
       <div style={{ fontFamily: 'var(--font)', direction: lang === 'ar' ? 'rtl' : 'ltr' }}>
         <a href="#main" className="ec-skip">{lang === 'ar' ? 'انتقل إلى المحتوى' : 'Skip to content'}</a>
         {settings.topbar_visible !== false && <TopBar />}
-        <Header menu={data.menu || []} />
+        <Header menu={pruneMenu(data.menu)} />
         <main id="main">
           {data.page && <PageBanner page={data.page} />}
           {data.notFound && <NotFound />}
@@ -145,7 +145,7 @@ function Socials({ className, color }) {
 function TopBar() {
   const { lang, toggle, settings } = useLang()
   const t = useT()
-  const links = settings.topbar_links || []
+  const links = (settings.topbar_links || []).filter(l => live(l.url))
   return (
     <div className="ec-topbar-wrap" style={{ background: N, borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
       <div style={{ maxWidth: 1440, margin: '0 auto', padding: '4px 48px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -157,7 +157,7 @@ function TopBar() {
           {links.map((l, i) => (
             <span key={i} style={{ display: 'contents' }}>
               <span aria-hidden="true" style={{ color: 'rgba(255,255,255,0.25)', userSelect: 'none' }}>|</span>
-              <a className="ec-util-link" href={l.url || '#'}>{t(l.label)}</a>
+              <a className="ec-util-link" href={l.url}>{t(l.label)}</a>
             </span>
           ))}
         </div>
@@ -170,6 +170,12 @@ function TopBar() {
 }
 
 // ─── HEADER + MEGA MENU ──────────────────────────────────────────────────────
+// Hides menu links that lead nowhere yet (empty or "#"), then headings and top items left with nothing under them.
+const pruneMenu = items => (items || []).flatMap(m => {
+  const children = pruneMenu(m.children)
+  return children.length || live(m.url) ? [{ ...m, children }] : []
+})
+
 function MegaPanel({ item, onEnter, onLeave }) {
   const t = useT()
   const groups = item.children || []
@@ -212,7 +218,7 @@ function MegaPanel({ item, onEnter, onLeave }) {
               <div style={{ padding: '14px 16px 18px' }}>
                 <div style={{ fontSize: 15, fontWeight: 800, color: '#fff', margin: '0 0 6px', lineHeight: 1.35 }}>{t(featured.title)}</div>
                 <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.75)', lineHeight: 1.7, margin: '0 0 14px' }}>{t(featured.desc)}</div>
-                {t(featured.cta) && <a href={featured.url || '#'} className="ec-hover-fade" style={{ display: 'inline-flex', alignItems: 'center', minHeight: 36, background: G, color: N, borderRadius: 20, padding: '6px 16px', fontSize: 13, fontWeight: 800 }}>{t(featured.cta)}</a>}
+                {t(featured.cta) && live(featured.url) && <a href={featured.url} className="ec-hover-fade" style={{ display: 'inline-flex', alignItems: 'center', minHeight: 36, background: G, color: N, borderRadius: 20, padding: '6px 16px', fontSize: 13, fontWeight: 800 }}>{t(featured.cta)}</a>}
               </div>
             </div>
           </div>
@@ -385,11 +391,11 @@ function Footer() {
             </>}
           </div>
 
-          {(s.footer_columns || []).map((col, i) => (
+          {(s.footer_columns || []).map(col => ({ ...col, links: (col.links || []).filter(l => live(l.url)) })).filter(col => col.links.length).map((col, i) => (
             <div key={i}>
               <h2 style={{ color: G, fontSize: 15, fontWeight: 800, margin: '0 0 14px', letterSpacing: '0.04em' }}>{t(col.title)}</h2>
               <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
-                {(col.links || []).map((l, j) => <li key={j}><a className="ec-footer-link" href={l.url || '#'}>{t(l.label)}</a></li>)}
+                {col.links.map((l, j) => <li key={j}><a className="ec-footer-link" href={l.url}>{t(l.label)}</a></li>)}
               </ul>
             </div>
           ))}

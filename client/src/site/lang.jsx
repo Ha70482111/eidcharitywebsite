@@ -15,9 +15,13 @@ export function useT() {
   return v => pick(v, lang)
 }
 
-// Renders a link when a URL is set, otherwise the given fallback tag.
+// A link that leads somewhere: not empty and not a bare "#" placeholder.
+// Placeholder links are hidden on the site until a page is set for them in /admin.
+export const live = u => { const s = String(u ?? '').trim(); return s !== '' && s !== '#' }
+
+// Renders a link when a real URL is set, otherwise the given fallback tag.
 export function Link({ href, children, as: Tag = 'span', ...rest }) {
-  if (href) {
+  if (live(href)) {
     const external = /^https?:\/\//.test(href) && typeof window !== 'undefined' && !href.startsWith(window.location.origin)
     return <a href={href} {...(external ? { target: '_blank', rel: 'noopener noreferrer' } : {})} {...rest}>{children}</a>
   }
