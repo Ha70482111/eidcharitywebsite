@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800" preserveAspectRatio="xMidYMid slice">
+<defs>
+<linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#0B4A5C"/><stop offset="1" stop-color="#003049"/></linearGradient>
+<radialGradient id="glow" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#fff" stop-opacity="0.18"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient>
+<linearGradient id="gold" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#E3CF9E"/><stop offset="1" stop-color="#B69D67"/></linearGradient>
+<pattern id="pt" width="120" height="120" patternUnits="userSpaceOnUse">
+<path d="M0.0,-34.0L9.4,-22.6L24.0,-24.0L22.6,-9.4L34.0,0.0L22.6,9.4L24.0,24.0L9.4,22.6L0.0,34.0L-9.4,22.6L-24.0,24.0L-22.6,9.4L-34.0,0.0L-22.6,-9.4L-24.0,-24.0L-9.4,-22.6Z" transform="translate(60 60)" fill="none" stroke="#B69D67" stroke-width="1.6" opacity="0.22"/>
+<path d="M0.0,-14.0L3.9,-9.3L9.9,-9.9L9.3,-3.9L14.0,0.0L9.3,3.9L9.9,9.9L3.9,9.3L0.0,14.0L-3.9,9.3L-9.9,9.9L-9.3,3.9L-14.0,0.0L-9.3,-3.9L-9.9,-9.9L-3.9,-9.3Z" transform="translate(0 0)" fill="none" stroke="#B69D67" stroke-width="1.2" opacity="0.16"/>
+<path d="M0.0,-14.0L3.9,-9.3L9.9,-9.9L9.3,-3.9L14.0,0.0L9.3,3.9L9.9,9.9L3.9,9.3L0.0,14.0L-3.9,9.3L-9.9,9.9L-9.3,3.9L-14.0,0.0L-9.3,-3.9L-9.9,-9.9L-3.9,-9.3Z" transform="translate(120 0)" fill="none" stroke="#B69D67" stroke-width="1.2" opacity="0.16"/>
+<path d="M0.0,-14.0L3.9,-9.3L9.9,-9.9L9.3,-3.9L14.0,0.0L9.3,3.9L9.9,9.9L3.9,9.3L0.0,14.0L-3.9,9.3L-9.9,9.9L-9.3,3.9L-14.0,0.0L-9.3,-3.9L-9.9,-9.9L-3.9,-9.3Z" transform="translate(0 120)" fill="none" stroke="#B69D67" stroke-width="1.2" opacity="0.16"/>
+<path d="M0.0,-14.0L3.9,-9.3L9.9,-9.9L9.3,-3.9L14.0,0.0L9.3,3.9L9.9,9.9L3.9,9.3L0.0,14.0L-3.9,9.3L-9.9,9.9L-9.3,3.9L-14.0,0.0L-9.3,-3.9L-9.9,-9.9L-3.9,-9.3Z" transform="translate(120 120)" fill="none" stroke="#B69D67" stroke-width="1.2" opacity="0.16"/>
+</pattern>
+</defs>
+<rect width="1200" height="800" fill="url(#bg)"/>
+<rect width="1200" height="800" fill="url(#pt)"/>
+<circle cx="600" cy="400" r="260" fill="url(#glow)"/>
+<circle cx="600" cy="400" r="175" fill="none" stroke="#B69D67" stroke-width="2" opacity="0.45"/>
+<circle cx="600" cy="400" r="188" fill="none" stroke="#B69D67" stroke-width="1" opacity="0.25" stroke-dasharray="4 10"/>
+<g transform="translate(600 405) scale(0.62)">
+<rect x="-230" y="170" width="460" height="16" rx="4" fill="#B69D67"/>
+<rect x="-210" y="-120" width="34" height="290" fill="url(#gold)"/><path d="M-224 -120 H-162 L-193 -175 Z" fill="#E3CF9E"/>
+<rect x="176" y="-120" width="34" height="290" fill="url(#gold)"/><path d="M162 -120 H224 L193 -175 Z" fill="#E3CF9E"/>
+<rect x="-140" y="10" width="280" height="160" fill="url(#gold)"/>
+<path d="M-115 10 Q-115 -140 0 -170 Q115 -140 115 10 Z" fill="#E3CF9E"/>
+<path d="M0 -170 V-205" stroke="#E3CF9E" stroke-width="6"/>
+<path d="M-6 -240 A20 20 0 1 0 14 -205 A15 15 0 1 1 -6 -240 Z" fill="#fff"/>
+<path d="M-35 170 V90 A35 35 0 0 1 35 90 V170 Z" fill="#5E0030"/>
+<path d="M-105 120 V75 A18 18 0 0 1 -69 75 V120 Z M69 120 V75 A18 18 0 0 1 105 120 V120 Z" fill="#5E0030" opacity="0.8"/></g>
+</svg>
