@@ -554,22 +554,32 @@ function Partners({ content: c, items }) {
 // ─── GENERIC CARDS ───────────────────────────────────────────────────────────
 function Cards({ content: c, items }) {
   const t = useT()
+  const { lang } = useLang()
   const dir = useDir()
   const cls = { 2: 'ec-grid-2', 3: 'ec-grid-3', 4: 'ec-grid-4g' }[c.columns] || 'ec-grid-3'
   return (
     <Shell content={c}>
       <Head c={c} />
       <div className={cls} style={{ margin: t(c.button) ? '0 0 42px' : 0 }}>
-        {items.map((it, i) => (
-          <article key={i} className="ec-card-hover" style={{ borderRadius: CR, overflow: 'hidden', border: CB, background: '#fff' }}>
-            <div style={{ height: 200, overflow: 'hidden', position: 'relative' }} className="ec-img-zoom"><CardImage src={it.image} texts={[it.title, c.title, it.desc]} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /></div>
-            <div style={{ padding: '20px 22px 24px' }}>
-              <h3 style={{ fontFamily: 'var(--font)', fontSize: 19, fontWeight: 800, color: N, margin: '0 0 8px' }}>{t(it.title)}</h3>
-              <p style={{ fontSize: 14.5, color: '#5A5450', lineHeight: 1.75, margin: '0 0 12px', whiteSpace: 'pre-line' }}>{t(it.desc)}</p>
-              {t(it.link_label) && live(it.url) && <a href={it.url} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, color: M, fontWeight: 700, fontSize: 14.5, minHeight: 32 }}>{t(it.link_label)} <Arrow c={M} s={14} dir={dir} /></a>}
-            </div>
-          </article>
-        ))}
+        {items.map((it, i) => {
+          // With «open_details» on (the news page) the whole card opens the item's details page.
+          const href = c.open_details ? newsHref(it) : ''
+          const label = t(it.link_label) || (lang === 'en' ? 'Read more' : 'اقرأ الخبر')
+          return (
+            <article key={i} className="ec-card-hover" style={{ borderRadius: CR, overflow: 'hidden', border: CB, background: '#fff', position: 'relative' }}>
+              <div style={{ height: 200, overflow: 'hidden', position: 'relative' }} className="ec-img-zoom"><CardImage src={it.image} texts={[it.title, c.title, it.desc]} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /></div>
+              <div style={{ padding: '20px 22px 24px' }}>
+                {t(it.date) && <div style={{ fontSize: 13, color: GT, fontWeight: 700, margin: '0 0 8px' }}>{t(it.date)}</div>}
+                <h3 style={{ fontFamily: 'var(--font)', fontSize: 19, fontWeight: 800, color: N, margin: '0 0 8px' }}>
+                  {href ? <a href={href} className="ec-title-link ec-card-cover">{t(it.title)}</a> : t(it.title)}
+                </h3>
+                <p style={{ fontSize: 14.5, color: '#5A5450', lineHeight: 1.75, margin: '0 0 12px', whiteSpace: 'pre-line' }}>{t(it.desc)}</p>
+                {href ? <span aria-hidden="true" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, color: M, fontWeight: 700, fontSize: 14.5, minHeight: 32 }}>{label} <Arrow c={M} s={14} dir={dir} /></span>
+                  : t(it.link_label) && live(it.url) && <a href={it.url} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, color: M, fontWeight: 700, fontSize: 14.5, minHeight: 32 }}>{t(it.link_label)} <Arrow c={M} s={14} dir={dir} /></a>}
+              </div>
+            </article>
+          )
+        })}
       </div>
       <div style={{ textAlign: 'center' }}><OutlineButton c={c} /></div>
     </Shell>

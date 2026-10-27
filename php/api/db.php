@@ -109,6 +109,23 @@ function eid_ensure_schema(PDO $pdo = null)
     eid_add_gift($pdo);
     eid_import_pages($pdo, 'pages_imported_3', ['volunteer', 'partnerships']);
     eid_link_pages($pdo, 'pages_linked_3', false);
+    eid_news_details($pdo);
+}
+
+/** One-time pass: the card sections of the news page (/page/news) open a details page for each news item. */
+function eid_news_details(PDO $pdo)
+{
+    if (q("SELECT k FROM settings WHERE k = 'news_details'", [], $pdo)) return;
+    try {
+        q("INSERT INTO settings (k, v) VALUES ('news_details', ?)", [json_encode(gmdate('c'))], $pdo);
+    } catch (PDOException $e) {
+        return; // another request is doing it right now
+    }
+    foreach (q("SELECT s.* FROM sections s JOIN pages p ON p.id = s.page_id WHERE p.slug = 'news' AND s.type = 'cards'", [], $pdo) as $sec) {
+        $c = jparse($sec['content']);
+        $c['open_details'] = true;
+        q('UPDATE sections SET content = ? WHERE id = ?', [jenc($c), (int)$sec['id']], $pdo);
+    }
 }
 
 /** Adds a column to a table that already exists (databases created before the column was introduced). */

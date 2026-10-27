@@ -240,13 +240,15 @@ route('GET', '/api/donate/:id', function ($ctx) {
         'related' => array_slice($related, 0, 3), 'donate_action_url' => $payUrl];
 });
 
-// A news details page for one item of a news section (home page or a visible sub-page), with the other news of that section.
+// A news details page for one item of a news section, or of a card section with «open_details» on (home page or a visible sub-page), with the other news of that section.
 route('GET', '/api/news/:id', function ($ctx) {
     $rows = q("SELECT i.* FROM section_items i JOIN sections s ON s.id = i.section_id LEFT JOIN pages p ON p.id = s.page_id
-        WHERE i.id = ? AND i.is_visible = 1 AND s.is_visible = 1 AND s.type = 'media' AND (s.page_id IS NULL OR p.is_visible = 1)", [intv($ctx['params']['id'])]);
+        WHERE i.id = ? AND i.is_visible = 1 AND s.is_visible = 1 AND s.type IN ('media', 'cards') AND (s.page_id IS NULL OR p.is_visible = 1)", [intv($ctx['params']['id'])]);
     if (!$rows) throw new HttpError(404, 'الخبر غير موجود');
     $item = item_row($rows[0]);
     $section = section_row(must_find('sections', $item['section_id'], 'القسم'));
+    // a card section has details pages only when «open_details» is on (the news page's cards)
+    if ($section['type'] === 'cards' && empty(((array)$section['content'])['open_details'])) throw new HttpError(404, 'الخبر غير موجود');
     $related = array_map('item_row', q('SELECT * FROM section_items WHERE section_id = ? AND id <> ? AND is_visible = 1 ORDER BY sort_order, id',
         [$item['section_id'], $item['id']]));
     $slug = $section['page_id'] ? (q('SELECT slug FROM pages WHERE id = ?', [$section['page_id']])[0]['slug'] ?? null) : null;
