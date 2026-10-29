@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { get, post, put, del } from './api.js'
-import { useToast, VisibilityToggle, MoveButtons, PageHead, swap } from './ui.jsx'
+import { useToast, useUser, isManager, VisibilityToggle, MoveButtons, PageHead, swap } from './ui.jsx'
 import { SECTION_TYPES } from '../shared/sectionTypes.js'
 
 // pageId: a sub-page's sections; without it, the home page's.
@@ -9,6 +9,8 @@ export default function SectionsPage({ pageId = null }) {
   const [list, setList] = useState(null)
   const [page, setPage] = useState(null)
   const [adding, setAdding] = useState(false)
+  // An editor gets whole sub-pages, but only single sections of the home page: there they can't add, move or delete.
+  const full = isManager(useUser()) || pageId !== null
 
   const load = () => get(pageId ? `/api/admin/sections?page=${pageId}` : '/api/admin/sections').then(setList).catch(e => toast(e.message, 'error'))
   useEffect(() => {
@@ -42,9 +44,9 @@ export default function SectionsPage({ pageId = null }) {
   return (
     <>
       {pageId && <a href="#/pages" className="ad-back">→ كل الصفحات</a>}
-      <PageHead title={pageId ? `أقسام صفحة «${page?.title_ar || '…'}»` : 'أقسام الصفحة الرئيسية'}>
+      <PageHead title={pageId ? `أقسام صفحة «${page?.title_ar || '…'}»` : full ? 'أقسام الصفحة الرئيسية' : 'أقسام من الصفحة الرئيسية'}>
         {page && <a className="ad-btn ad-btn-light" href={`/page/${page.slug}`} target="_blank" rel="noopener">عرض الصفحة ↗</a>}
-        <button type="button" className="ad-btn ad-btn-primary" onClick={() => setAdding(true)}>+ إضافة قسم</button>
+        {full && <button type="button" className="ad-btn ad-btn-primary" onClick={() => setAdding(true)}>+ إضافة قسم</button>}
       </PageHead>
       <p className="ad-help">الترتيب هنا هو ترتيب ظهور الأقسام في الموقع. الأقسام المخفية لا تظهر للزوار.</p>
 
@@ -54,7 +56,7 @@ export default function SectionsPage({ pageId = null }) {
         <ul className="ad-rows">
           {list.map((s, i) => (
             <li key={s.id} className={`ad-row ${s.is_visible ? '' : 'ad-row-hidden'}`}>
-              <div className="ad-row-order"><MoveButtons index={i} count={list.length} onMove={move} label={s.name} /></div>
+              {full && <div className="ad-row-order"><MoveButtons index={i} count={list.length} onMove={move} label={s.name} /></div>}
               <div className="ad-row-main">
                 <a href={`#/sections/${s.id}`} className="ad-row-title">{s.name || SECTION_TYPES[s.type]?.label || s.type}</a>
                 <span className="ad-row-meta">
@@ -66,8 +68,8 @@ export default function SectionsPage({ pageId = null }) {
               <div className="ad-row-actions">
                 <VisibilityToggle visible={s.is_visible} onChange={v => toggle(s, v)} label={s.name} />
                 <a className="ad-btn ad-btn-light" href={`#/sections/${s.id}`}>تعديل</a>
-                <button type="button" className="ad-btn ad-btn-light" onClick={() => duplicate(s)}>نسخ</button>
-                <button type="button" className="ad-btn ad-btn-danger" onClick={() => remove(s)}>حذف</button>
+                {full && <button type="button" className="ad-btn ad-btn-light" onClick={() => duplicate(s)}>نسخ</button>}
+                {full && <button type="button" className="ad-btn ad-btn-danger" onClick={() => remove(s)}>حذف</button>}
               </div>
             </li>
           ))}
