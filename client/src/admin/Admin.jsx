@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { get, post, setToken, getToken, setUnauthorizedHandler } from './api.js'
-import { ToastProvider } from './ui.jsx'
+import { ToastProvider, UserCtx, isManager } from './ui.jsx'
 import SectionsPage from './SectionsPage.jsx'
 import SectionEditor from './SectionEditor.jsx'
 import MenuPage from './MenuPage.jsx'
@@ -139,28 +139,45 @@ const NAV = [
   ['/entries', 'الطلبات الواردة'],
   ['/menu', 'المنيو الرئيسية'],
   ['/settings', 'الإعدادات العامة'],
-  ['/account', 'الحسابات'],
+  ['/account', 'الحسابات والصلاحيات'],
 ]
+
+// An editor sees only the parts their menu items give them, and their own password.
+function editorNav(scope) {
+  return [
+    scope.sections.length > 0 && ['/sections', 'أقسام من الصفحة الرئيسية'],
+    scope.pages.length > 0 && ['/pages', 'صفحاتي'],
+    ['/account', 'حسابي'],
+  ].filter(Boolean)
+}
 
 function Shell({ user, onLogout }) {
   const route = useHashRoute()
   const [navOpen, setNavOpen] = useState(false)
   const [unread, setUnread] = useState(0)
-  useEffect(() => { get('/api/admin/entries').then(d => setUnread(d.unread)).catch(() => {}) }, [])
+  const manager = isManager(user)
+  useEffect(() => { if (manager) get('/api/admin/entries').then(d => setUnread(d.unread)).catch(() => {}) }, [manager])
   const sectionMatch = /^\/sections\/(\d+)$/.exec(route)
   const pageMatch = /^\/pages\/(\d+)$/.exec(route)
+  const nav = manager ? NAV : editorNav(user.scope)
 
   let page
   if (sectionMatch) page = <SectionEditor id={Number(sectionMatch[1])} />
   else if (pageMatch) page = <SectionsPage pageId={Number(pageMatch[1])} />
-  else if (route === '/pages') page = <PagesPage />
-  else if (route === '/entries') page = <EntriesPage onUnread={setUnread} />
-  else if (route === '/menu') page = <MenuPage />
-  else if (route === '/settings') page = <SettingsPage />
   else if (route === '/account') page = <AccountPage user={user} />
-  else page = <SectionsPage />
+  else {
+    // a link outside the account's menu opens its first part
+    const path = nav.some(([p]) => p === route) ? route : nav[0][0]
+    if (path === '/pages') page = <PagesPage />
+    else if (path === '/entries') page = <EntriesPage onUnread={setUnread} />
+    else if (path === '/menu') page = <MenuPage />
+    else if (path === '/settings') page = <SettingsPage />
+    else if (path === '/sections') page = <SectionsPage />
+    else page = <NoAccess />
+  }
 
   return (
+    <UserCtx.Provider value={user}>
     <div className="ad-shell">
       <aside className={`ad-side ${navOpen ? 'open' : ''}`}>
         <div className="ad-brand">
@@ -168,7 +185,7 @@ function Shell({ user, onLogout }) {
           <span>لوحة التحكم</span>
         </div>
         <nav aria-label="أقسام لوحة التحكم">
-          {NAV.map(([path, label]) => (
+          {nav.map(([path, label]) => (
             <a key={path} href={`#${path}`} onClick={() => setNavOpen(false)}
               className={`ad-nav-link ${route === path || route.startsWith(path + '/') ? 'active' : ''}`}
               aria-current={route === path || route.startsWith(path + '/') ? 'page' : undefined}>
@@ -179,6 +196,7 @@ function Shell({ user, onLogout }) {
         </nav>
         <div className="ad-user">
           <span dir="ltr">{user.username}</span>
+          <span style={{ color: '#B69D67', fontSize: 13 }}>{manager ? 'مدير الموقع' : 'محرر'}</span>
           <button type="button" className="ad-btn ad-btn-light" onClick={onLogout}>خروج</button>
         </div>
       </aside>
@@ -186,6 +204,16 @@ function Shell({ user, onLogout }) {
         <button type="button" className="ad-burger" aria-label="القائمة" aria-expanded={navOpen} onClick={() => setNavOpen(!navOpen)}>☰ القائمة</button>
         <main>{page}</main>
       </div>
+    </div>
+    </UserCtx.Provider>
+  )
+}
+
+function NoAccess() {
+  return (
+    <div className="ad-card">
+      <h1 style={{ fontSize: 20, marginTop: 0 }}>أهلًا بك</h1>
+      <p className="ad-help">لسه ما اتحددش لك أجزاء تعدّلها في الموقع. اطلب من مدير الموقع يختار لك عناصر من المنيو في «الحسابات والصلاحيات».</p>
     </div>
   )
 }

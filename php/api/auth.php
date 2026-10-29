@@ -34,9 +34,17 @@ function verify_token($token)
     if (!hash_equals($expected, $sig)) return null;
     $data = json_decode(b64url_decode($payload), true);
     if (!$data || empty($data['exp']) || $data['exp'] < time()) return null;
-    $rows = q('SELECT id, username FROM admins WHERE id = ?', [(int)$data['uid']]);
-    if (!$rows) return null;
-    return ['id' => (int)$rows[0]['id'], 'username' => $rows[0]['username']];
+    $rows = q('SELECT * FROM admins WHERE id = ?', [(int)$data['uid']]);
+    if (!$rows || !admin_active($rows[0])) return null; // a disabled account is logged out at once
+    return admin_user($rows[0]);
+}
+
+// Columns added later (role, is_active, perms) may be missing until the schema upgrade runs.
+function admin_active(array $r) { return !isset($r['is_active']) || (int)$r['is_active'] === 1; }
+function admin_user(array $r)
+{
+    return ['id' => (int)$r['id'], 'username' => $r['username'], 'role' => ($r['role'] ?? '') === 'editor' ? 'editor' : 'manager',
+        'menu' => array_values(array_map('intval', (array)(jparse($r['perms'] ?? '')['menu'] ?? [])))];
 }
 
 function request_token()

@@ -8,6 +8,7 @@ class HttpError extends Exception
 
 require __DIR__ . '/db.php';
 require __DIR__ . '/auth.php';
+require __DIR__ . '/access.php';
 
 define('EID_UPLOAD_DIR', getenv('EID_UPLOAD_DIR') ?: dirname(__DIR__) . '/uploads');
 define('EID_MAX_UPLOAD', 5 * 1024 * 1024);
@@ -168,7 +169,7 @@ function route($method, $pattern, $handler)
         $keys[] = $m[1];
         return $m[1] === 'slug' ? '([A-Za-z0-9-]+)' : '(\d+)';
     }, $pattern) . '$#';
-    $routes[] = ['method' => $method, 're' => $re, 'keys' => $keys, 'handler' => $handler, 'auth' => strpos($pattern, '/api/admin') === 0];
+    $routes[] = ['method' => $method, 'pattern' => $pattern, 're' => $re, 'keys' => $keys, 'handler' => $handler, 'auth' => strpos($pattern, '/api/admin') === 0];
 }
 
 // First-run installer: saves DB credentials, creates tables + content + first admin.
@@ -390,7 +391,7 @@ route('POST', '/api/forms/:id', function ($ctx) {
 });
 
 route('GET', '/api/auth/status', function ($ctx) {
-    return ['needsInstall' => false, 'needsSetup' => admin_count() === 0, 'user' => $ctx['user']];
+    return ['needsInstall' => false, 'needsSetup' => admin_count() === 0, 'user' => public_user($ctx['user'])];
 });
 
 route('POST', '/api/auth/setup', function ($ctx) {
@@ -399,7 +400,7 @@ route('POST', '/api/auth/setup', function ($ctx) {
     $password = str($ctx['body']['password'] ?? '', 200);
     validate_credentials($username, $password);
     $user = create_admin($username, $password);
-    return ['token' => sign_token($user), 'user' => $user];
+    return ['token' => sign_token($user), 'user' => public_user($user + ['role' => 'manager'])];
 });
 
 route('POST', '/api/auth/login', function ($ctx) {
@@ -411,8 +412,9 @@ route('POST', '/api/auth/login', function ($ctx) {
         throw new HttpError(401, 'اسم المستخدم أو كلمة المرور غير صحيحة');
     }
     clear_failures($ip);
-    $user = ['id' => (int)$rows[0]['id'], 'username' => $rows[0]['username']];
-    return ['token' => sign_token($user), 'user' => $user];
+    if (!admin_active($rows[0])) throw new HttpError(403, 'هذا الحساب موقوف. تواصل مع مدير الموقع.');
+    $user = admin_user($rows[0]);
+    return ['token' => sign_token($user), 'user' => public_user($user)];
 });
 
 // Admin: menu
@@ -458,8 +460,12 @@ route('POST', '/api/admin/menu/reorder', function ($ctx) {
 });
 
 // Admin: sub-pages
-route('GET', '/api/admin/pages', function () {
+route('GET', '/api/admin/pages', function ($ctx) {
     $pages = array_map('page_row', q('SELECT * FROM pages ORDER BY sort_order, id'));
+    if (!is_manager($ctx['user'])) {
+        $mine = editor_scope($ctx['user'])['pages'];
+        $pages = array_values(array_filter($pages, function ($p) use ($mine) { return in_array($p['id'], $mine, true); }));
+    }
     $counts = [];
     foreach (q('SELECT page_id, COUNT(*) AS n FROM sections WHERE page_id IS NOT NULL GROUP BY page_id') as $c) $counts[(int)$c['page_id']] = (int)$c['n'];
     foreach ($pages as &$p) $p['section_count'] = $counts[$p['id']] ?? 0;
@@ -565,10 +571,14 @@ route('POST', '/api/admin/pages/import-media', function ($ctx) {
 });
 
 // Admin: sections (?page=ID lists a sub-page's sections; without it, the home page's)
-route('GET', '/api/admin/sections', function () {
+route('GET', '/api/admin/sections', function ($ctx) {
     $pageId = isset($_GET['page']) && $_GET['page'] !== '' ? intv($_GET['page']) : null;
     [$where, $params] = page_scope($pageId);
     $sections = array_map('section_row', q("SELECT * FROM sections WHERE $where ORDER BY sort_order, id", $params));
+    if ($pageId === null && !is_manager($ctx['user'])) {
+        $mine = editor_scope($ctx['user'])['sections'];
+        $sections = array_values(array_filter($sections, function ($s) use ($mine) { return in_array($s['id'], $mine, true); }));
+    }
     $counts = [];
     foreach (q('SELECT section_id, COUNT(*) AS n FROM section_items GROUP BY section_id') as $c) $counts[(int)$c['section_id']] = (int)$c['n'];
     foreach ($sections as &$s) $s['item_count'] = $counts[$s['id']] ?? 0;
@@ -729,17 +739,50 @@ route('GET', '/api/admin/uploads', function () {
     return $out;
 });
 
-// Admin: accounts
+// Admin: accounts (managers only — see authorize()). A manager can't demote, disable or delete their own
+// account, so the site always keeps at least one working manager.
+function admin_row($r)
+{
+    $u = admin_user($r);
+    return $u + ['created_at' => $r['created_at'], 'is_active' => admin_active($r)];
+}
+function rolev($v) { return $v === 'editor' ? 'editor' : 'manager'; }
+function menu_idsv($v)
+{
+    $ids = array_values(array_unique(idsv($v ?? [])));
+    $known = array_map('intval', array_column(q('SELECT id FROM menu_items'), 'id'));
+    return array_values(array_filter($ids, function ($id) use ($known) { return in_array($id, $known, true); }));
+}
 route('GET', '/api/admin/admins', function () {
-    return array_map(function ($r) { return ['id' => (int)$r['id'], 'username' => $r['username'], 'created_at' => $r['created_at']]; },
-        q('SELECT id, username, created_at FROM admins ORDER BY id'));
+    return array_map('admin_row', q('SELECT * FROM admins ORDER BY id'));
 });
 route('POST', '/api/admin/admins', function ($ctx) {
-    $username = trim(str($ctx['body']['username'] ?? '', 100));
-    $password = str($ctx['body']['password'] ?? '', 200);
+    $b = $ctx['body'];
+    $username = trim(str($b['username'] ?? '', 100));
+    $password = str($b['password'] ?? '', 200);
     validate_credentials($username, $password);
     if (q('SELECT id FROM admins WHERE username = ?', [$username])) throw new HttpError(409, 'اسم المستخدم موجود بالفعل');
-    return create_admin($username, $password);
+    $user = create_admin($username, $password);
+    $role = rolev($b['role'] ?? 'manager');
+    q('UPDATE admins SET role = ?, perms = ? WHERE id = ?', [$role, jenc(['menu' => $role === 'editor' ? menu_idsv($b['menu'] ?? []) : []]), $user['id']]);
+    return admin_row(must_find('admins', $user['id'], 'الحساب'));
+});
+route('PUT', '/api/admin/admins/:id', function ($ctx) {
+    $id = intv($ctx['params']['id']);
+    $b = $ctx['body'];
+    $cur = admin_row(must_find('admins', $id, 'الحساب'));
+    $self = $id === $ctx['user']['id'];
+    $role = has($b, 'role') ? rolev($b['role']) : $cur['role'];
+    $active = has($b, 'is_active') ? boolv($b['is_active']) : $cur['is_active'];
+    if ($self && ($role !== 'manager' || !$active)) throw new HttpError(400, 'لا يمكنك إيقاف حسابك أو تحويله لمحرر');
+    $menu = has($b, 'menu') ? menu_idsv($b['menu']) : $cur['menu'];
+    q('UPDATE admins SET role = ?, is_active = ?, perms = ? WHERE id = ?', [$role, $active ? 1 : 0, jenc(['menu' => $role === 'editor' ? $menu : []]), $id]);
+    if (has($b, 'password') && $b['password'] !== '') {
+        $pw = str($b['password'], 200);
+        if (slen($pw) < 8) throw new HttpError(400, 'كلمة المرور 8 أحرف على الأقل');
+        q('UPDATE admins SET password_hash = ? WHERE id = ?', [password_hash($pw, PASSWORD_DEFAULT), $id]);
+    }
+    return admin_row(must_find('admins', $id, 'الحساب'));
 });
 route('DELETE', '/api/admin/admins/:id', function ($ctx) {
     $id = intv($ctx['params']['id']);
@@ -748,6 +791,8 @@ route('DELETE', '/api/admin/admins/:id', function ($ctx) {
     q('DELETE FROM admins WHERE id = ?', [$id]);
     return ['ok' => true];
 });
+// The menu tree with what each item opens, for choosing an editor's permissions.
+route('GET', '/api/admin/access-menu', function () { return access_menu(); });
 route('PUT', '/api/admin/password', function ($ctx) {
     $row = q('SELECT * FROM admins WHERE id = ?', [$ctx['user']['id']])[0];
     if (!password_verify(str($ctx['body']['current'] ?? '', 200), $row['password_hash'])) throw new HttpError(400, 'كلمة المرور الحالية غير صحيحة');
@@ -785,7 +830,7 @@ function dispatch()
         if (!eid_config()) {
             if ($path === '/api/auth/status') return send_json(200, ['needsInstall' => true, 'needsSetup' => false, 'user' => null]);
             if ($path !== '/api/install') throw new HttpError(503, 'الموقع لم يُجهَّز بعد');
-        } elseif ($path === '/api/site' || $path === '/api/gift' || $path === '/api/auth/status' || $path === '/api/admin/entries' || strpos($path, '/api/page/') === 0) {
+        } elseif ($path === '/api/site' || $path === '/api/gift' || $path === '/api/auth/status' || $path === '/api/auth/login' || $path === '/api/admin/entries' || strpos($path, '/api/page/') === 0) {
             eid_ensure_schema(); // creates tables on first run if config.php was written by hand
         }
 
@@ -805,6 +850,7 @@ function dispatch()
                 if (!is_array($body)) throw new HttpError(400, 'JSON غير صالح');
             }
         }
+        if ($route['auth']) authorize($user, $method, $route['pattern'], $params, $body);
         $ip = $_SERVER['REMOTE_ADDR'] ?? '';
         send_json(200, ($route['handler'])(['params' => $params, 'body' => $body, 'user' => $user, 'ip' => $ip]));
     } catch (HttpError $e) {

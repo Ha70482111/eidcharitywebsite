@@ -340,6 +340,7 @@ test('existing database is upgraded once, without touching its content', () => {
     $pdo->exec("INSERT INTO menu_items (parent_id, label_ar, url) VALUES (NULL, 'من نحن', '')");
     $pdo->exec("INSERT INTO menu_items (parent_id, label_ar, url) VALUES (1, 'الإبلاغ', '#')");
     $pdo->exec("INSERT INTO menu_items (parent_id, label_ar, url) VALUES (1, 'اتصل بنا', 'https://example.com/contact')");
+    $pdo->exec("INSERT INTO admins (username, password_hash) VALUES ('owner', 'x')");
     eid_ensure_schema();
     eid_ensure_schema();
     q("DELETE FROM pages WHERE slug = 'about'");
@@ -355,6 +356,7 @@ test('existing database is upgraded once, without touching its content', () => {
       'projects' => count(q("SELECT id FROM sections WHERE type = 'campaigns'")),
       'donate' => get_setting('site')['donate_url'],
       'gift' => count(q("SELECT id FROM sections WHERE type = 'gift'")),
+      'owner' => q("SELECT role, is_active FROM admins WHERE username = 'owner'")[0],
     ]);`
   const out = require('node:child_process').execFileSync('php', ['-r', script], { env: { ...process.env, EID_DB_DRIVER: 'sqlite', EID_SQLITE_FILE: file } })
   const res = JSON.parse(out)
@@ -368,6 +370,7 @@ test('existing database is upgraded once, without touching its content', () => {
   assert.equal(res.contact, 'https://example.com/contact', 'links the owner set are kept')
   assert.equal(res.footer, '/page/governance-policies')
   assert.equal(Number(res.group), 1, 'menu group added once for pages not yet in the menu')
+  assert.deepEqual([res.owner.role, Number(res.owner.is_active)], ['manager', 1], 'existing accounts become managers')
 })
 
 test('a database linked before the success-stories page gets it once', () => {
@@ -558,4 +561,79 @@ test('settings, upload, accounts, password', async () => {
   r = await call('PUT', '/api/admin/password', { current: 'secret-pass-1', password: 'new-secret-9' })
   assert.equal(r.status, 200)
   assert.equal((await call('POST', '/api/auth/login', { username: 'admin', password: 'new-secret-9' }, null)).status, 200)
+})
+
+test('roles: a manager adds editors who edit only the content of their menu items', async () => {
+  const menu = (await call('GET', '/api/admin/access-menu')).data
+  const link = menu.find(m => m.parent_id !== null && /^\/page\//.test(m.url) && m.target)
+  assert.ok(link, 'a menu link opens a sub-page')
+  const group = menu.find(m => m.id === link.parent_id)
+  const pagesUnder = menu.filter(m => m.parent_id === group.id && /^\/page\//.test(m.url)).map(m => m.url.slice(6))
+  const home = (await call('GET', '/api/admin/sections')).data
+  const anchored = home.find(s => s.content.anchor)
+  const anchorItem = menu.find(m => m.url === `#${anchored.content.anchor}`)
+
+  let r = await call('POST', '/api/admin/admins', { username: 'writer', password: 'writer-pass-1', role: 'editor', menu: [group.id, ...(anchorItem ? [anchorItem.id] : []), 999999] })
+  assert.equal(r.status, 200)
+  assert.equal(r.data.role, 'editor')
+  assert.ok(!r.data.menu.includes(999999), 'unknown menu items are dropped')
+  const editorId = r.data.id
+
+  r = await call('POST', '/api/auth/login', { username: 'writer', password: 'writer-pass-1' }, null)
+  assert.equal(r.status, 200)
+  const ed = r.data.token
+  assert.equal(r.data.user.role, 'editor')
+  const all = (await call('GET', '/api/admin/pages')).data
+  const mine = all.filter(p => pagesUnder.includes(p.slug)).map(p => p.id).sort()
+  assert.deepEqual([...r.data.user.scope.pages].sort(), mine, 'a group gives every page under it')
+
+  for (const url of ['/api/admin/menu', '/api/admin/settings', '/api/admin/admins', '/api/admin/entries', '/api/admin/access-menu']) {
+    assert.equal((await call('GET', url, undefined, ed)).status, 403, url)
+  }
+  assert.deepEqual((await call('GET', '/api/admin/pages', undefined, ed)).data.map(p => p.id).sort(), mine)
+
+  const pageId = mine[0]
+  const other = all.find(p => !mine.includes(p.id))
+  const sec = (await call('GET', `/api/admin/sections?page=${pageId}`, undefined, ed)).data[0]
+  assert.equal((await call('PUT', `/api/admin/sections/${sec.id}`, { name: 'edited by editor' }, ed)).status, 200)
+  assert.equal((await call('GET', `/api/admin/sections?page=${other.id}`, undefined, ed)).status, 403)
+  const otherSec = (await call('GET', `/api/admin/sections?page=${other.id}`)).data[0]
+  assert.equal((await call('PUT', `/api/admin/sections/${otherSec.id}`, { name: 'x' }, ed)).status, 403)
+  r = await call('POST', '/api/admin/sections', { type: 'text', name: 'new', page_id: pageId }, ed)
+  assert.equal(r.status, 200)
+  const it = await call('POST', `/api/admin/sections/${r.data.id}/items`, { content: {} }, ed)
+  assert.equal(it.status, 200)
+  assert.equal((await call('PUT', `/api/admin/items/${it.data.id}`, { is_visible: false }, ed)).status, 200)
+  assert.equal((await call('DELETE', `/api/admin/sections/${r.data.id}`, undefined, ed)).status, 200)
+  assert.equal((await call('POST', '/api/admin/sections', { type: 'text', name: 'home' }, ed)).status, 403, 'no new home-page sections')
+
+  const page = all.find(p => p.id === pageId)
+  assert.equal((await call('PUT', `/api/admin/pages/${pageId}`, { title_ar: page.title_ar, slug: page.slug }, ed)).status, 200)
+  assert.equal((await call('PUT', `/api/admin/pages/${pageId}`, { slug: 'moved-away' }, ed)).status, 403, 'only a manager changes a page link')
+
+  const homeMine = (await call('GET', '/api/admin/sections', undefined, ed)).data
+  if (anchorItem) {
+    assert.deepEqual(homeMine.map(s => s.id), [anchored.id], 'a "#anchor" menu link gives that home-page section only')
+    assert.equal((await call('PUT', `/api/admin/sections/${anchored.id}`, { name: anchored.name }, ed)).status, 200)
+    assert.equal((await call('DELETE', `/api/admin/sections/${anchored.id}`, undefined, ed)).status, 403)
+  } else {
+    assert.equal(homeMine.length, 0)
+  }
+
+  // the manager changes the editor's menu items, then disables the account
+  r = await call('PUT', `/api/admin/admins/${editorId}`, { menu: [] })
+  assert.deepEqual(r.data.menu, [])
+  assert.equal((await call('GET', `/api/admin/pages/${pageId}`, undefined, ed)).status, 403)
+  r = await call('PUT', `/api/admin/admins/${editorId}`, { is_active: false })
+  assert.equal(r.data.is_active, false)
+  assert.equal((await call('GET', '/api/admin/pages', undefined, ed)).status, 401, 'a disabled account is logged out')
+  assert.equal((await call('POST', '/api/auth/login', { username: 'writer', password: 'writer-pass-1' }, null)).status, 403)
+  r = await call('PUT', `/api/admin/admins/${editorId}`, { is_active: true, password: 'reset-pass-22' })
+  assert.equal((await call('POST', '/api/auth/login', { username: 'writer', password: 'reset-pass-22' }, null)).status, 200)
+
+  const me = (await call('GET', '/api/auth/status')).data.user
+  assert.equal(me.role, 'manager', 'the first account is the manager')
+  assert.equal((await call('PUT', `/api/admin/admins/${me.id}`, { role: 'editor' })).status, 400)
+  assert.equal((await call('PUT', `/api/admin/admins/${me.id}`, { is_active: false })).status, 400)
+  assert.equal((await call('DELETE', `/api/admin/admins/${editorId}`)).status, 200)
 })

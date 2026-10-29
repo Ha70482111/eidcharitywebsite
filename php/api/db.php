@@ -98,6 +98,10 @@ function eid_ensure_schema(PDO $pdo = null)
     $pdo = $pdo ?: db();
     foreach (eid_ddl(db_dialect($pdo)) as $stmt) $pdo->exec($stmt);
     eid_add_column($pdo, 'sections', 'page_id', 'INT NULL');
+    // Accounts: the existing ones become managers; editors get their menu items in perms ({"menu": [ids]}).
+    eid_add_column($pdo, 'admins', 'role', "VARCHAR(20) NOT NULL DEFAULT 'manager'");
+    eid_add_column($pdo, 'admins', 'is_active', 'TINYINT NOT NULL DEFAULT 1');
+    eid_add_column($pdo, 'admins', 'perms', 'LONGTEXT NULL');
     $n = (int)q('SELECT COUNT(*) AS n FROM sections', [], $pdo)[0]['n'];
     $m = (int)q("SELECT COUNT(*) AS m FROM settings WHERE k = 'site'", [], $pdo)[0]['m'];
     if ($n === 0 && $m === 0) eid_seed($pdo);

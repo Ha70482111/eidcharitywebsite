@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { get, post, put, del } from './api.js'
-import { useToast, VisibilityToggle, MoveButtons, PageHead, swap } from './ui.jsx'
+import { useToast, useUser, isManager, VisibilityToggle, MoveButtons, PageHead, swap } from './ui.jsx'
 import { FieldList } from './fields.jsx'
 
 // Banner fields shown at the top of every sub-page.
@@ -13,6 +13,7 @@ export const pageUrl = p => `/page/${p.slug}`
 
 export default function PagesPage() {
   const toast = useToast()
+  const manager = isManager(useUser()) // an editor sees only their pages, and can't add, move or delete pages
   const [list, setList] = useState(null)
   const [editing, setEditing] = useState(null) // page id, or 'new'
 
@@ -43,15 +44,17 @@ export default function PagesPage() {
 
   return (
     <>
-      <PageHead title="الصفحات الفرعية">
-        <button type="button" className="ad-btn ad-btn-primary" onClick={() => setEditing('new')}>+ إضافة صفحة</button>
+      <PageHead title={manager ? 'الصفحات الفرعية' : 'صفحاتي'}>
+        {manager && <button type="button" className="ad-btn ad-btn-primary" onClick={() => setEditing('new')}>+ إضافة صفحة</button>}
       </PageHead>
-      <p className="ad-help">
-        كل صفحة ليها رابط زي <span dir="ltr">/page/about</span>. عشان تظهر في المنيو: انسخ رابط الصفحة، وحطه في خانة «الرابط» لعنصر المنيو.
-        الصفحات المخفية لا تظهر للزوار.
-      </p>
+      {manager ? (
+        <p className="ad-help">
+          كل صفحة ليها رابط زي <span dir="ltr">/page/about</span>. عشان تظهر في المنيو: انسخ رابط الصفحة، وحطه في خانة «الرابط» لعنصر المنيو.
+          الصفحات المخفية لا تظهر للزوار.
+        </p>
+      ) : <p className="ad-help">دي الصفحات اللي مدير الموقع سمح لك تعدّل محتواها. اضغط «الأقسام» عشان تعدّل محتوى الصفحة.</p>}
 
-      <MediaImport />
+      {manager && <MediaImport />}
 
       {editing === 'new' && <PageForm onClose={() => setEditing(null)} onSaved={p => { setEditing(null); window.location.hash = `/pages/${p.id}` }} />}
 
@@ -60,7 +63,7 @@ export default function PagesPage() {
           {list.map((p, i) => (
             <li key={p.id} className={`ad-row ad-row-item ${p.is_visible ? '' : 'ad-row-hidden'}`}>
               <div className="ad-row-line">
-                <div className="ad-row-order"><MoveButtons index={i} count={list.length} onMove={move} label={p.title_ar} /></div>
+                {manager && <div className="ad-row-order"><MoveButtons index={i} count={list.length} onMove={move} label={p.title_ar} /></div>}
                 <div className="ad-row-main">
                   <a href={`#/pages/${p.id}`} className="ad-row-title">{p.title_ar || p.title_en || p.slug}</a>
                   <span className="ad-row-meta"><span dir="ltr">{pageUrl(p)}</span> · {p.section_count} قسم</span>
@@ -68,10 +71,10 @@ export default function PagesPage() {
                 <div className="ad-row-actions">
                   <VisibilityToggle visible={p.is_visible} onChange={v => toggle(p, v)} label={p.title_ar} />
                   <a className="ad-btn ad-btn-light" href={`#/pages/${p.id}`}>الأقسام</a>
-                  <button type="button" className="ad-btn ad-btn-light" onClick={() => setEditing(editing === p.id ? null : p.id)} aria-expanded={editing === p.id}>العنوان والرابط</button>
+                  <button type="button" className="ad-btn ad-btn-light" onClick={() => setEditing(editing === p.id ? null : p.id)} aria-expanded={editing === p.id}>{manager ? 'العنوان والرابط' : 'العنوان'}</button>
                   <button type="button" className="ad-btn ad-btn-light" onClick={() => copyLink(p)}>نسخ الرابط</button>
                   <a className="ad-btn ad-btn-light" href={pageUrl(p)} target="_blank" rel="noopener">عرض ↗</a>
-                  <button type="button" className="ad-btn ad-btn-danger" onClick={() => remove(p)}>حذف</button>
+                  {manager && <button type="button" className="ad-btn ad-btn-danger" onClick={() => remove(p)}>حذف</button>}
                 </div>
               </div>
               {editing === p.id && (
@@ -89,6 +92,7 @@ export default function PagesPage() {
 
 export function PageForm({ page, onClose, onSaved }) {
   const toast = useToast()
+  const manager = isManager(useUser()) // the link ties a page to the menu, so only a manager changes it
   const [d, setD] = useState({
     title_ar: page?.title_ar || '', title_en: page?.title_en || '', slug: page?.slug || '',
     content: page?.content || { subtitle: { ar: '', en: '' }, image: '' },
@@ -123,12 +127,12 @@ export function PageForm({ page, onClose, onSaved }) {
           <label className="ad-label" htmlFor={`pg-en-${page?.id || 'new'}`}>Page title (English)</label>
           <input id={`pg-en-${page?.id || 'new'}`} className="ad-input" dir="ltr" value={d.title_en} onChange={set('title_en')} />
         </div>
-        <div className="ad-field ad-wide">
+        {manager && <div className="ad-field ad-wide">
           <label className="ad-label" htmlFor={`pg-slug-${page?.id || 'new'}`}>رابط الصفحة (حروف إنجليزية وأرقام وشرطة فقط)</label>
           <input id={`pg-slug-${page?.id || 'new'}`} className="ad-input" dir="ltr" value={d.slug} onChange={set('slug')} required placeholder="about-us" />
           <p className="ad-help" dir="ltr" style={{ textAlign: 'start' }}>/page/{d.slug || '…'}</p>
           {page && <p className="ad-help">لو غيّرت الرابط، عدّل كمان أي عنصر في المنيو بيشاور على الرابط القديم.</p>}
-        </div>
+        </div>}
       </div>
       <FieldList fields={BANNER_FIELDS} value={d.content} onChange={content => setD({ ...d, content })} />
       <div className="ad-form-actions">

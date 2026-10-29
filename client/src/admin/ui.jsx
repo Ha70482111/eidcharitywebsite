@@ -3,6 +3,11 @@ import { createContext, useCallback, useContext, useState } from 'react'
 const ToastCtx = createContext(() => {})
 export const useToast = () => useContext(ToastCtx)
 
+// The logged-in account. An editor has role 'editor' and scope { pages, sections } (what they may edit).
+export const UserCtx = createContext(null)
+export const useUser = () => useContext(UserCtx)
+export const isManager = user => user?.role !== 'editor'
+
 export function ToastProvider({ children }) {
   const [toasts, setToasts] = useState([])
   const push = useCallback((msg, kind = 'ok') => {
